@@ -22,6 +22,18 @@ It is **Linux-specific**, as it relies on **POSIX** system calls and the `sys/ep
 - **GCC or Clang compiler**
 - **Make** (optional, for easy compilation)
 
+## Short Guide
+
+- mkdir build
+- cd ./build
+- mkdir pages
+- cd ./pages
+- touch index.html
+- cd ..
+- cmake ..
+- make
+- ./sews
+
 ## License
 
 This project is licensed under the **MIT License**.
