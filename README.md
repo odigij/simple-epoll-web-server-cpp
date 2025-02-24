@@ -1,19 +1,27 @@
-# Simple Epoll Based Web Server in C++
-
-## Status
-
-Work in progress 
+# Simple Epoll Web Server
 
 ## Description
 
-This is an experimental effort to understand mechanics of a web server framework that is abstracted from many developers. Roadmaps are mentioned below:
+This project is an **experimental** effort to understand the mechanics of a web server framework that is usually abstracted from developers. It is a **web server built from scratch in C++**, utilizing **epoll** for asynchronous, non-blocking I/O.
 
-### Roadmap 19/02/2025
+It is **Linux-specific**, as it relies on **POSIX** system calls and the `sys/epoll.h` header. Windows users would need to rewrite those sections or use `sys/poll.h` as an alternative.
 
-1. [] Be able to handle multiple clients.
+## Features
 
-2. [] Serving static HTML files according to client requests.
+- **Linux-based** – Uses epoll and POSIX APIs.
+- **Single-threaded** – Efficiently handles multiple clients without extra threads.
+- **Command-line options** – Supports terminal parameters (`--port`, `--max-request`, `--epoll-count`, `--help`).
+- **Non-blocking mode** – Uses epoll for scalable, event-driven I/O.
+- **Handles multiple clients** – Supports concurrent client connections.
+- **Serves HTML & CSS** – Can deliver static web content.
 
-3. [] Properly handling HTTP headers.
+## Requirements
 
-4. [] Closing user's connection to the server after response.
+- **Linux OS** (or WSL if on Windows)
+- **C++17 or later**
+- **GCC or Clang compiler**
+- **Make** (optional, for easy compilation)
+
+## License
+
+This project is licensed under the **MIT License**.

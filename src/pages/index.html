@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <link rel="stylesheet" type="text/css" href="/styles.css">
+  <title>Main Page</title>
+</head>
+
+<body>
+  <ul class="sews_navbar">
+    <li><a class="active" href="index.html">Intro</a></li>
+    <li><a href="features.html">Feats</a></li>
+    <li><a href="knowhow.html">Short Guide</a></li>
+  </ul>
+
+  <h1 class="sews_h1">Welcome to Simple Epoll Web Server</h1>
+
+  <h2 class="sews_h2">Description</h2>
+
+  <p class="sews_p">
+    This project is an experimental effort to understand the mechanics of a web server framework that is usually
+    abstracted from developers. It is a web server built from scratch in C++, utilizing epoll for asynchronous,
+    non-blocking I/O.
+  </p>
+
+  <p class="sews_p">
+    It is Linux-specific, as it relies on POSIX system calls and the `sys/epoll.h` header. Windows users would
+    need to rewrite those sections or use `sys/poll.h` as an alternative.
+  </p>
+
+  <h2 class="sews_h2">License</h2>
+
+  <p class="sews_p"> This project is licensed under the MIT License.</p>
+</body>
+
+</html>

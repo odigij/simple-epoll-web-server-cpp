@@ -1,0 +1,47 @@
+.sews_navbar {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background-color: #82989b;
+}
+
+.sews_navbar li {
+  float: left;
+}
+
+.sews_navbar li a {
+  display: block;
+  color: #333;
+  text-align: center;
+  padding: 14px 16px;
+  text-decoration: none;
+  font-size: 16pt;
+}
+
+.sews_navbar li a:hover {
+  background-color: #62989b;
+}
+
+.sews_h1 {
+  border-bottom: 1px solid #333;
+  font-size: 24pt;
+}
+
+.sews_h2 {
+  font-size: 18pt;
+}
+
+.sews_h1,
+.sews_h2 {
+  color: #82989b;
+}
+
+.sews_ul {
+  list-style-type: '- ';
+  font-size: 15pt;
+}
+
+.sews_p {
+  font-size: 15pt;
+}
