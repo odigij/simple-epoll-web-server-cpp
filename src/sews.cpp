@@ -15,7 +15,7 @@ void handleSigint(int sig) {
   stop = 1;
 }
 
-std::tuple<int, int, int> handleArgs(int &argumentCount, char *argumentVector[]) {
+std::tuple<int, int, int> handleArgs(int argumentCount, char *argumentVector[]) {
   int port = 8080, maximumRequest = 3, epollCount = 32, option;
   std::string message;
   static struct option longOptions[] = {
@@ -58,13 +58,13 @@ std::tuple<int, int, int> handleArgs(int &argumentCount, char *argumentVector[])
       exit(EXIT_FAILURE);
     }
   }
-  std::cout << "SEWS listens http://127.0.0.1: " << port << " | max-request: " << maximumRequest
+  std::cout << "SEWS listens http://127.0.0.1:" << port << " | max-request: " << maximumRequest
             << ", epoll-count: " << epollCount << '\n';
   return std::make_tuple(port, maximumRequest, epollCount);
 }
 
-std::tuple<int, sockaddr_in, int> initServer(int &port, int &maximumRequest) {
-  int fileDescriptor, epollFileDescriptor;
+std::tuple<int, sockaddr_in, int> initServer(int port, int maximumRequest) {
+  int fileDescriptor, epollFileDescriptor, opt = 1;
   struct sockaddr_in address;
   fileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
   if (fileDescriptor == -1) {
@@ -73,7 +73,6 @@ std::tuple<int, sockaddr_in, int> initServer(int &port, int &maximumRequest) {
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
   address.sin_port = htons(port);
-  int opt = 1;
   if (setsockopt(fileDescriptor, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
     throw std::runtime_error("FATAL: setsockopt.\n");
   }
@@ -89,19 +88,17 @@ std::tuple<int, sockaddr_in, int> initServer(int &port, int &maximumRequest) {
   if (epollFileDescriptor < 0) {
     throw std::runtime_error(strerror(errno));
   }
-  {
-    struct epoll_event tempEvent;
-    tempEvent.events = EPOLLIN;
-    tempEvent.data.fd = fileDescriptor;
-    if (epoll_ctl(epollFileDescriptor, EPOLL_CTL_ADD, fileDescriptor, &tempEvent) != 0) {
-      throw std::runtime_error("FATAL: Server epoll register failed.\n");
-    }
+  struct epoll_event tempEvent;
+  tempEvent.events = EPOLLIN;
+  tempEvent.data.fd = fileDescriptor;
+  if (epoll_ctl(epollFileDescriptor, EPOLL_CTL_ADD, fileDescriptor, &tempEvent) != 0) {
+    throw std::runtime_error("FATAL: Server epoll register failed.\n");
   }
   return std::make_tuple(fileDescriptor, address, epollFileDescriptor);
 }
 
-void handleServerEvents(struct epoll_event &activeEpollEvent, int &serverFileDescriptor,
-                        int &serverEpollFileDescriptor, std::set<int> &clientFileDescriptors) {
+void handleServerEvents(struct epoll_event &activeEpollEvent, int serverFileDescriptor,
+                        int serverEpollFileDescriptor, std::set<int> &clientFileDescriptors) {
   if (activeEpollEvent.events & EPOLLIN) {
     struct sockaddr_in newClientAddress;
     socklen_t newClientAddressSize = sizeof(newClientAddress);
@@ -140,23 +137,18 @@ void handleServerEvents(struct epoll_event &activeEpollEvent, int &serverFileDes
 }
 
 std::string handleRequest(epoll_event &epollEvent) {
-  char buffer[1024];
+  char buffer[1024 * 2];
   ssize_t bytesRead = read(epollEvent.data.fd, buffer, sizeof(buffer) - 1);
   std::ostringstream responseStream;
-  std::string htmlContent;
-  std::string contentType = "text/html";
+  std::istringstream requestStream(buffer);
+  std::string method, path, httpVersion, filePath, htmlContent, contentType = "text/html";
+  requestStream >> method >> path >> httpVersion;
   if (bytesRead > 0) {
     buffer[bytesRead] = '\0';
-    std::istringstream requestStream(buffer);
-    std::string method, path, httpVersion;
-    requestStream >> method >> path >> httpVersion;
-    std::string filePath;
-    if (path == "/" || path.empty()) {
-      filePath = "./pages/index.html";
-    } else {
-      filePath = "./pages" + path;
-    }
+    filePath =
+        path == "/" || path.empty() ? "../assets/pages/index.html" : "../assets/pages" + path;
     if (filePath.size() >= 4 && filePath.substr(filePath.size() - 4) == ".css") {
+      filePath = "../assets/styles/" + path;
       contentType = "text/css";
     }
     if (method == "GET") {
@@ -170,7 +162,6 @@ std::string handleRequest(epoll_event &epollEvent) {
                        << "\r\n"
                        << htmlContent;
       } else {
-        std::ifstream file("./pages/404.html", std::ios::binary);
         htmlContent.insert(htmlContent.end(), std::istreambuf_iterator<char>(file),
                            std::istreambuf_iterator<char>());
         responseStream << "HTTP/1.1 404 Not Found\r\n"
@@ -180,7 +171,7 @@ std::string handleRequest(epoll_event &epollEvent) {
                        << htmlContent;
       }
     } else {
-      std::ifstream file("./pages/405.html", std::ios::binary);
+      std::ifstream file("../assests/pages/405.html", std::ios::binary);
       htmlContent.insert(htmlContent.end(), std::istreambuf_iterator<char>(file),
                          std::istreambuf_iterator<char>());
       responseStream << "HTTP/1.1 405 Method Not Allowed\r\n"
@@ -190,12 +181,14 @@ std::string handleRequest(epoll_event &epollEvent) {
                      << htmlContent;
     }
   } else if (bytesRead == 0) {
+    // Unimplemented scope
   } else {
+    // Unimplemented scope
   }
   return responseStream.str();
 }
 
-void handleClientEvents(struct epoll_event &activeEpollEvent, int &serverEpollFileDescriptor,
+void handleClientEvents(struct epoll_event &activeEpollEvent, int serverEpollFileDescriptor,
                         std::set<int> &clientFileDescriptors) {
   if (activeEpollEvent.events & (EPOLLHUP | EPOLLERR)) {
     if (epoll_ctl(serverEpollFileDescriptor, EPOLL_CTL_DEL, activeEpollEvent.data.fd, nullptr) ==
@@ -209,7 +202,7 @@ void handleClientEvents(struct epoll_event &activeEpollEvent, int &serverEpollFi
     if (send(activeEpollEvent.data.fd, httpResponse.c_str(), httpResponse.size(), 0) == -1) {
       std::cerr << "LOG: Failed to send HTML.\n";
     } else {
-      std::cout << "LOG: Successfully sent the HTML.\n";
+      // Unimplemented scope
     }
     epoll_ctl(serverEpollFileDescriptor, EPOLL_CTL_DEL, activeEpollEvent.data.fd, nullptr);
     close(activeEpollEvent.data.fd);
@@ -217,25 +210,24 @@ void handleClientEvents(struct epoll_event &activeEpollEvent, int &serverEpollFi
   }
 }
 
-void thread(int &argumentCount, char *argumentVector[]) {
+void thread(int argumentCount, char *argumentVector[]) {
   try {
     signal(SIGINT, handleSigint);
     auto [port, maximumRequest, epollEventSize] = handleArgs(argumentCount, argumentVector);
     auto [serverFileDescriptor, serverAddr, serverEpollFileDescriptor] =
         initServer(port, maximumRequest);
     struct epoll_event activeEpollEvents[epollEventSize];
-    int activeEpollEventCount = epollEventSize;
     std::set<int> clientFileDescriptors;
-    while (!stop) {
+    while (!sews::stop) {
       const int activeEventCount =
-          epoll_wait(serverEpollFileDescriptor, activeEpollEvents, activeEpollEventCount, 3000);
+          epoll_wait(serverEpollFileDescriptor, activeEpollEvents, epollEventSize, 3000);
       for (int index(0); index < activeEventCount; index++) {
-        if (activeEpollEvents[index].data.fd == serverFileDescriptor) {
-          handleServerEvents(activeEpollEvents[index], serverFileDescriptor,
-                             serverEpollFileDescriptor, clientFileDescriptors);
-        } else {
-          handleClientEvents(activeEpollEvents[index], serverEpollFileDescriptor,
+        epoll_event &currentEvent = activeEpollEvents[index];
+        if (currentEvent.data.fd == serverFileDescriptor) {
+          handleServerEvents(currentEvent, serverFileDescriptor, serverEpollFileDescriptor,
                              clientFileDescriptors);
+        } else {
+          handleClientEvents(currentEvent, serverEpollFileDescriptor, clientFileDescriptors);
         }
       }
     }
@@ -244,7 +236,6 @@ void thread(int &argumentCount, char *argumentVector[]) {
     }
     close(serverEpollFileDescriptor);
     close(serverFileDescriptor);
-    std::cout << "Resources closed.\n";
     exit(EXIT_SUCCESS);
   } catch (const std::exception &err) {
     std::cerr << err.what();

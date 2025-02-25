@@ -4,9 +4,7 @@
 
 ## Description
 
-This project is an **experimental** effort to understand the mechanics of a web server framework that is usually abstracted from developers. It is a **web server built from scratch in C++**, utilizing **epoll** for asynchronous, non-blocking I/O.
-
-It is **Linux-specific**, as it relies on **POSIX** system calls and the `sys/epoll.h` header. Windows users would need to rewrite those sections or use `sys/poll.h` as an alternative.
+This project is an **experimental** effort to understand the mechanics of a web server framework that is usually abstracted from developers. It is a **web server built from scratch in C++**, utilizing **epoll** for asynchronous, non-blocking I/O. It is **Linux-specific**, as it relies on **POSIX** system calls and the `sys/epoll.h` header.
 
 ## Features
 
@@ -24,14 +22,10 @@ It is **Linux-specific**, as it relies on **POSIX** system calls and the `sys/ep
 - **GCC or Clang compiler**
 - **Make** (optional, for easy compilation)
 
-## Short Guide
+## Example Usage
 
 - mkdir build
 - cd ./build
-- mkdir pages
-- cd ./pages
-- touch index.html
-- cd ..
 - cmake ..
 - make
 - ./sews
