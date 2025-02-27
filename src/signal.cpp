@@ -22,20 +22,24 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../include/sews.hpp"
 
-#include <iostream>
-
-volatile sig_atomic_t sews::SignalHandler::flags = 0;
-
-int main(int argc, char* argv[]) {
-    try {
-        sews::SignalHandler::init();
-        auto [ port, maximumRequest, epollEventSize ] = sews::handleArgs(argc, argv);
-        sews::ServerManager server(port, maximumRequest, epollEventSize);
-        server.initialize();
-        server.run();
-        exit(EXIT_SUCCESS);
-    } catch (const std::exception& err) {
-        std::cerr << err.what();
-        exit(EXIT_FAILURE);
+namespace sews {
+    void SignalHandler::init() {
+        std::signal(SIGINT, handle);
+        std::signal(SIGTERM, handle);
     }
-}
+    void SignalHandler::handle(int signal) {
+        switch (signal) {
+        case SIGINT:
+            flags |= 1;
+            break;
+        case SIGTERM:
+            flags |= 2;
+            break;
+        default:
+            break;
+        }
+    }
+    int SignalHandler::getSignal() {
+        return flags;
+    }
+} // namespace sews
