@@ -20,24 +20,32 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/sews.hpp"
+#ifndef SEWS_ROUTER_HPP
+#define SEWS_ROUTER_HPP
 
-#include <iostream>
+#include <functional>
+#include <string>
+#include <unordered_map>
 
-volatile sig_atomic_t sews::SignalHandler::flags = 0;
+namespace sews {
 
-int main(int argc, char* argv[]) {
-    try {
-        sews::SignalHandler::init();
-        sews::Server server;
-        auto [ port, maximumRequest, epollEventSize ] = sews::handleArgs(argc, argv);
-        server.start(port, maximumRequest);
-        while (sews::SignalHandler::getSignal() == 0) {
-            server.update(epollEventSize);
-        }
-        exit(EXIT_SUCCESS);
-    } catch (const std::exception& err) {
-        std::cerr << err.what();
-        exit(EXIT_FAILURE);
-    }
-}
+    class Router {
+      public:
+        Router();
+        Router(Router&&) = default;
+        Router(const Router&) = default;
+        Router& operator=(Router&&) = default;
+        Router& operator=(const Router&) = default;
+        ~Router();
+        using HandlerFunc = std::function<std::string(const std::string&)>;
+        void addRoute(const std::string method, std::string path, HandlerFunc handler);
+        std::string handleRequest(const std::string& method, const std::string& path,
+                                  const std::string& body);
+
+      private:
+        std::unordered_map<std::string, HandlerFunc> routes;
+    };
+
+} // namespace sews
+
+#endif // !SEWS_ROUTER_HPP

@@ -20,84 +20,76 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/sews.hpp"
+#include "../include/server.hpp"
 
+#include <cstring>
+#include <fcntl.h>
 #include <fstream>
 #include <iostream>
+#include <netinet/in.h>
 #include <sstream>
 #include <stdexcept>
+#include <string>
+#include <sys/epoll.h>
+#include <unistd.h>
 
 namespace sews {
-    ServerManager::ServerManager(int port, int requestNum, int eventSize) {
-        this->config.port = port;
-        this->config.requestNum = requestNum;
-        this->config.eventSize = eventSize;
+    Server::Server() {
     }
-    ServerManager::~ServerManager() {
-        for (auto activeClientFileDescriptor : this->clientFileDescriptors) {
-            close(activeClientFileDescriptor);
+    Server::~Server() {
+    }
+    void Server::start(int port, int backlog) {
+        this->_createSocket(port);
+        this->_initSocket(backlog);
+    }
+    void Server::update(int event_poll_size) {
+        struct epoll_event events[ event_poll_size ];
+        const int activeEventCount =
+            epoll_wait(this->_epoll_file_descriptor, &*events, event_poll_size, 3000);
+        for (int index(0); index < activeEventCount; index++) {
+            this->_handleEvents(events[ index ]);
         }
-        close(this->config.epollFileDescriptor);
-        close(this->config.fileDescriptor);
     }
-    void ServerManager::initialize() {
-        int opt = 1;
-        struct sockaddr_in address;
-        this->config.fileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
-        if (this->config.fileDescriptor == -1) {
+    void Server::_createSocket(int port) {
+        this->_file_descriptor = socket(AF_INET, SOCK_STREAM, 0);
+        if (this->_file_descriptor == -1) {
             throw std::runtime_error("FATAL: Server creation failed.\n");
         }
-        address.sin_family = AF_INET;
-        address.sin_addr.s_addr = INADDR_ANY;
-        address.sin_port = htons(this->config.port);
-        if (setsockopt(this->config.fileDescriptor, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) <
-            0) {
+        struct sockaddr_in address = {.sin_family = AF_INET, .sin_addr = {.s_addr = INADDR_ANY}};
+        address.sin_port = htons(port);
+        int opt = 1;
+        if (setsockopt(this->_file_descriptor, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
             throw std::runtime_error("FATAL: setsockopt.\n");
         }
-        if (bind(this->config.fileDescriptor, (struct sockaddr*)&address, sizeof(address)) != 0) {
-            close(this->config.fileDescriptor);
+        if (bind(this->_file_descriptor, (struct sockaddr*)&address, sizeof(address)) != 0) {
+            close(this->_file_descriptor);
             throw std::runtime_error("FATAL: Server binding failed.\n");
         }
-    };
-    void ServerManager::run() {
-        if (listen(this->config.fileDescriptor, this->config.requestNum) != 0) {
-            close(this->config.fileDescriptor);
+    }
+    void Server::_initSocket(int backlog) {
+        if (listen(this->_file_descriptor, backlog) != 0) {
+            close(this->_file_descriptor);
             throw std::runtime_error("FATAL: Server listen failed.\n");
         }
-        this->config.epollFileDescriptor = epoll_create(1);
-        if (this->config.epollFileDescriptor < 0) {
+        this->_epoll_file_descriptor = epoll_create(1);
+        if (this->_epoll_file_descriptor < 0) {
             throw std::runtime_error(strerror(errno));
         }
-        struct epoll_event epollEvent;
-        epollEvent.events = EPOLLIN;
-        epollEvent.data.fd = this->config.fileDescriptor;
-        std::cout << this->config.eventSize << ',' << this->config.epollFileDescriptor;
-        if (epoll_ctl(this->config.epollFileDescriptor, EPOLL_CTL_ADD, this->config.fileDescriptor,
+        struct epoll_event epollEvent = {EPOLLIN, {.fd = this->_file_descriptor}};
+        if (epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_ADD, this->_file_descriptor,
                       &epollEvent) != 0) {
             throw std::runtime_error("FATAL: Server epoll register failed.\n");
         }
-        while (sews::SignalHandler::getSignal() == 0) {
-            const int activeEventCount =
-                epoll_wait(this->config.epollFileDescriptor, &*activeEpollEvents,
-                           this->config.eventSize, 3000);
-            for (int index(0); index < activeEventCount; index++) {
-                epoll_event& currentEvent = activeEpollEvents[ index ];
-                this->handleEvents(currentEvent, this->config.fileDescriptor,
-                                   this->config.epollFileDescriptor, clientFileDescriptors);
-            }
-        }
     }
-    void ServerManager::handleEvents(struct epoll_event& activeEpollEvent, int serverFileDescriptor,
-                                     int serverEpollFileDescriptor,
-                                     std::set<int>& clientFileDescriptors) {
-        if (activeEpollEvent.data.fd == serverFileDescriptor) { // Server events
-            if (activeEpollEvent.events & (EPOLLHUP | EPOLLERR)) {
+    void Server::_handleEvents(epoll_event& event) {
+        if (event.data.fd == this->_file_descriptor) { // Server events
+            if (event.events & (EPOLLHUP | EPOLLERR)) {
                 throw std::runtime_error("FATAL: Server socket closed unexpectedly.\n");
-            } else if (activeEpollEvent.events & EPOLLIN) {
+            } else if (event.events & EPOLLIN) {
                 struct sockaddr_in newClientAddress;
                 socklen_t newClientAddressSize = sizeof(newClientAddress);
                 const int newClientFileDescriptor =
-                    accept(serverFileDescriptor, (struct sockaddr*)&newClientAddress,
+                    accept(this->_file_descriptor, (struct sockaddr*)&newClientAddress,
                            &newClientAddressSize);
                 if (newClientFileDescriptor < 0) {
                     std::cerr << "LOG: Client connection failed.\n";
@@ -117,40 +109,38 @@ namespace sews {
                 epoll_event newClientEpollEvent;
                 newClientEpollEvent.events = EPOLLIN;
                 newClientEpollEvent.data.fd = newClientFileDescriptor;
-                if (epoll_ctl(serverEpollFileDescriptor, EPOLL_CTL_ADD, newClientFileDescriptor,
+                if (epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_ADD, newClientFileDescriptor,
                               &newClientEpollEvent) != 0) {
                     close(newClientFileDescriptor);
                     std::cerr << "LOG: Client epoll register failed.\n";
                     return;
                 }
-                clientFileDescriptors.insert(newClientFileDescriptor);
+                this->_client_file_descriptors.insert(newClientFileDescriptor);
             }
         } else { // Client events
-            if (activeEpollEvent.events & (EPOLLHUP | EPOLLERR)) {
-                if (epoll_ctl(serverEpollFileDescriptor, EPOLL_CTL_DEL, activeEpollEvent.data.fd,
+            if (event.events & (EPOLLHUP | EPOLLERR)) {
+                if (epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, event.data.fd,
                               nullptr) == -1) {
                     std::cerr << "LOG: Failed to remove client from epoll registry.\n";
                 }
-                close(activeEpollEvent.data.fd);
-                clientFileDescriptors.erase(activeEpollEvent.data.fd);
-            } else if (activeEpollEvent.events & EPOLLIN) {
-                std::string httpResponse = this->handleRequest(activeEpollEvent);
-                if (send(activeEpollEvent.data.fd, httpResponse.c_str(), httpResponse.size(), 0) ==
-                    -1) {
+                close(event.data.fd);
+                this->_client_file_descriptors.erase(event.data.fd);
+            } else if (event.events & EPOLLIN) {
+                std::string httpResponse = this->_handleSocketData(event);
+                if (send(event.data.fd, httpResponse.c_str(), httpResponse.size(), 0) == -1) {
                     std::cerr << "LOG: Failed to send HTML.\n";
                 } else {
                     // Unimplemented scope
                 }
-                epoll_ctl(serverEpollFileDescriptor, EPOLL_CTL_DEL, activeEpollEvent.data.fd,
-                          nullptr);
-                close(activeEpollEvent.data.fd);
-                clientFileDescriptors.erase(activeEpollEvent.data.fd);
+                epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, event.data.fd, nullptr);
+                close(event.data.fd);
+                this->_client_file_descriptors.erase(event.data.fd);
             }
         }
-    };
-    std::string ServerManager::handleRequest(epoll_event& epollEvent) {
+    }
+    std::string Server::_handleSocketData(epoll_event& event) {
         char buffer[ 1024 * 2 ];
-        ssize_t bytesRead = read(epollEvent.data.fd, buffer, sizeof(buffer) - 1);
+        ssize_t bytesRead = read(event.data.fd, buffer, sizeof(buffer) - 1);
         std::ostringstream responseStream;
         std::istringstream requestStream(buffer);
         std::string method, path, httpVersion, filePath, htmlContent, contentType = "text/html";
@@ -198,5 +188,5 @@ namespace sews {
             // Unimplemented scope
         }
         return responseStream.str();
-    };
+    }
 } // namespace sews

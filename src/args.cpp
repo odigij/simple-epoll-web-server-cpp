@@ -20,9 +20,11 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/sews.hpp"
+#include "../include/args.hpp"
 
+#include <getopt.h>
 #include <iostream>
+#include <string>
 
 namespace sews {
     std::tuple<int, int, int> handleArgs(int argumentCount, char* argumentVector[]) {

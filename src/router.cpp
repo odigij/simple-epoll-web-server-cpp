@@ -20,24 +20,24 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/sews.hpp"
+#include "../include/router.hpp"
 
-#include <iostream>
-
-volatile sig_atomic_t sews::SignalHandler::flags = 0;
-
-int main(int argc, char* argv[]) {
-    try {
-        sews::SignalHandler::init();
-        sews::Server server;
-        auto [ port, maximumRequest, epollEventSize ] = sews::handleArgs(argc, argv);
-        server.start(port, maximumRequest);
-        while (sews::SignalHandler::getSignal() == 0) {
-            server.update(epollEventSize);
-        }
-        exit(EXIT_SUCCESS);
-    } catch (const std::exception& err) {
-        std::cerr << err.what();
-        exit(EXIT_FAILURE);
+namespace sews {
+    Router::Router() {
     }
-}
+    Router::~Router() {
+    }
+    void Router::addRoute(const std::string method, std::string path, HandlerFunc handler) {
+        this->routes[ method + ' ' + path ] = handler;
+    }
+    std::string Router::handleRequest(const std::string& method, const std::string& path,
+                                      const std::string& body) {
+        const std::string key = method + ' ' + path;
+        if (this->routes.find(key) != routes.end()) {
+            return this->routes[ key ](body);
+        }
+        // TODO:
+        // - [] Make it return a definable class as template.
+        return "";
+    }
+} // namespace sews

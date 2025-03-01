@@ -20,24 +20,36 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/sews.hpp"
+#ifndef SEWS_SERVER_HPP
+#define SEWS_SERVER_HPP
 
-#include <iostream>
+#include "router.hpp"
 
-volatile sig_atomic_t sews::SignalHandler::flags = 0;
+#include <set>
+#include <string>
+#include <sys/epoll.h>
 
-int main(int argc, char* argv[]) {
-    try {
-        sews::SignalHandler::init();
-        sews::Server server;
-        auto [ port, maximumRequest, epollEventSize ] = sews::handleArgs(argc, argv);
-        server.start(port, maximumRequest);
-        while (sews::SignalHandler::getSignal() == 0) {
-            server.update(epollEventSize);
-        }
-        exit(EXIT_SUCCESS);
-    } catch (const std::exception& err) {
-        std::cerr << err.what();
-        exit(EXIT_FAILURE);
-    }
-}
+namespace sews {
+    class Server {
+      public:
+        Server();
+        Server(Server&&) = default;
+        Server(const Server&) = default;
+        Server& operator=(Server&&) = default;
+        Server& operator=(const Server&) = default;
+        ~Server();
+        void start(int port, int backlog);
+        void update(int event_poll_size);
+
+      private:
+        int _flags, _file_descriptor, _epoll_file_descriptor;
+        std::set<int> _client_file_descriptors;
+        void _createSocket(int port);
+        void _initSocket(int backlog);
+        void _handleEvents(epoll_event& event);
+        std::string _handleSocketData(epoll_event& event);
+        Router router;
+    };
+} // namespace sews
+
+#endif // !SEWS_SERVER_HPP
