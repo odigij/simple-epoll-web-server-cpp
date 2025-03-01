@@ -37,6 +37,11 @@ namespace sews {
     Server::Server() {
     }
     Server::~Server() {
+        for (auto activeClientFileDescriptor : this->_client_file_descriptors) {
+            close(activeClientFileDescriptor);
+        }
+        close(this->_epoll_file_descriptor);
+        close(this->_file_descriptor);
     }
     void Server::start(int port, int backlog) {
         this->_createSocket(port);
