@@ -1,7 +1,5 @@
 # Simple Epoll Web Server
 
-![Screenshot From 2025-02-25 00-53-39](https://github.com/user-attachments/assets/23e38192-6902-4f2a-99ab-5e65e57b0ade)
-
 ## Description
 
 This project is an **experimental** effort to understand the mechanics of a web server framework that is usually abstracted from developers. It is a **web server built from scratch in C++**, utilizing **epoll** for asynchronous, non-blocking I/O. It is **Linux-specific**, as it relies on **POSIX** system calls and the `sys/epoll.h` header.

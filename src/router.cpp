@@ -37,7 +37,7 @@ namespace sews {
 			return this->routes[ request.method + request.path ](request);
 		}
 		// TODO
-		// [] May return different types due to request content type.
+		// May return different types due to request content type.
 		return Response::notFound();
 	}
 } // namespace sews

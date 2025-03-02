@@ -47,6 +47,8 @@ namespace sews {
 	}
 	void Server::update(int event_poll_size) {
 		struct epoll_event events[ event_poll_size ];
+		// TODO
+		// Get timeout through user.
 		const int active_event_count =
 			epoll_wait(this->_epoll_file_descriptor, &*events, event_poll_size, 3000);
 		for (int index(0); index < active_event_count; index++) {
@@ -85,9 +87,9 @@ namespace sews {
 		}
 	}
 	void Server::_handleEvents(epoll_event& poll_event) {
+		// TODO
+		// Separate EPOLLHUP & EPOLLERR
 		if (poll_event.data.fd == this->_file_descriptor) { // Server events
-															// TODO
-															// [] Separate EPOLLHUP & EPOLLERR
 			if (poll_event.events & (EPOLLHUP | EPOLLERR)) {
 				throw std::runtime_error("FATAL: Server socket closed unexpectedly.\n");
 			} else if (poll_event.events & EPOLLIN) {
@@ -144,11 +146,12 @@ namespace sews {
 		}
 	}
 	std::string Server::_handleSocketData(epoll_event& poll_event) {
+		// TODO
+		// [] Need to implement dynamic size buffer.
+		// [] Implement the rest of the control flows.
 		char buffer[ 1024 * 5 ];
 		ssize_t bytes_read = read(poll_event.data.fd, buffer, sizeof(buffer) - 1);
 		std::string response;
-		// TODO
-		// [] Implement the rest of the control flows.
 		if (bytes_read > 0) {
 			buffer[ bytes_read ] = '\0';
 			return this->router.handleRequest(buffer);
