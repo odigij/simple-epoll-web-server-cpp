@@ -261,8 +261,8 @@ StatementMacros:
   - Q_UNUSED
   - QT_REQUIRE_VERSION
 TableGenBreakInsideDAGArg: DontBreak
-TabWidth:        8
-UseTab:          Never
+TabWidth:        4
+UseTab:          Always
 VerilogBreakBetweenInstancePorts: true
 WhitespaceSensitiveMacros:
   - BOOST_PP_STRINGIZE

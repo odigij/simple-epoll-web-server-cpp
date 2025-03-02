@@ -20,38 +20,16 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SEWS_SERVER_HPP
-#define SEWS_SERVER_HPP
-
-#include "router.hpp"
-
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-#include <set>
-#include <string>
-#include <sys/epoll.h>
+#include "../include/response.hpp"
 
 namespace sews {
-	class Server {
-	  public:
-		Server(Router& router);
-		Server(Server&&) = default;
-		Server(const Server&) = default;
-		Server& operator=(Server&&) = delete;
-		Server& operator=(const Server&) = delete;
-		~Server();
-		void start(int port, int backlog);
-		void update(int poll_size);
+	std::string Response::ok(const std::string& body, const std::string& contentType) {
+		return "HTTP/1.1 200 OK\r\nContent-Type: " + contentType +
+			   "\r\nContent-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
+	}
 
-	  private:
-		int _flags, _file_descriptor, _epoll_file_descriptor;
-		std::set<int> _client_file_descriptors;
-		void _createSocket(int port);
-		void _initSocket(int backlog);
-		void _handleEvents(epoll_event& poll_event);
-		std::string _handleSocketData(epoll_event& poll_event);
-		Router& router;
-	};
+	std::string Response::notFound() {
+		return "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot "
+			   "Found";
+	}
 } // namespace sews
-
-#endif // !SEWS_SERVER_HPP

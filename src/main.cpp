@@ -27,17 +27,19 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 volatile sig_atomic_t sews::SignalHandler::flags = 0;
 
 int main(int argc, char* argv[]) {
-    try {
-        sews::SignalHandler::init();
-        sews::Server server;
-        auto [ port, maximumRequest, epollEventSize ] = sews::handleArgs(argc, argv);
-        server.start(port, maximumRequest);
-        while (sews::SignalHandler::getSignal() == 0) {
-            server.update(epollEventSize);
-        }
-        exit(EXIT_SUCCESS);
-    } catch (const std::exception& err) {
-        std::cerr << err.what();
-        exit(EXIT_FAILURE);
-    }
+	try {
+		sews::SignalHandler::init();
+		sews::Router router;
+		sews::Server server(router);
+		sews::initializeApp(router);
+		auto [ port, maximumRequest, epollEventSize ] = sews::handleArgs(argc, argv);
+		server.start(port, maximumRequest);
+		while (sews::SignalHandler::getSignal() == 0) {
+			server.update(epollEventSize);
+		}
+		exit(EXIT_SUCCESS);
+	} catch (const std::exception& err) {
+		std::cerr << err.what();
+		exit(EXIT_FAILURE);
+	}
 }

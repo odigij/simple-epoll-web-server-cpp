@@ -20,38 +20,13 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SEWS_SERVER_HPP
-#define SEWS_SERVER_HPP
+#ifndef SEWS_APP_HPP
+#define SEWS_APP_HPP
 
 #include "router.hpp"
 
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-#include <set>
-#include <string>
-#include <sys/epoll.h>
-
 namespace sews {
-	class Server {
-	  public:
-		Server(Router& router);
-		Server(Server&&) = default;
-		Server(const Server&) = default;
-		Server& operator=(Server&&) = delete;
-		Server& operator=(const Server&) = delete;
-		~Server();
-		void start(int port, int backlog);
-		void update(int poll_size);
-
-	  private:
-		int _flags, _file_descriptor, _epoll_file_descriptor;
-		std::set<int> _client_file_descriptors;
-		void _createSocket(int port);
-		void _initSocket(int backlog);
-		void _handleEvents(epoll_event& poll_event);
-		std::string _handleSocketData(epoll_event& poll_event);
-		Router& router;
-	};
+	void initializeApp(Router&);
 } // namespace sews
 
-#endif // !SEWS_SERVER_HPP
+#endif // !SEWS_APP_HPP

@@ -20,24 +20,24 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/router.hpp"
+#include "../include/sews.hpp"
 
 namespace sews {
-    Router::Router() {
-    }
-    Router::~Router() {
-    }
-    void Router::addRoute(const std::string method, std::string path, HandlerFunc handler) {
-        this->routes[ method + ' ' + path ] = handler;
-    }
-    std::string Router::handleRequest(const std::string& method, const std::string& path,
-                                      const std::string& body) {
-        const std::string key = method + ' ' + path;
-        if (this->routes.find(key) != routes.end()) {
-            return this->routes[ key ](body);
-        }
-        // TODO:
-        // - [] Make it return a definable class as template.
-        return "";
-    }
+
+	Router::Router() {
+	}
+	Router::~Router() {
+	}
+	void Router::addRoute(const std::string method, std::string path, HandlerFunc handler) {
+		this->routes[ method + path ] = handler;
+	}
+	std::string Router::handleRequest(const std::string& rawRequest) {
+		Request request(rawRequest);
+		if (this->routes.find(request.method + request.path) != routes.end()) {
+			return this->routes[ request.method + request.path ](request);
+		}
+		// TODO
+		// [] May return different types due to request content type.
+		return Response::notFound();
+	}
 } // namespace sews

@@ -20,38 +20,22 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SEWS_SERVER_HPP
-#define SEWS_SERVER_HPP
+#include "../include/request.hpp"
 
-#include "router.hpp"
-
-#include <openssl/err.h>
-#include <openssl/ssl.h>
-#include <set>
-#include <string>
-#include <sys/epoll.h>
+#include <sstream>
 
 namespace sews {
-	class Server {
-	  public:
-		Server(Router& router);
-		Server(Server&&) = default;
-		Server(const Server&) = default;
-		Server& operator=(Server&&) = delete;
-		Server& operator=(const Server&) = delete;
-		~Server();
-		void start(int port, int backlog);
-		void update(int poll_size);
+	Request::Request(const std::string& rawRequest) {
+		std::istringstream stream(rawRequest);
+		stream >> method >> path;
+		std::string headerLine;
 
-	  private:
-		int _flags, _file_descriptor, _epoll_file_descriptor;
-		std::set<int> _client_file_descriptors;
-		void _createSocket(int port);
-		void _initSocket(int backlog);
-		void _handleEvents(epoll_event& poll_event);
-		std::string _handleSocketData(epoll_event& poll_event);
-		Router& router;
-	};
+		while (std::getline(stream, headerLine) && headerLine != "\r") {
+			size_t pos = headerLine.find(":");
+			if (pos != std::string::npos) {
+				headers[ headerLine.substr(0, pos) ] = headerLine.substr(pos + 2);
+			}
+		}
+		std::getline(stream, body);
+	}
 } // namespace sews
-
-#endif // !SEWS_SERVER_HPP

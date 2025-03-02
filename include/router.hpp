@@ -23,28 +23,29 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SEWS_ROUTER_HPP
 #define SEWS_ROUTER_HPP
 
+#include "request.hpp"
+
 #include <functional>
 #include <string>
 #include <unordered_map>
 
 namespace sews {
 
-    class Router {
-      public:
-        Router();
-        Router(Router&&) = default;
-        Router(const Router&) = default;
-        Router& operator=(Router&&) = default;
-        Router& operator=(const Router&) = default;
-        ~Router();
-        using HandlerFunc = std::function<std::string(const std::string&)>;
-        void addRoute(const std::string method, std::string path, HandlerFunc handler);
-        std::string handleRequest(const std::string& method, const std::string& path,
-                                  const std::string& body);
+	class Router {
+	  public:
+		Router();
+		Router(Router&&) = default;
+		Router(const Router&) = default;
+		Router& operator=(Router&&) = default;
+		Router& operator=(const Router&) = default;
+		~Router();
+		using HandlerFunc = std::function<std::string(const Request request)>;
+		void addRoute(const std::string method, std::string path, HandlerFunc handler);
+		std::string handleRequest(const std::string& request);
 
-      private:
-        std::unordered_map<std::string, HandlerFunc> routes;
-    };
+	  private:
+		std::unordered_map<std::string, HandlerFunc> routes;
+	};
 
 } // namespace sews
 

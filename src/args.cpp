@@ -27,17 +27,17 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 
 namespace sews {
-    std::tuple<int, int, int> handleArgs(int argumentCount, char* argumentVector[]) {
-        int port = 8080, maximumRequest = 3, epollCount = 32, option;
+    std::tuple<int, int, int> handleArgs(int argument_count, char* argument_vector[]) {
+        int port = 8080, maximum_request = 3, epoll_event_size = 32, option;
         std::string message;
-        static struct option longOptions[] = {
+        static struct option long_options[] = {
             {"port", optional_argument, nullptr, 'p'},
             {"max-request", optional_argument, nullptr, 'm'},
             {"epoll-count", optional_argument, nullptr, 'e'},
             {"help", no_argument, 0, 'h'},
             {0, no_argument, 0, 0},
         };
-        while ((option = getopt_long(argumentCount, argumentVector, "p:m:e:h:", longOptions,
+        while ((option = getopt_long(argument_count, argument_vector, "p:m:e:h:", long_options,
                                      nullptr)) != -1) {
             switch (option) {
             case 'p':
@@ -47,14 +47,14 @@ namespace sews {
                               : "Invalid port value, 0 < val < 65535, default value is 8080.";
                 break;
             case 'm':
-                maximumRequest = optarg ? std::stoi(optarg) : maximumRequest;
-                message = maximumRequest >= 0 ? ""
-                                              : "Maximum request must be equal or "
-                                                "greater than zero, default value is 3.";
+                maximum_request = optarg ? std::stoi(optarg) : maximum_request;
+                message = maximum_request >= 0 ? ""
+                                               : "Maximum request must be equal or "
+                                                 "greater than zero, default value is 3.";
                 break;
             case 'e':
-                epollCount = optarg ? std::stoi(optarg) : epollCount;
-                message = epollCount > 0
+                epoll_event_size = optarg ? std::stoi(optarg) : epoll_event_size;
+                message = epoll_event_size > 0
                               ? ""
                               : "Epoll count must be greater than zero, default values is 32.";
                 break;
@@ -73,8 +73,8 @@ namespace sews {
             }
         }
         std::cout << "SEWS listens http://127.0.0.1:" << port
-                  << " | max-request: " << maximumRequest << ", epoll-count: " << epollCount
+                  << " | max-request: " << maximum_request << ", epoll-count: " << epoll_event_size
                   << '\n';
-        return std::make_tuple(port, maximumRequest, epollCount);
+        return std::make_tuple(port, maximum_request, epoll_event_size);
     }
 } // namespace sews
