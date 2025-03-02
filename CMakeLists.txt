@@ -4,23 +4,13 @@ project(${P_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCES
-    src/args.cpp
-    src/signal.cpp
-    src/request.cpp
-    src/response.cpp
-    src/router.cpp
-    src/server.cpp
-    src/main.cpp
-)
+file(GLOB SOURCES src/*.cpp)
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/app/entry.cpp")
     message(STATUS "Using user-defined app: app/entry.cpp")
     list(APPEND SOURCES app/entry.cpp)
-    add_compile_definitions(APP_EXISTS)
 else()
-    message(STATUS "Using default app: src/predefined_entry.cpp")
-    list(APPEND SOURCES src/predefined_entry.cpp)
+  message( FATAL_ERROR "${CMAKE_SOURCE_DIR}/app/entry.cpp does not exists." )
 endif()
 
 add_executable(${P_NAME} ${SOURCES})

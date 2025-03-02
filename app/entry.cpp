@@ -26,9 +26,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <sstream>
 
 void sews::initializeApp(sews::Router& router) {
-
-#ifndef APP_EXISTS
-
 	router.addRoute("GET", "/stylesheet.css", [](const Request& request) -> const std::string {
 		std::string file_path = "../assets/styles/stylesheet.css", html_content,
 					content_type = "text/css";
@@ -78,6 +75,4 @@ void sews::initializeApp(sews::Router& router) {
 		}
 		return responseStream.str();
 	});
-
-#endif
 }

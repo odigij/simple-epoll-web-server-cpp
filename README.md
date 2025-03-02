@@ -76,17 +76,16 @@ Ensure you have CMake and the required dependencies installed before proceeding.
 
 By default, the server comes with a predefined router and static content handling. To customize request handling, follow these steps:
 
-1. **Create a file named logic.cpp in the app directory.**
+1. **Create a file named entry.cpp in the app directory.**
 
 2. **Include the app_entry.hpp header:**
    ```cpp
    #include "../include/app_entry.hpp"
    ```
-3. **Define the sews::initializeApp function in logic.cpp to customize the router:**
+3. **Define the sews::initializeApp function in entry.cpp to customize the router:**
    ```cpp
    void sews::initializeApp(sews::Router& router) {
     // Define your custom routes and handlers here
-    // Check out src/predefined_entry.cpp as an example
     }
    ```
 This allows you to extend and modify the request handling logic according to your application’s needs.
