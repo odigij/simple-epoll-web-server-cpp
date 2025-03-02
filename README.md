@@ -77,9 +77,7 @@ Ensure you have CMake and the required dependencies installed before proceeding.
 By default, the server comes with a predefined router and static content handling. To customize request handling, follow these steps:
 
 1. **Create a file named logic.cpp in the app directory.**
-   ```bash
-   git clone <repository_url>
-   ```
+
 2. **Include the app_entry.hpp header:**
    ```cpp
    #include "../include/app_entry.hpp"
