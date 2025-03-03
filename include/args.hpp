@@ -26,7 +26,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <tuple>
 
 namespace sews {
-    std::tuple<int, int, int> handleArgs(int argument_count, char* argument_vector[]);
+	std::tuple<int, int, int, int, int> handleArgs(int argument_count, char* argument_vector[]);
 } // namespace sews
 
 #endif // !SEWS_ARGS_HPP

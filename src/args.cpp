@@ -27,17 +27,20 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <string>
 
 namespace sews {
-	std::tuple<int, int, int> handleArgs(int argument_count, char* argument_vector[]) {
-		int port = 8080, maximum_request = 3, epoll_event_size = 32, option;
+	std::tuple<int, int, int, int, int> handleArgs(int argument_count, char* argument_vector[]) {
+		int port = 8080, maximum_request = 3, epoll_event_size = 32, timeout = 3000, flags = 0,
+			option;
 		std::string message;
 		static struct option long_options[] = {
 			{"port", optional_argument, nullptr, 'p'},
 			{"max-request", optional_argument, nullptr, 'm'},
 			{"epoll-count", optional_argument, nullptr, 'e'},
+			{"timeout", optional_argument, nullptr, 't'},
+			{"flags", optional_argument, nullptr, 'f'},
 			{"help", no_argument, 0, 'h'},
 			{0, no_argument, 0, 0},
 		};
-		while ((option = getopt_long(argument_count, argument_vector, "p:m:e:h:", long_options,
+		while ((option = getopt_long(argument_count, argument_vector, "p:m:e:t:f:h:", long_options,
 									 nullptr)) != -1) {
 			switch (option) {
 			case 'p':
@@ -58,10 +61,30 @@ namespace sews {
 							  ? ""
 							  : "Epoll count must be greater than zero, default values is 32.";
 				break;
+			case 't':
+				timeout = optarg ? std::stoi(optarg) : epoll_event_size;
+				message =
+					timeout >= 0
+						? ""
+						: "Timeout must be equal or greater than zero, default values is 3000.";
+				break;
+			case 'f':
+				flags = optarg ? std::stoi(optarg) : epoll_event_size;
+				message = flags >= 0
+							  ? ""
+							  : "Flags must be equal or greater than zero, default values is 3000.";
+				break;
 			case 'h':
-				std::cout << "sews -p <value> -m <value> -e <value>\nsews -h\nsews "
-							 "--port <value> "
-							 "--max-request <value> --epoll-count <value>\nsews --help\n";
+				std::cout << "sews -p <value>\n"
+							 "sews -m <value>\n"
+							 "sews -e <value>\n"
+							 "sews -t <value>\n"
+							 "sews --port <value>\n"
+							 "sews --max-request <value>\n"
+							 "sews --epoll-count <value>\n"
+							 "sews --timeout <value>\n"
+							 "sews --flags <value>\n"
+							 "sews --help\n";
 				exit(EXIT_SUCCESS);
 			default:
 				message = "invalid argument, use --help for usage";
@@ -72,6 +95,6 @@ namespace sews {
 				exit(EXIT_FAILURE);
 			}
 		}
-		return std::make_tuple(port, maximum_request, epoll_event_size);
+		return std::make_tuple(port, maximum_request, epoll_event_size, timeout, flags);
 	}
 } // namespace sews

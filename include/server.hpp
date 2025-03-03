@@ -40,7 +40,7 @@ namespace sews {
 		Server& operator=(Server&&) = delete;
 		Server& operator=(const Server&) = delete;
 		~Server();
-		void start(int port, int backlog);
+		void start(int port, int backlog, int timeout, int flags);
 		void update(int poll_size);
 
 	  private:
