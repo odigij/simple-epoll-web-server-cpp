@@ -83,7 +83,7 @@ namespace sews {
 							 "sews --max-request <value>\n"
 							 "sews --epoll-count <value>\n"
 							 "sews --timeout <value>\n"
-							 "sews --flags <value>\n"
+							 "sews --flags <value>\tset it 0 to use no TLS or 1 to use TLS\n"
 							 "sews --help\n";
 				exit(EXIT_SUCCESS);
 			default:

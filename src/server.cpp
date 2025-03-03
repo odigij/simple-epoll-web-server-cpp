@@ -38,7 +38,7 @@ namespace sews {
 	}
 	Server::~Server() {
 		for (auto connection : this->_connections) {
-			if (this->_flags & 2) {
+			if (this->_flags & 1) {
 				SSL_shutdown(connection->ssl);
 				SSL_free(connection->ssl);
 			}
@@ -53,7 +53,7 @@ namespace sews {
 		this->_flags = flags;
 		this->_createSocket(port);
 		this->_initSocket(backlog);
-		if (this->_flags & 2) {
+		if (this->_flags & 1) {
 			std::cout << "SEWS listens https://127.0.0.1:" << port << "| TLS" << '\n';
 			this->_setUpTls();
 		} else {
@@ -122,7 +122,7 @@ namespace sews {
 					return;
 				}
 				int op, ret;
-				if (this->_flags & 2) {
+				if (this->_flags & 1) {
 					connection->ssl = SSL_new(this->_ssl_ctx);
 					if (!connection->ssl) {
 						std::cerr << "LOG: SSL_new() failed.\n";
@@ -138,7 +138,7 @@ namespace sews {
 				epoll_event client_epoll_event;
 				client_epoll_event.events = EPOLLIN;
 				client_epoll_event.data.ptr = connection;
-				if (this->_flags & 2 && ret <= 0) {
+				if (this->_flags & 1 && ret <= 0) {
 					int err = SSL_get_error(connection->ssl, ret);
 					if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
 						client_epoll_event.events =
@@ -157,7 +157,7 @@ namespace sews {
 							  connection->file_descriptor, &client_epoll_event) != 0) {
 					std::cerr << "LOG: Client epoll register failed.\n";
 					close(connection->file_descriptor);
-					if (this->_flags & 2) {
+					if (this->_flags & 1) {
 						SSL_shutdown(connection->ssl);
 						SSL_free(connection->ssl);
 					}
@@ -171,7 +171,7 @@ namespace sews {
 			if (poll_event.events & (EPOLLHUP | EPOLLERR)) {
 				epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, connection->file_descriptor,
 						  nullptr);
-				if (this->_flags & 2) {
+				if (this->_flags & 1) {
 					SSL_shutdown(connection->ssl);
 					SSL_free(connection->ssl);
 				}
@@ -184,7 +184,7 @@ namespace sews {
 				if (response.empty()) {
 					return;
 				}
-				if (this->_flags & 2) {
+				if (this->_flags & 1) {
 					int bytes_written =
 						SSL_write(connection->ssl, response.c_str(), response.size());
 					if (bytes_written <= 0) {
@@ -247,7 +247,7 @@ namespace sews {
 		Server::Connection* connection = static_cast<Server::Connection*>(poll_event.data.ptr);
 		char buffer[ 1024 * 5 ];
 		ssize_t bytes_read;
-		if (this->_flags & 2) {
+		if (this->_flags & 1) {
 			bytes_read = SSL_read(connection->ssl, buffer, sizeof(buffer) - 1);
 		} else {
 			bytes_read = read(connection->file_descriptor, buffer, sizeof(buffer) - 1);
