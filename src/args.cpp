@@ -72,9 +72,6 @@ namespace sews {
 				exit(EXIT_FAILURE);
 			}
 		}
-		std::cout << "SEWS listens http://127.0.0.1:" << port
-				  << " | max-request: " << maximum_request << ", epoll-count: " << epoll_event_size
-				  << '\n';
 		return std::make_tuple(port, maximum_request, epoll_event_size);
 	}
 } // namespace sews

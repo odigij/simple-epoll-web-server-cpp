@@ -36,8 +36,6 @@ namespace sews {
 		if (this->routes.find(request.method + request.path) != routes.end()) {
 			return this->routes[ request.method + request.path ](request);
 		}
-		// TODO
-		// May return different types due to request content type.
 		return Response::notFound();
 	}
 } // namespace sews

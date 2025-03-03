@@ -45,12 +45,18 @@ namespace sews {
 
 	  private:
 		int _flags, _file_descriptor, _epoll_file_descriptor;
-		std::set<int> _client_file_descriptors;
+		struct Connection {
+			int file_descriptor;
+			SSL* ssl;
+		};
+		std::set<Server::Connection*> _connections;
+		SSL_CTX* _ssl_ctx;
+		Router& _router;
 		void _createSocket(int port);
 		void _initSocket(int backlog);
 		void _handleEvents(epoll_event& poll_event);
 		std::string _handleSocketData(epoll_event& poll_event);
-		Router& router;
+		void _setUpTls();
 	};
 } // namespace sews
 

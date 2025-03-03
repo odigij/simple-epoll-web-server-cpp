@@ -4,29 +4,24 @@ project(${P_NAME})
 
 set(CMAKE_CXX_STANDARD 17)
 
-set(SOURCES
-    src/args.cpp
-    src/signal.cpp
-    src/request.cpp
-    src/response.cpp
-    src/router.cpp
-    src/server.cpp
-    src/main.cpp
-)
+find_package(OpenSSL REQUIRED)
+if(NOT OpenSSL_FOUND)
+    message(FATAL_ERROR "OpenSSL not found. Install it with: sudo apt install libssl-dev")
+endif()
+
+file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/app/entry.cpp")
     message(STATUS "Including: app/entry.cpp")
-    list(APPEND SOURCES app/entry.cpp)
-
-    if(EXISTS "${CMAKE_SOURCE_DIR}/app/handlers.cpp")
-        message(STATUS "Including: app/handlers.cpp")
-        list(APPEND SOURCES app/handlers.cpp)
-    else()
-        message(WARNING "app/handlers.cpp is missing. Your app may not function correctly.")
-    endif()
+    file(GLOB APP_SOURCES ${CMAKE_SOURCE_DIR}/app/*.cpp)
+    list(APPEND SOURCES ${APP_SOURCES})
 else()
-    message(FATAL_ERROR "Missing required: app/entry.cpp")
+    message(WARNING "app/entry.cpp is missing. Your app may not function correctly.")
 endif()
 
 add_executable(${P_NAME} ${SOURCES})
-target_include_directories(${P_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/app)
+
+target_include_directories(${P_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
+
+target_link_libraries(${P_NAME} OpenSSL::SSL OpenSSL::Crypto)
+

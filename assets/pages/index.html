@@ -1,10 +1,21 @@
 <!doctype html>
 <html>
   <head>
-    <link rel="stylesheet" type="text/css" href="stylesheet.css" />
-    <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
-    <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png" />
-    <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png" />
+    <link rel="stylesheet" type="text/css" href="styles/stylesheet.css" />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="pages/apple-touch-icon.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="pages/favicon-32x32.png" />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="pages/favicon-16x16.png" />
     <link rel="manifest" href="site.webmanifest" />
     <meta charset="UTF-8" />
     <title>Simple Epoll Web Server</title>
@@ -41,6 +52,7 @@
           </li>
           <li>Serves HTML & CSS - Can deliver static web content.</li>
           <li>Custom Routes - Define your own response functions.</li>
+          <li>TLS - Uses OpenSSL to secure connections.</li>
         </ul>
       </div>
 
@@ -51,6 +63,7 @@
           <li>C++17 or later</li>
           <li>GCC or Clang compiler</li>
           <li>CMake</li>
+          <li>OpenSSL</li>
         </ul>
       </div>
 
@@ -62,6 +75,12 @@
           <li><code>mkdir build &amp;&amp; cd build</code></li>
           <li><code>cmake ..</code></li>
           <li><code>make</code></li>
+          <li>
+            <code>
+              openssl req -x509 -newkey rsa:4096 -keyout server.key -out
+              server.crt -days 365 -nodes
+            </code>
+          </li>
           <li><code>./sews</code></li>
         </ul>
       </div>

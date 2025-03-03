@@ -20,6 +20,8 @@ This project is an **experimental** effort to understand the mechanics of a web 
 
 - **Customizable router** – Define controllers to manage different request paths.
 
+- **TLS** – Uses OpenSSL to secure connections.
+
 # Requirements
 
 - **Linux OS** (or WSL if on Windows)
@@ -29,6 +31,8 @@ This project is an **experimental** effort to understand the mechanics of a web 
 - **GCC or Clang compiler**
 
 - **CMake**
+
+- **OpenSSL**
 
 ## Build and Run Instructions
 
@@ -64,7 +68,12 @@ Ensure you have CMake and the required dependencies installed before proceeding.
    make
    ```
 
-6. **Run the Executable:**
+6. **Generate Cert:**
+   ```bash
+   openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes
+   ```
+
+7. **Run the Executable:**
    ```bash
    ./sews
    ```
