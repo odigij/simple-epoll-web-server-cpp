@@ -1,6 +1,9 @@
 <!doctype html>
-<html>
+<html lang="en">
   <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Epoll Web Server</title>
     <link rel="stylesheet" type="text/css" href="styles/stylesheet.css" />
     <link
       rel="apple-touch-icon"
@@ -16,107 +19,163 @@
       type="image/png"
       sizes="16x16"
       href="pages/favicon-16x16.png" />
-    <link rel="manifest" href="site.webmanifest" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css" />
+    <link rel="manifest" href="pages/site.webmanifest" />
     <meta charset="UTF-8" />
-    <title>Simple Epoll Web Server</title>
   </head>
-
   <body>
-    <div class="sews_div">
-      <h1 class="sews_title">Simple Epoll Web Server</h1>
+    <h1 class="sews_title">Simple Epoll Web Server</h1>
 
-      <div class="sews_section">
-        <h2 class="sews_heading">About</h2>
-        <p class="sews_paragraph">
-          This project is an experimental effort to understand the mechanics of
-          a web server framework that is usually abstracted from developers. It
-          is a web server built from scratch in C++, utilizing epoll for
-          asynchronous, non-blocking I/O. It is Linux-specific, as it relies on
-          POSIX system calls and the
-          <code>sys/epoll.h</code>
-          header.
-        </p>
-      </div>
+    <section id="section_about" class="sews_section">
+      <h2 class="sews_heading"> About</h2>
+      <p class="sews_paragraph">
+        The
+        <strong>Simple Epoll Web Server (SEWS)</strong>
+        is a lightweight, single-threaded web server written in
+        <strong>C++.</strong>
+        It explores
+        <strong>epoll-based, non-blocking I/O</strong>
+        and
+        <strong>event-driven architectures.</strong>
+        SEWS is
+        <strong>Linux-specific,</strong>
+        relying on
+        <code class="sews_code">sys/epoll.h</code>
+        and POSIX system calls.
+      </p>
+    </section>
 
-      <div class="sews_section">
-        <h2 class="sews_heading">Features</h2>
-        <ul class="sews_list">
-          <li>Linux-based - Uses epoll and POSIX APIs.</li>
-          <li>Single-threaded - Efficient event-driven architecture.</li>
-          <li>
-            Command-Line Options - Supports parameters (--port, --max-request,
-            --epoll-count, --help).
-          </li>
-          <li>
-            Non-blocking mode - Uses epoll for scalable, event-driven I/O.
-          </li>
-          <li>Serves HTML & CSS - Can deliver static web content.</li>
-          <li>Custom Routes - Define your own response functions.</li>
-          <li>TLS - Uses OpenSSL to secure connections.</li>
-        </ul>
-      </div>
+    <section id="section_technical" class="sews_section">
+      <h2 class="sews_heading"> Technical Highlights</h2>
+      <ul class="sews_list sews_list_highlight">
+        <li>
+          <strong>Epoll-based Event Handling</strong>
+          – Uses
+          <code class="sews_code">epoll</code>
+          for efficient, non-blocking I/O.
+        </li>
+        <li>
+          <strong>Minimalist, Single-threaded Design</strong>
+          – Event-driven programming without multi-threading.
+        </li>
+        <li>
+          <strong>Command-Line Configuration</strong>
+          – Supports parameters:
+          <ul>
+            <li>
+              <code class="sews_code">--port</code>
+              (Set server’s listening port)
+            </li>
+            <li>
+              <code class="sews_code">--max-request</code>
+              (Define max concurrent requests)
+            </li>
+            <li>
+              <code class="sews_code">--epoll-count</code>
+              (Adjust epoll event count)
+            </li>
+            <li>
+              <code class="sews_code">--timeout</code>
+              (Timeout of incomming connection)
+            </li>
+            <li>
+              <code class="sews_code">--flags</code>
+              (Configuration flags)
+            </li>
+            <li>
+              <code class="sews_code">--help</code>
+              (Show available options)
+            </li>
+          </ul>
+        </li>
+        <li>
+          <strong>Static Content Serving</strong>
+          – Handles
+          <code class="sews_code">HTML</code>
+          &
+          <code class="sews_code">CSS</code>
+          delivery.
+        </li>
+        <li>
+          <strong>OpenSSL Integration</strong>
+          – Implements HTTPS support.
+        </li>
+      </ul>
+    </section>
 
-      <div class="sews_section">
-        <h2 class="sews_heading">Requirements</h2>
-        <ul class="sews_list">
-          <li>Linux OS (or WSL if on Windows)</li>
-          <li>C++17 or later</li>
-          <li>GCC or Clang compiler</li>
-          <li>CMake</li>
-          <li>OpenSSL</li>
-        </ul>
-      </div>
+    <section id="section_requirements" class="sews_section">
+      <h2 class="sews_heading"> Requirements</h2>
+      <ul class="sews_list sews_list_requirements">
+        <li>Linux OS (or WSL for Windows)</li>
+        <li>C++17 or later</li>
+        <li>GCC or Clang compiler</li>
+        <li>CMake</li>
+        <li>OpenSSL</li>
+      </ul>
+    </section>
 
-      <div class="sews_section">
-        <h2 class="sews_heading">Steps to Build and Run</h2>
-        <ul class="sews_list">
-          <li><code>git clone &lt;repository_url&gt;</code></li>
-          <li><code>cd &lt;repository_name&gt;</code></li>
-          <li><code>mkdir build &amp;&amp; cd build</code></li>
-          <li><code>cmake ..</code></li>
-          <li><code>make</code></li>
-          <li>
-            <code>
-              openssl req -x509 -newkey rsa:4096 -keyout server.key -out
-              server.crt -days 365 -nodes
-            </code>
-          </li>
-          <li><code>./sews</code></li>
-        </ul>
-      </div>
+    <section id="section_build" class="sews_section">
+      <h2 class="sews_heading">󰆍 Building and Running</h2>
+      <ul class="sews_list sews_list_instructions">
+        <li>
+          <code class="sews_code">git clone &lt;repository_url&gt;</code>
+        </li>
+        <li><code class="sews_code">cd &lt;repository_name&gt;</code></li>
+        <li><code class="sews_code">mkdir build && cd build</code></li>
+        <li><code class="sews_code">cmake ..</code></li>
+        <li><code class="sews_code">make</code></li>
+        <li>
+          <code class="sews_code">
+            openssl req -x509 -newkey rsa:4096 -keyout server.key -out
+            server.crt -days 365 -nodes
+          </code>
+        </li>
+        <li><code class="sews_code">./sews</code></li>
+      </ul>
+    </section>
 
-      <div class="sews_section">
-        <h2 class="sews_heading">Custom Routing</h2>
-        <p class="sews_paragraph">
-          By default, the server includes predefined routing and static content
-          handling. To define your own request handlers:
-        </p>
-        <ol class="sews_list">
-          <li>
-            Create a file named
-            <code>entry.cpp</code>
-            in the
-            <code>app</code>
-            directory.
-          </li>
-          <li>
-            Include the
-            <code>app_entry.hpp</code>
-            header:
-            <pre><code>#include "../include/app_entry.hpp"</code></pre>
-          </li>
-          <li>
-            Define the
-            <code>sews::initializeApp</code>
-            function in
-            <code>entry.cpp</code>
-            :
-            <pre><code>void sews::initializeApp(sews::Router& router) {
-    // Define your custom handlers & app logic here
-}</code></pre>
-          </li>
-        </ol>
-      </div>
-    </div>
+    <section id="section_routing" class="sews_section">
+      <h2 class="sews_heading">󱌣 Custom Routing</h2>
+      <p class="sews_paragraph">
+        Normally SEWS comes up with default
+        <code class="sews_code">app</code>
+        folder with some handlers to display this page. To define custom routes,
+        follow these steps:
+      </p>
+      <ol class="sews_list sews_list_build_run">
+        <li>
+          Create an
+          <code class="sews_code">entry.cpp</code>
+          file inside
+          <code class="sews_code">app</code>
+          directory.
+        </li>
+        <li>
+          Include the necessary header:
+          <pre
+            class="sews_pre"><code class="sews_code">#include "../include/app_entry.hpp"</code></pre>
+        </li>
+        <li>
+          Implement the
+          <code class="sews_code">sews::initializeApp</code>
+          function:
+          <pre
+            class="sews_pre"><code class="sews_code">void sews::initializeApp(sews::Router& router) {
+            // Define your custom handlers & application logic here
+          }</code></pre>
+        </li>
+      </ol>
+    </section>
+
+    <footer class="sews_footer">
+      <p>
+        2025 Yiğit Leblebicier  This project is open-source under the
+        <a target="_blank" href="https://opensource.org/licenses/MIT">
+          MIT License
+        </a>
+      </p>
+    </footer>
   </body>
 </html>

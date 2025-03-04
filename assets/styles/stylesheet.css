@@ -1,51 +1,107 @@
 body {
-  background-color: #d2f0f0;
-  font-family: Arial, sans-serif;
-}
-
-.sews_div {
-  max-width: 80%;
-  margin: 5% auto 5% auto;
-  padding: 20px;
-  background: white;
-  border-radius: 10px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+  background-color: #f4f9f9;
+  font-family: "JetBrainsMono Nerd Font", monospace;
+  color: #333;
+  margin: 0;
+  padding: 0;
 }
 
 .sews_title {
-  color: #333;
-  font-size: 25pt;
+  color: #1e3a5f;
+  font-size: 28pt;
   text-align: center;
-  margin-bottom: 20px;
+  margin-bottom: 25px;
 }
 
 .sews_heading {
-  color: #333;
-  font-size: 20pt;
-  margin-top: 20px;
+  color: #1e3a5f;
+  font-size: 22pt;
+  margin-top: 30px;
+  border-bottom: 3px solid #1e3a5f;
+  padding-bottom: 5px;
 }
 
 .sews_section {
   margin-bottom: 30px;
-  border-bottom: 2px solid #333;
-  padding-bottom: 10px;
+  padding-bottom: 15px;
+  max-width: 75%;
+  margin: 40px auto;
+  padding: 25px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.sews_list_highlight li::marker {
+  content: " ";
+}
+
+.sews_list_highlight ul li::marker {
+  content: "󰡕 ";
+}
+
+.sews_list_requirements li::marker {
+  content: " ";
+}
+
+.sews_list_instructions li::marker {
+  content: "󰞷 ";
+}
+
+.sews_list_build_run li::marker {
+  content: "󰁚 ";
 }
 
 .sews_list {
   list-style: none;
   padding-left: 20px;
-  font-size: 15pt;
+  font-size: 16pt;
+}
+
+.sews_list li {
+  margin-bottom: 10px;
 }
 
 .sews_list li::before {
-  content: "+ ";
-  color: #333;
-  font-weight: bold;
-  padding-right: 5px;
+  color: #1e3a5f;
+  font-weight: normal;
+}
+
+.sews_list li::marker {
+  color: #1e3a5f;
+  font-weight: normal;
 }
 
 .sews_paragraph {
-  color: #333;
-  font-size: 15pt;
-  line-height: 1.6;
+  font-size: 16pt;
+  line-height: 1.8;
+}
+
+.sews_code {
+  font-family: "Courier New", monospace;
+  background: #eef2f3;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 16pt;
+}
+
+.sews_pre {
+  background: #eef2f3;
+  padding: 10px;
+  border-radius: 5px;
+  overflow-x: auto;
+  font-size: 16pt;
+  line-height: 1.5;
+}
+
+.sew_pre .sews_code {
+  background: none;
+  padding: 0;
+}
+
+.sews_footer p {
+  text-align: center;
+  color: #1e3a5f;
+  font-size: 14pt;
+  margin-bottom: 25px;
 }
