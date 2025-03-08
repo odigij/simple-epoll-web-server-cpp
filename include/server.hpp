@@ -30,6 +30,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <set>
 #include <string>
 #include <sys/epoll.h>
+#include <vector>
 
 namespace sews {
 	class Server {
@@ -40,8 +41,8 @@ namespace sews {
 		Server& operator=(Server&&) = delete;
 		Server& operator=(const Server&) = delete;
 		~Server();
-		void start(int port, int backlog, int timeout, int flags);
-		void update(int poll_size);
+		void start(int port, int backlog, int timeout, int flags, int epoll_pool_size);
+		void update();
 
 	  private:
 		int _flags, _file_descriptor, _epoll_file_descriptor, _timeout;
@@ -50,6 +51,7 @@ namespace sews {
 			SSL* ssl;
 		};
 		std::set<Server::Connection*> _connections;
+		std::vector<epoll_event> _epoll_pool;
 		SSL_CTX* _ssl_ctx;
 		Router& _router;
 		void _createSocket(int port);

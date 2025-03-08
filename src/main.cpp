@@ -34,9 +34,9 @@ int main(int argc, char* argv[]) {
 		sews::initializeApp(router);
 		auto [ port, maximumRequest, epollEventSize, timeout, flags ] =
 			sews::handleArgs(argc, argv);
-		server.start(port, maximumRequest, timeout, flags);
+		server.start(port, maximumRequest, timeout, flags, epollEventSize);
 		while (sews::SignalHandler::getSignal() == 0) {
-			server.update(epollEventSize);
+			server.update();
 		}
 		exit(EXIT_SUCCESS);
 	} catch (const std::exception& err) {

@@ -50,11 +50,12 @@ namespace sews {
 		close(this->_epoll_file_descriptor);
 		close(this->_file_descriptor);
 	}
-	void Server::start(int port, int backlog, int timeout, int flags) {
+	void Server::start(int port, int backlog, int timeout, int flags, int epoll_pool_size) {
 		this->_flags = flags;
 		this->_createSocket(port);
 		this->_initSocket(backlog);
 		this->_timeout = timeout;
+		this->_epoll_pool.resize(epoll_pool_size);
 		std::ostringstream consoleOutput;
 		consoleOutput << "SEWS listens ";
 		if (this->_flags & 1) {
@@ -64,15 +65,16 @@ namespace sews {
 			consoleOutput << "http";
 		}
 		consoleOutput << "://127.0.0.1:" << port << " - backlog: " << backlog
-					  << " - timeout: " << timeout << " - flags: " << flags << '\n';
+					  << " - timeout: " << timeout << " - flags: " << flags
+					  << " - pool-size: " << epoll_pool_size << '\n';
 		std::cout << consoleOutput.str();
 	}
-	void Server::update(int event_poll_size) {
-		struct epoll_event events[ event_poll_size ];
+	void Server::update() {
 		const int active_event_count =
-			epoll_wait(this->_epoll_file_descriptor, &*events, event_poll_size, this->_timeout);
+			epoll_wait(this->_epoll_file_descriptor, this->_epoll_pool.data(),
+					   this->_epoll_pool.size(), this->_timeout);
 		for (int index(0); index < active_event_count; index++) {
-			this->_handleEvents(events[ index ]);
+			this->_handleEvents(this->_epoll_pool.at(index));
 		}
 	}
 	void Server::_createSocket(int port) {
@@ -152,6 +154,8 @@ namespace sews {
 							(err == SSL_ERROR_WANT_READ) ? EPOLLIN : EPOLLOUT;
 					} else {
 						std::cerr << "LOG: SSL handshake failed.\n";
+						std::string msg = "use https you dork";
+						send(connection->file_descriptor, msg.data(), msg.size(), 0);
 						ERR_print_errors_fp(stderr);
 						SSL_shutdown(connection->ssl);
 						SSL_free(connection->ssl);
@@ -253,12 +257,9 @@ namespace sews {
 		// FIX:   Implement the rest of the control flows.
 		Server::Connection* connection = static_cast<Server::Connection*>(poll_event.data.ptr);
 		char buffer[ 1024 * 5 ];
-		ssize_t bytes_read;
-		if (this->_flags & 1) {
-			bytes_read = SSL_read(connection->ssl, buffer, sizeof(buffer) - 1);
-		} else {
-			bytes_read = read(connection->file_descriptor, buffer, sizeof(buffer) - 1);
-		}
+		ssize_t bytes_read = (this->_flags & 1) == 1
+								 ? SSL_read(connection->ssl, buffer, sizeof(buffer) - 1)
+								 : read(connection->file_descriptor, buffer, sizeof(buffer) - 1);
 		std::string response;
 		if (bytes_read >= 0) {
 			buffer[ bytes_read ] = '\0';
