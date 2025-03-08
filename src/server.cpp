@@ -27,6 +27,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <netinet/in.h>
 #include <openssl/ssl.h>
+#include <sstream>
 #include <stdexcept>
 #include <string>
 #include <sys/epoll.h>
@@ -53,17 +54,23 @@ namespace sews {
 		this->_flags = flags;
 		this->_createSocket(port);
 		this->_initSocket(backlog);
+		this->_timeout = timeout;
+		std::ostringstream consoleOutput;
+		consoleOutput << "SEWS listens ";
 		if (this->_flags & 1) {
-			std::cout << "SEWS listens https://127.0.0.1:" << port << "| TLS" << '\n';
+			consoleOutput << "https";
 			this->_setUpTls();
 		} else {
-			std::cout << "SEWS listens http://127.0.0.1:" << port << '\n';
+			consoleOutput << "http";
 		}
+		consoleOutput << "://127.0.0.1:" << port << " - backlog: " << backlog
+					  << " - timeout: " << timeout << " - flags: " << flags << '\n';
+		std::cout << consoleOutput.str();
 	}
 	void Server::update(int event_poll_size) {
 		struct epoll_event events[ event_poll_size ];
 		const int active_event_count =
-			epoll_wait(this->_epoll_file_descriptor, &*events, event_poll_size, 3000);
+			epoll_wait(this->_epoll_file_descriptor, &*events, event_poll_size, this->_timeout);
 		for (int index(0); index < active_event_count; index++) {
 			this->_handleEvents(events[ index ]);
 		}

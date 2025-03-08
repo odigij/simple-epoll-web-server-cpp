@@ -44,7 +44,7 @@ namespace sews {
 		void update(int poll_size);
 
 	  private:
-		int _flags, _file_descriptor, _epoll_file_descriptor;
+		int _flags, _file_descriptor, _epoll_file_descriptor, _timeout;
 		struct Connection {
 			int file_descriptor;
 			SSL* ssl;
