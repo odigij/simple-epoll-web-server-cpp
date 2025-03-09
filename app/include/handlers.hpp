@@ -29,8 +29,12 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace app {
 	std::string getContentType(const std::string& path);
-	const std::string handleIndex(const sews::Request& request);
-	const std::string handleStaticFile(const sews::Request& request);
+	const std::string handleIndex(const sews::Request& request,
+								  const std::unordered_map<std::string, std::string>& params);
+	const std::string handleStaticFile(const sews::Request& request,
+									   const std::unordered_map<std::string, std::string>& params);
+	const std::string apiTest(const sews::Request& request,
+							  const std::unordered_map<std::string, std::string>& params);
 } // namespace app
 
 #endif

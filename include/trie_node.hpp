@@ -9,15 +9,18 @@
 
 namespace sews {
 	struct Trie {
+		using Handler = std::function<std::string(
+			const Request&, const std::unordered_map<std::string, std::string>&)>;
+		std::unordered_map<std::string, Trie*> children;
+		std::unordered_map<std::string, Handler> methods;
+
 		~Trie() {
-			for (auto& childPair : children) {
+			for (auto& childPair : this->children) {
 				delete childPair.second;
 			}
 		}
-		using Handler = std::function<std::string(const Request&)>;
-		std::unordered_map<std::string, Trie*> children;
-		std::unordered_map<std::string, Handler> methods;
 	};
+
 } // namespace sews
 
 #endif // !SEWS_TRIE_NODE_HPP

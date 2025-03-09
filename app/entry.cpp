@@ -24,8 +24,10 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include "include/handlers.hpp"
 
 void sews::initializeApp(sews::Router& router) {
-	router.addRoute("GET", "/", app::handleIndex);
-	router.addRoute("GET", "/pages/favicon-16x16.png", app::handleStaticFile);
-	router.addRoute("GET", "/pages/apple-touch-icon.png", app::handleStaticFile);
-	router.addRoute("GET", "/styles/stylesheet.css", app::handleStaticFile);
+	router.addRoute("GET", {"/", "/home"}, app::handleIndex);
+	router.addRoute(
+		"GET",
+		{"/pages/favicon-16x16.png", "/pages/apple-touch-icon.png", "/styles/stylesheet.css"},
+		app::handleStaticFile);
+	router.addRoute("GET", {"/api/test/:id"}, app::apiTest);
 }

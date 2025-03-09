@@ -37,7 +37,7 @@ namespace sews {
 		Router& operator=(Router&&) = default;
 		Router& operator=(const Router&) = default;
 		~Router();
-		void addRoute(std::string method, std::string router, Trie::Handler function);
+		void addRoute(std::string method, std::vector<std::string> routes, Trie::Handler function);
 		std::string handleRequest(const std::string& raw_request);
 
 	  private:

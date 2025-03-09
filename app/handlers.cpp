@@ -43,7 +43,8 @@ namespace app {
 		}
 		return "application/octet-stream";
 	}
-	const std::string handleStaticFile(const sews::Request& request) {
+	const std::string handleStaticFile(const sews::Request& request,
+									   const std::unordered_map<std::string, std::string>& params) {
 		std::string filePath = "../assets" + request.path;
 		std::ifstream file(filePath, std::ios::binary);
 		std::ostringstream responseStream;
@@ -68,7 +69,8 @@ namespace app {
 		}
 		return responseStream.str();
 	}
-	const std::string handleIndex(const sews::Request& request) {
+	const std::string handleIndex(const sews::Request& request,
+								  const std::unordered_map<std::string, std::string>& params) {
 		std::string content;
 		std::ostringstream responseStream;
 		std::ifstream file("../assets/pages/index.html", std::ios::binary);
@@ -90,5 +92,14 @@ namespace app {
 						   << content;
 		}
 		return responseStream.str();
+	}
+
+	const std::string apiTest(const sews::Request& request,
+							  const std::unordered_map<std::string, std::string>& params) {
+		auto it = params.find("id");
+		if (it != params.end()) {
+			return "User profile for user: " + it->second;
+		}
+		return "User ID not provided";
 	}
 } // namespace app

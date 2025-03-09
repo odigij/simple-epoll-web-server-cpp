@@ -22,14 +22,33 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "../include/response.hpp"
 
+#include <fstream>
+#include <sstream>
+
 namespace sews {
 	std::string Response::ok(const std::string& body, const std::string& contentType) {
 		return "HTTP/1.1 200 OK\r\nContent-Type: " + contentType +
 			   "\r\nContent-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
 	}
 
+	// TODO: Separate it based on content-type.
 	std::string Response::notFound() {
-		return "HTTP/1.1 404 Not Found\r\nContent-Type: text/plain\r\nContent-Length: 9\r\n\r\nNot "
-			   "Found";
+		std::string content;
+		std::ostringstream responseStream;
+		std::ifstream file("../assets/pages/404.html", std::ios::binary);
+		if (file) {
+			content.insert(content.end(), std::istreambuf_iterator<char>(file),
+						   std::istreambuf_iterator<char>());
+			responseStream << "HTTP/1.1 404 Not Found\r\n"
+						   << "Content-Type: " << "text/html" << "\r\n"
+						   << "Content-Length: " << content.size() << "\r\n"
+						   << "\r\n"
+						   << content;
+		} else {
+			responseStream << "HTTP/1.1 404 Not Found\r\nContent-Type: "
+							  "text/plain\r\nContent-Length: 9\r\n\r\nNot "
+							  "Found";
+		}
+		return responseStream.str();
 	}
 } // namespace sews

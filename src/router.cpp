@@ -32,7 +32,8 @@ namespace sews {
 	}
 
 	Router::~Router() {
-		// TODO: Handle root clean up.
+		delete this->root;
+		this->root = nullptr;
 	}
 
 	void Router::split(std::vector<std::string>& parts, std::string& route) {
@@ -45,36 +46,57 @@ namespace sews {
 		}
 	}
 
-	void Router::addRoute(std::string method, std::string route, Trie::Handler function) {
-		std::vector<std::string> parts;
-		split(parts, route);
-		Trie* node = root;
-		for (const std::string& part : parts) {
-			if (node->children.find(part) == node->children.end()) {
-				node->children[ part ] = new Trie();
+	void Router::addRoute(std::string method, std::vector<std::string> routes,
+						  Trie::Handler function) {
+		for (std::string route : routes) {
+			std::vector<std::string> parts;
+			split(parts, route);
+			Trie* node = root;
+			for (const std::string& part : parts) {
+				if (node->children.find(part) == node->children.end()) {
+					node->children[ part ] = new Trie();
+				}
+				node = node->children[ part ];
 			}
-			node = node->children[ part ];
+			node->methods[ method ] = function;
 		}
-		node->methods[ method ] = function;
 	}
 
-	// FIXME: Not found returns for both undefined route or function.
+	// FIXME: Returns not found for both undefined route or function.
 	std::string Router::handleRequest(const std::string& raw_request) {
 		Request request(raw_request);
 		Trie* node = root;
 		std::vector<std::string> parts;
 		split(parts, request.path);
+
+		std::unordered_map<std::string, std::string> params;
+
 		for (const std::string& part : parts) {
 			if (node->children.find(part) != node->children.end()) {
 				node = node->children[ part ];
 			} else {
-				return Response::notFound();
+				bool foundDynamic = false;
+				for (auto& childPair : node->children) {
+					const std::string& key = childPair.first;
+					if (!key.empty() && key[ 0 ] == ':') {
+						std::string paramName = key.substr(1);
+						params[ paramName ] = part;
+						node = childPair.second;
+						foundDynamic = true;
+						break;
+					}
+				}
+				if (!foundDynamic) {
+					return Response::notFound();
+				}
 			}
 		}
+
 		if (node->methods.find(request.method) != node->methods.end()) {
-			return node->methods[ request.method ](request);
+			return node->methods[ request.method ](request, params);
 		} else {
 			return Response::notFound();
 		}
 	}
+
 } // namespace sews
