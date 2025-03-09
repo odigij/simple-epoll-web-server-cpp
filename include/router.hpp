@@ -23,14 +23,12 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SEWS_ROUTER_HPP
 #define SEWS_ROUTER_HPP
 
-#include "request.hpp"
+#include "trie_node.hpp"
 
-#include <functional>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 namespace sews {
-
 	class Router {
 	  public:
 		Router();
@@ -39,14 +37,13 @@ namespace sews {
 		Router& operator=(Router&&) = default;
 		Router& operator=(const Router&) = default;
 		~Router();
-		using HandlerFunc = std::function<std::string(const Request request)>;
-		void addRoute(const std::string method, std::string path, HandlerFunc handler);
-		std::string handleRequest(const std::string& request);
+		void addRoute(std::string method, std::string router, Trie::Handler function);
+		std::string handleRequest(const std::string& raw_request);
 
 	  private:
-		std::unordered_map<std::string, HandlerFunc> routes;
+		Trie* root;
+		void split(std::vector<std::string>& parts, std::string& route);
 	};
-
 } // namespace sews
 
 #endif // !SEWS_ROUTER_HPP

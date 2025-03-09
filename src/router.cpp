@@ -20,22 +20,61 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/sews.hpp"
+#include "../include/router.hpp"
+
+#include "../include/response.hpp"
+
+#include <sstream>
 
 namespace sews {
-
 	Router::Router() {
+		this->root = new Trie();
 	}
+
 	Router::~Router() {
+		// TODO: Handle root clean up.
 	}
-	void Router::addRoute(const std::string method, std::string path, HandlerFunc handler) {
-		this->routes[ method + path ] = handler;
-	}
-	std::string Router::handleRequest(const std::string& rawRequest) {
-		Request request(rawRequest);
-		if (this->routes.find(request.method + request.path) != routes.end()) {
-			return this->routes[ request.method + request.path ](request);
+
+	void Router::split(std::vector<std::string>& parts, std::string& route) {
+		std::stringstream ss(route);
+		std::string segment;
+		while (std::getline(ss, segment, '/')) {
+			if (!segment.empty()) {
+				parts.push_back(segment);
+			}
 		}
-		return Response::notFound();
+	}
+
+	void Router::addRoute(std::string method, std::string route, Trie::Handler function) {
+		std::vector<std::string> parts;
+		split(parts, route);
+		Trie* node = root;
+		for (const std::string& part : parts) {
+			if (node->children.find(part) == node->children.end()) {
+				node->children[ part ] = new Trie();
+			}
+			node = node->children[ part ];
+		}
+		node->methods[ method ] = function;
+	}
+
+	// FIXME: Not found returns for both undefined route or function.
+	std::string Router::handleRequest(const std::string& raw_request) {
+		Request request(raw_request);
+		Trie* node = root;
+		std::vector<std::string> parts;
+		split(parts, request.path);
+		for (const std::string& part : parts) {
+			if (node->children.find(part) != node->children.end()) {
+				node = node->children[ part ];
+			} else {
+				return Response::notFound();
+			}
+		}
+		if (node->methods.find(request.method) != node->methods.end()) {
+			return node->methods[ request.method ](request);
+		} else {
+			return Response::notFound();
+		}
 	}
 } // namespace sews
