@@ -20,9 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/response.hpp"
-
 #include <fstream>
+#include <response.hpp>
 #include <sstream>
 
 namespace sews {
@@ -31,23 +30,24 @@ namespace sews {
 			   "\r\nContent-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
 	}
 
-	// TODO: Separate it based on content-type.
-	std::string Response::notFound() {
-		std::string content;
+	std::string Response::notFound(bool isHtml) {
 		std::ostringstream responseStream;
-		std::ifstream file("../assets/pages/404.html", std::ios::binary);
-		if (file) {
-			content.insert(content.end(), std::istreambuf_iterator<char>(file),
-						   std::istreambuf_iterator<char>());
-			responseStream << "HTTP/1.1 404 Not Found\r\n"
-						   << "Content-Type: " << "text/html" << "\r\n"
-						   << "Content-Length: " << content.size() << "\r\n"
-						   << "\r\n"
-						   << content;
+		if (isHtml) {
+			std::string content;
+			std::ifstream file("../assets/public/pages/404.html", std::ios::binary);
+			if (file) {
+				content.insert(content.end(), std::istreambuf_iterator<char>(file),
+							   std::istreambuf_iterator<char>());
+				responseStream << "HTTP/1.1 404 Not Found\r\n"
+							   << "Content-Type: text/html" << "\r\n"
+							   << "Content-Length: " << content.size() << "\r\n\r\n"
+							   << content;
+			}
 		} else {
-			responseStream << "HTTP/1.1 404 Not Found\r\nContent-Type: "
-							  "text/plain\r\nContent-Length: 9\r\n\r\nNot "
-							  "Found";
+			responseStream << "HTTP/1.1 404 Not Found\r\n"
+						   << "Content-Type: text/plain\r\n"
+						   << "Content-Length: 9\r\n\r\n"
+						   << "Not Found";
 		}
 		return responseStream.str();
 	}

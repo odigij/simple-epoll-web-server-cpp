@@ -8,22 +8,21 @@
     <link
       rel="apple-touch-icon"
       sizes="180x180"
-      href="pages/apple-touch-icon.png" />
+      href="icons/apple-touch-icon.png" />
     <link
       rel="icon"
       type="image/png"
       sizes="32x32"
-      href="pages/favicon-32x32.png" />
+      href="icons/favicon-32x32.png" />
     <link
       rel="icon"
       type="image/png"
       sizes="16x16"
-      href="pages/favicon-16x16.png" />
+      href="icons/favicon-16x16.png" />
     <link
       rel="stylesheet"
       href="https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css" />
-    <link rel="manifest" href="pages/site.webmanifest" />
-    <meta charset="UTF-8" />
+    <link rel="manifest" href="info/site.webmanifest" />
   </head>
   <body>
     <h1 class="sews_title">Simple Epoll Web Server</h1>
@@ -43,7 +42,8 @@
         <strong>Linux-specific,</strong>
         relying on
         <code class="sews_code">sys/epoll.h</code>
-        and POSIX system calls.
+        and POSIX system calls. It is worth to mention that this project is
+        experimental.
       </p>
     </section>
 
@@ -108,11 +108,16 @@
     <section id="section_requirements" class="sews_section">
       <h2 class="sews_heading"> Requirements</h2>
       <ul class="sews_list sews_list_requirements">
-        <li>Linux OS (or WSL for Windows)</li>
+        <li>Linux OS</li>
         <li>C++17 or later</li>
         <li>GCC or Clang compiler</li>
         <li>CMake</li>
         <li>OpenSSL</li>
+        <li>
+          P.S: If you have installed requirements on your platform with any
+          package manager (apt, pacman, etc.) cmake going to find it via
+          CMakeLists.txt.
+        </li>
       </ul>
     </section>
 
@@ -132,7 +137,11 @@
             server.crt -days 365 -nodes
           </code>
         </li>
-        <li><code class="sews_code">./sews</code></li>
+        <li>
+          <code class="sews_code">./sews --help</code>
+          to see options/args
+        </li>
+        <li><code class="sews_code">./sews ..args &</code></li>
       </ul>
     </section>
 
@@ -153,7 +162,7 @@
           directory.
         </li>
         <li>
-          Include the necessary header:
+          Include this necessary header:
           <pre
             class="sews_pre"><code class="sews_code">#include "../include/app_entry.hpp"</code></pre>
         </li>

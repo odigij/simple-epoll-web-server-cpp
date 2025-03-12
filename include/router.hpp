@@ -23,9 +23,8 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SEWS_ROUTER_HPP
 #define SEWS_ROUTER_HPP
 
-#include "trie_node.hpp"
-
 #include <string>
+#include <trie_node.hpp>
 #include <vector>
 
 namespace sews {

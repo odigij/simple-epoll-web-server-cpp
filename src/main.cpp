@@ -20,9 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/sews.hpp"
-
 #include <iostream>
+#include <sews.hpp>
 
 volatile sig_atomic_t sews::SignalHandler::flags = 0;
 

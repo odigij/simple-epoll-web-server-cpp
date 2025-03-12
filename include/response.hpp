@@ -29,7 +29,7 @@ namespace sews {
 	class Response {
 	  public:
 		static std::string ok(const std::string& body, const std::string& contentType);
-		static std::string notFound();
+		static std::string notFound(bool isHtml = false);
 	};
 } // namespace sews
 #endif

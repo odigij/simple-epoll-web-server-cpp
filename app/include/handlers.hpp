@@ -23,8 +23,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef APP_HANDLERS_HPP
 #define APP_HANDLERS_HPP
 
-#include "../../include/request.hpp"
-
+#include <request.hpp>
 #include <string>
 
 namespace app {

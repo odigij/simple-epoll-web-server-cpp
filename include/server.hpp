@@ -23,10 +23,9 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SEWS_SERVER_HPP
 #define SEWS_SERVER_HPP
 
-#include "router.hpp"
-
 #include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <router.hpp>
 #include <set>
 #include <string>
 #include <sys/epoll.h>

@@ -43,9 +43,10 @@ namespace app {
 		}
 		return "application/octet-stream";
 	}
+
 	const std::string handleStaticFile(const sews::Request& request,
 									   const std::unordered_map<std::string, std::string>& params) {
-		std::string filePath = "../assets" + request.path;
+		std::string filePath = "../assets/public/" + request.path;
 		std::ifstream file(filePath, std::ios::binary);
 		std::ostringstream responseStream;
 		std::string content;
@@ -58,22 +59,23 @@ namespace app {
 						   << "\r\n"
 						   << content;
 		} else {
-			std::ifstream file("../assets/pages/404.html", std::ios::binary);
+			std::ifstream file("../assets/public/pages/404.html", std::ios::binary);
 			content.insert(content.end(), std::istreambuf_iterator<char>(file),
 						   std::istreambuf_iterator<char>());
 			responseStream << "HTTP/1.1 404 Not Found\r\n"
-						   << "Content-Type: text/html\r\n"
+						   << "Content-Type: " << getContentType(request.path) << "\r\n"
 						   << "Content-Length: " << content.size() << "\r\n"
 						   << "\r\n"
 						   << content;
 		}
 		return responseStream.str();
 	}
+
 	const std::string handleIndex(const sews::Request& request,
 								  const std::unordered_map<std::string, std::string>& params) {
 		std::string content;
 		std::ostringstream responseStream;
-		std::ifstream file("../assets/pages/index.html", std::ios::binary);
+		std::ifstream file("../assets/public/pages/index.html", std::ios::binary);
 		if (file) {
 			content.insert(content.end(), std::istreambuf_iterator<char>(file),
 						   std::istreambuf_iterator<char>());

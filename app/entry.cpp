@@ -20,14 +20,15 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/app_entry.hpp"
 #include "include/handlers.hpp"
+
+#include <app_entry.hpp>
 
 void sews::initializeApp(sews::Router& router) {
 	router.addRoute("GET", {"/", "/home"}, app::handleIndex);
-	router.addRoute(
-		"GET",
-		{"/pages/favicon-16x16.png", "/pages/apple-touch-icon.png", "/styles/stylesheet.css"},
-		app::handleStaticFile);
+	router.addRoute("GET",
+					{"/icons/favicon-16x16.png", "/icons/apple-touch-icon.png",
+					 "/styles/stylesheet.css", "/info/site.webmanifest", "/info/about.txt"},
+					app::handleStaticFile);
 	router.addRoute("GET", {"/api/test/:id"}, app::apiTest);
 }

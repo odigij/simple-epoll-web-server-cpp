@@ -23,7 +23,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SEWS_APP_HPP
 #define SEWS_APP_HPP
 
-#include "router.hpp"
+#include <router.hpp>
 
 namespace sews {
 	void initializeApp(Router&);

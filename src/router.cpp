@@ -20,10 +20,8 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/router.hpp"
-
-#include "../include/response.hpp"
-
+#include <response.hpp>
+#include <router.hpp>
 #include <sstream>
 
 namespace sews {
@@ -87,7 +85,7 @@ namespace sews {
 					}
 				}
 				if (!foundDynamic) {
-					return Response::notFound();
+					return Response::notFound(true);
 				}
 			}
 		}

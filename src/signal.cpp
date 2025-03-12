@@ -20,26 +20,26 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "../include/signal.hpp"
+#include <signal.hpp>
 
 namespace sews {
-    void SignalHandler::init() {
-        std::signal(SIGINT, handle);
-        std::signal(SIGTERM, handle);
-    }
-    void SignalHandler::handle(int signal) {
-        switch (signal) {
-        case SIGINT:
-            flags |= 1;
-            break;
-        case SIGTERM:
-            flags |= 2;
-            break;
-        default:
-            break;
-        }
-    }
-    int SignalHandler::getSignal() {
-        return flags;
-    }
+	void SignalHandler::init() {
+		std::signal(SIGINT, handle);
+		std::signal(SIGTERM, handle);
+	}
+	void SignalHandler::handle(int signal) {
+		switch (signal) {
+		case SIGINT:
+			flags |= 1;
+			break;
+		case SIGTERM:
+			flags |= 2;
+			break;
+		default:
+			break;
+		}
+	}
+	int SignalHandler::getSignal() {
+		return flags;
+	}
 } // namespace sews

@@ -1,9 +1,8 @@
 #ifndef SEWS_TRIE_NODE_HPP
 #define SEWS_TRIE_NODE_HPP
 
-#include "request.hpp"
-
 #include <functional>
+#include <request.hpp>
 #include <string>
 #include <unordered_map>
 
