@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Simple Epoll Web Server (SEWS)</title>
+    <link rel="stylesheet" type="text/css" href="styles/stylesheet.css" />
+    <link rel="icon" type="image/png" href="icons/favicon.ico" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/jetbrains-mono@1.0.6/css/jetbrains-mono.min.css" />
+  </head>
+  <body>
+    <h1 class="sews_title">Simple Epoll Web Server (SEWS)</h1>
+
+    <section id="section_about" class="sews_section">
+      <h2 class="sews_heading">󱔢 About SEWS</h2>
+      <p class="sews_paragraph">
+        <strong>SEWS</strong>
+        is a lightweight, experimental web server built in
+        <strong>C++</strong>
+        for learning and exploring web frameworks. It leverages
+        <code class="sews_code">sys/epoll</code>
+        for non-blocking, event-driven networking and is designed to be simple
+        to use via SSH on a remote server. SEWS is strictly single-threaded,
+        focusing on efficient I/O handling without multi-threading complexity.
+      </p>
+      <p class="sews_paragraph">
+        It supports HTTPS via OpenSSL and serves static files, automatically
+        generating
+        <strong>trie-based nodes</strong>
+        for files inside
+        <code class="sews_code">assets/public/static</code>
+        to optimize lookups. Routing is fully customizable via the
+        <code class="sews_code">sews::initializeApp</code>
+        function, allowing developers to define routes with support for multiple
+        paths and parameterized URLs (e.g.,
+        <code class="sews_code">"/api/test/:parameters"</code>
+        ). While basic parameter parsing is built-in, handling multiple
+        parameters requires manual parsing.
+      </p>
+      <p class="sews_paragraph">
+        While not as feature-rich as mainstream web frameworks, SEWS provides a
+        minimalistic and educational approach to server development, making it
+        ideal for experimenting with event-driven architectures and low-level
+        networking.
+      </p>
+    </section>
+
+    <section id="section_technical" class="sews_section">
+      <h2 class="sews_heading">󰣖 Technical Features</h2>
+      <p class="sews_paragraph">
+        SEWS is designed with a focus on simplicity, efficiency, and
+        event-driven architecture. Below are its core technical features:
+      </p>
+      <table class="sews_table">
+        <tr>
+          <th>Feature</th>
+          <th>Description</th>
+        </tr>
+        <tr>
+          <td><strong>Epoll-based I/O</strong></td>
+          <td>
+            Uses
+            <code class="sews_code">epoll</code>
+            for efficient event-driven networking, enabling non-blocking I/O
+            operations.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Minimalist, Single-threaded Design</strong></td>
+          <td>
+            SEWS is strictly single-threaded, leveraging `sys/epoll` for
+            event-driven concurrency without multi-threading.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Command-Line Configuration</strong></td>
+          <td>
+            Supports server configuration via CLI arguments at startup, allowing
+            flexible initial setup. SEWS uses JetBrains Mono font and Material
+            Design Icons for logs.
+          </td>
+        </tr>
+        <tr>
+          <td><strong>Static Content Serving</strong></td>
+          <td>
+            Automatically detects and serves static files, generating trie-based
+            nodes for assets located in
+            <code class="sews_code">assets/public/static</code>
+            .
+          </td>
+        </tr>
+        <tr>
+          <td><strong>OpenSSL Integration</strong></td>
+          <td>Supports HTTPS connections, enabling secure communication.</td>
+        </tr>
+        <tr>
+          <td><strong>Custom Routing System</strong></td>
+          <td>
+            Allows defining routes via
+            <code class="sews_code">sews::initializeApp</code>
+            , supporting multiple paths and parameterized URLs (manual parsing
+            required for multiple parameters).
+          </td>
+        </tr>
+      </table>
+    </section>
+
+    <section id="section_commands" class="sews_section">
+      <h2 class="sews_heading">󱌢 CLI Options</h2>
+      <p class="sews_paragraph">
+        SEWS supports various command-line options for configuring server
+        behavior at runtime. These options allow users to define network
+        parameters, request handling limits, and event-driven behavior.
+      </p>
+      <table class="sews_table">
+        <tr>
+          <th>Option</th>
+          <th>Description</th>
+          <th>Example Usage</th>
+        </tr>
+        <tr>
+          <td><code class="sews_code">-p</code></td>
+          <td>Set the server’s listening port.</td>
+          <td><code class="sews_code">./sews -p 8080</code></td>
+        </tr>
+        <tr>
+          <td><code class="sews_code">-m</code></td>
+          <td>
+            Define the maximum number of pending connections in the backlog
+            queue before new requests are refused.
+          </td>
+          <td><code class="sews_code">./sews -m 128</code></td>
+        </tr>
+        <tr>
+          <td><code class="sews_code">-e</code></td>
+          <td>
+            Set the number of events that can be processed per epoll cycle.
+          </td>
+          <td><code class="sews_code">./sews -e 32</code></td>
+        </tr>
+        <tr>
+          <td><code class="sews_code">-t</code></td>
+          <td>Specify the timeout (in milliseconds) for epoll waiting.</td>
+          <td><code class="sews_code">./sews -t 300</code></td>
+        </tr>
+        <tr>
+          <td><code class="sews_code">-f</code></td>
+          <td>
+            Define additional configuration flags for advanced server behavior.
+          </td>
+          <td><code class="sews_code">./sews -f 0</code></td>
+        </tr>
+        <tr>
+          <td><code class="sews_code">--help</code></td>
+          <td>Show all available CLI options and their descriptions.</td>
+          <td><code class="sews_code">./sews --help</code></td>
+        </tr>
+      </table>
+    </section>
+
+    <section id="section_build" class="sews_section">
+      <h2 class="sews_heading">󱓞 Build & Run</h2>
+      <ol class="sews_list sews_list_build_run">
+        <li><code class="sews_code">git clone &lt;repository_url&gt;</code></li>
+        <li><code class="sews_code">cd &lt;repository_name&gt;</code></li>
+        <li><code class="sews_code">mkdir build && cd build</code></li>
+        <li><code class="sews_code">cmake ..</code></li>
+        <li><code class="sews_code">make</code></li>
+        <li>
+          <code class="sews_code">
+            openssl req -x509 -newkey rsa:4096 -keyout server.key -out
+            server.crt -days 365 -nodes
+          </code>
+        </li>
+        <li>
+          <code class="sews_code">./sews --help</code>
+        </li>
+        <li><code class="sews_code">./sews --port 8080 &</code></li>
+      </ol>
+    </section>
+
+    <section id="section_routing" class="sews_section">
+      <h2 class="sews_heading">󰑪 Custom Routing</h2>
+      <p class="sews_paragraph">
+        SEWS allows defining custom routes using the
+        <code class="sews_code">Router</code>
+        system. Routes support multiple paths, dynamic parameters, and content
+        type specifications. Follow these steps to add custom routes:
+      </p>
+      <ol class="sews_list sews_list_instructions">
+        <li>
+          Create an
+          <code class="sews_code">entry.cpp</code>
+          file inside the
+          <code class="sews_code">app</code>
+          directory.
+        </li>
+        <li>
+          Include the required header:
+          <pre><code class="sews_code">#include "../include/app_entry.hpp"</code></pre>
+        </li>
+        <li>
+          Implement the
+          <code class="sews_code">sews::initializeApp</code>
+          function:
+          <pre><code class="sews_code">void sews::initializeApp(sews::Router& router) {
+              router.addRoute("GET", {"/", "/home"}, app::handleIndex, "text/html");
+              router.addRoute("GET", {"/api/test/:parameters"}, app::apiTest, "application/json");
+          }</code>
+          </pre>
+        </li>
+      </ol>
+      <p class="sews_paragraph">
+        Routes with parameters (e.g.,
+        <code class="sews_code">"/api/test/:parameters"</code>
+        ) require manual parsing when handling multiple parameters.
+      </p>
+    </section>
+
+    <footer class="sews_footer">
+      <p>
+        2025 Yiğit Leblebicier | Open-source under the
+        <a href="https://opensource.org/licenses/MIT" target="_blank">
+          MIT License
+        </a>
+      </p>
+    </footer>
+  </body>
+</html>

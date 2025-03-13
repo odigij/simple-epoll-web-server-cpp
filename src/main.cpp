@@ -23,7 +23,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <iostream>
 #include <sews.hpp>
 
-volatile sig_atomic_t sews::SignalHandler::flags = 0;
+volatile sig_atomic_t sews::SignalHandler::_flags = 0;
 
 int main(int argc, char* argv[]) {
 	try {

@@ -23,11 +23,10 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <args.hpp>
 #include <getopt.h>
 #include <iostream>
-#include <string>
 
 namespace sews {
 	std::tuple<int, int, int, int, int> handleArgs(int argument_count, char* argument_vector[]) {
-		int port = 8080, maximum_request = 3, epoll_event_size = 64, timeout = 3000, flags = 1,
+		int port = 8080, maximum_request = 128, epoll_event_size = 64, timeout = 500, flags = 1,
 			option;
 		std::string terminal_message;
 		static struct option long_options[] = {
@@ -47,12 +46,12 @@ namespace sews {
 				terminal_message =
 					port > 0 && port < 65535
 						? ""
-						: "Invalid port value, 0 < val < 65535, default value is 8080.";
+						: "󰅙 Invalid port value, 0 < val < 65535, default value is 8080.";
 				break;
 			case 'm':
 				maximum_request = optarg ? std::stoi(optarg) : maximum_request;
 				terminal_message = maximum_request >= 0 ? ""
-														: "Maximum request must be equal or "
+														: "󰅙 Maximum request must be equal or "
 														  "greater than zero, default value is 3.";
 				break;
 			case 'e':
@@ -60,33 +59,32 @@ namespace sews {
 				terminal_message =
 					epoll_event_size > 0
 						? ""
-						: "Epoll count must be greater than zero, default values is 32.";
+						: "󰅙 Epoll count must be greater than zero, default values is 32.";
 				break;
 			case 't':
 				timeout = optarg ? std::stoi(optarg) : timeout;
-				terminal_message =
-					timeout >= 0
-						? ""
-						: "Timeout must be equal or greater than zero, default values is 3000.";
+				terminal_message = timeout >= 0 ? ""
+												: "󰅙 Timeout must be equal or greater than "
+												  "zero, default values is 3000.";
 				break;
 			case 'f':
 				flags = optarg ? std::stoi(optarg) : flags;
 				terminal_message =
 					flags >= 0
 						? ""
-						: "Flags must be equal or greater than zero, default values is 3000.";
+						: "󰅙 Flags must be equal or greater than zero, default values is 3000.";
 				break;
 			case 'h':
-				std::cout << "sews -p <value>\n"
-							 "sews -m <value>\n"
-							 "sews -e <value>\n"
-							 "sews -t <value>\n"
-							 "sews --port <value>\n"
-							 "sews --max-request <value>\n"
-							 "sews --epoll-count <value>\n"
-							 "sews --timeout <value>\n"
-							 "sews --flags <value>\tset it 0 to use no TLS or 1 to use TLS\n"
-							 "sews --help\n";
+				std::cout << "󰞷 sews -p <value>\n"
+							 "󰞷 sews -m <value>\n"
+							 "󰞷 sews -e <value>\n"
+							 "󰞷 sews -t <value>\n"
+							 "󰞷 sews --port <value>\n"
+							 "󰞷 sews --max-request <value>\n"
+							 "󰞷 sews --epoll-count <value>\n"
+							 "󰞷 sews --timeout <value>\n"
+							 "󰞷 sews --flags <value>\tset it 0 to use no TLS or 1 to use TLS\n"
+							 "󰞷 sews --help\n";
 				exit(EXIT_SUCCESS);
 			default:
 				terminal_message = "invalid argument, use --help for usage";

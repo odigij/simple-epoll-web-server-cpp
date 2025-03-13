@@ -23,7 +23,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef SEWS_ROUTER_HPP
 #define SEWS_ROUTER_HPP
 
-#include <string>
 #include <trie_node.hpp>
 #include <vector>
 
@@ -36,12 +35,18 @@ namespace sews {
 		Router& operator=(Router&&) = default;
 		Router& operator=(const Router&) = default;
 		~Router();
-		void addRoute(std::string method, std::vector<std::string> routes, Trie::Handler function);
+		void addRoute(std::string method, std::vector<std::string> routes, Trie::Handler function,
+					  std::string mime_type);
 		std::string handleRequest(const std::string& raw_request);
 
 	  private:
-		Trie* root;
-		void split(std::vector<std::string>& parts, std::string& route);
+		Trie* _root;
+		void _split(std::vector<std::string>& parts, std::string& route);
+		void _registerStatics();
+		const std::string
+		handleStaticFile(const sews::Request& request,
+						 const std::unordered_map<std::string, std::string>& params);
+		std::string serveStaticErrorPage(int statusCode);
 	};
 } // namespace sews
 

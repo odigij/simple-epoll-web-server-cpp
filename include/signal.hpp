@@ -26,15 +26,15 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <csignal>
 
 namespace sews {
-    class SignalHandler {
-      public:
-        static void init();
-        static void handle(int signal);
-        static int getSignal();
+	class SignalHandler {
+	  public:
+		static void init();
+		static void handle(int signal);
+		static int getSignal();
 
-      private:
-        static volatile sig_atomic_t flags;
-    };
+	  private:
+		static volatile sig_atomic_t _flags;
+	};
 } // namespace sews
 
 #endif // !SEWS_SIGNAL_HPP

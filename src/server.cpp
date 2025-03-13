@@ -20,15 +20,14 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <cstring>
 #include <fcntl.h>
 #include <iostream>
 #include <netinet/in.h>
+#include <openssl/err.h>
 #include <openssl/ssl.h>
+#include <response.hpp>
 #include <server.hpp>
 #include <sstream>
-#include <stdexcept>
-#include <string>
 #include <sys/epoll.h>
 #include <sys/socket.h>
 #include <unistd.h>
@@ -38,7 +37,7 @@ namespace sews {
 	}
 
 	Server::~Server() {
-		std::cout << "Cleaning server connections..\n";
+		std::cout << "󰩹 Cleaning server connections..\n";
 		for (auto connection : this->_connections) {
 			if (this->_flags & 1) {
 				SSL_shutdown(connection->ssl);
@@ -48,7 +47,7 @@ namespace sews {
 					  nullptr);
 			close(connection->file_descriptor);
 		}
-		std::cout << "Shutting down the server.\n";
+		std::cout << "󰒏 Shutting down the server.\n";
 		close(this->_epoll_file_descriptor);
 		close(this->_file_descriptor);
 	}
@@ -57,16 +56,16 @@ namespace sews {
 		this->_flags = flags, this->_createSocket(port), this->_initSocket(backlog),
 		this->_timeout = timeout, this->_epoll_pool.resize(epoll_pool_size);
 		std::ostringstream server_info;
-		server_info << "Settings: ";
+		server_info << "󰣖 Settings: ";
 		if (this->_flags & 1) {
-			server_info << "(TLS ACTIVE) https";
+			server_info << "󰒃 https";
 			this->_setUpTls();
 		} else {
-			server_info << "(NO TLS) http";
+			server_info << "http";
 		}
-		server_info << "://127.0.0.1:" << port << " - backlog: " << backlog
-					<< " - timeout: " << timeout << " - flags: " << flags
-					<< " - pool-size: " << epoll_pool_size << '\n';
+		server_info << "://127.0.0.1:" << port << " - 󰌴 backlog: " << backlog
+					<< " - 󱎫 timeout: " << timeout << "MS - 󰈻 flags: " << flags
+					<< "(bitmap) - 󰘆 pool-size: " << epoll_pool_size << "\n\n";
 		std::cout << server_info.str();
 	}
 
@@ -82,25 +81,25 @@ namespace sews {
 	void Server::_createSocket(int port) {
 		this->_file_descriptor = socket(AF_INET, SOCK_STREAM | SOCK_CLOEXEC, 0);
 		if (this->_file_descriptor == -1) {
-			throw std::runtime_error("FATAL: Server creation failed.\n");
+			throw std::runtime_error("󰅙 Server creation failed.\n");
 		}
 		struct sockaddr_in address = {.sin_family = AF_INET, .sin_addr = {.s_addr = INADDR_ANY}};
 		address.sin_port = htons(port);
 		int opt = 1;
 		if (setsockopt(this->_file_descriptor, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
-			throw std::runtime_error("FATAL: setsockopt.\n");
+			throw std::runtime_error("󰅙 setsockopt.\n");
 		}
 		if (bind(this->_file_descriptor, (struct sockaddr*)&address, sizeof(address)) == -1) {
 			close(this->_file_descriptor);
-			throw std::runtime_error("FATAL: Server binding failed.\n");
+			throw std::runtime_error("󰅙 Server binding failed.\n");
 		}
-		std::cout << "Server socket has been created successfully.\n";
+		std::cout << "󰙴 Server socket has been created successfully.\n";
 	}
 
 	void Server::_initSocket(int backlog) {
 		if (listen(this->_file_descriptor, backlog) != 0) {
 			close(this->_file_descriptor);
-			throw std::runtime_error("FATAL: Server listen failed.\n");
+			throw std::runtime_error("󰅙 Server listen failed.\n");
 		}
 		this->_epoll_file_descriptor = epoll_create(1);
 		if (this->_epoll_file_descriptor < 0) {
@@ -109,18 +108,18 @@ namespace sews {
 		struct epoll_event epollEvent = {EPOLLIN, {.fd = this->_file_descriptor}};
 		if (epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_ADD, this->_file_descriptor,
 					  &epollEvent) != 0) {
-			throw std::runtime_error("FATAL: Server epoll register failed.\n");
+			throw std::runtime_error("󰅙  Server epoll register failed.\n");
 		}
-		std::cout << "Server socket has initialized.\n";
+		std::cout << "󰗠 Server socket has initialized.\n";
 	}
 
 	void Server::_handleEvents(epoll_event& poll_event) {
 		if (poll_event.data.fd == this->_file_descriptor) { // Server events
-			std::cout << "Server event: ";
+			std::cout << "󰛴 Server event: ";
 			if (poll_event.events & (EPOLLHUP | EPOLLERR)) {
-				throw std::runtime_error("FATAL: Server socket closed unexpectedly.\n");
+				throw std::runtime_error("󰅙 Server socket closed unexpectedly.\n");
 			} else if (poll_event.events & EPOLLIN) {
-				std::cout << "new connection.\n";
+				std::cout << "󱇬 New connection.\n";
 				struct sockaddr_in client_address;
 				socklen_t client_address_size = sizeof(client_address);
 				Server::Connection* connection = new Server::Connection();
@@ -128,13 +127,13 @@ namespace sews {
 					accept(this->_file_descriptor, (struct sockaddr*)&client_address,
 						   &client_address_size);
 				if (connection->file_descriptor < 0) {
-					std::cerr << "LOG: Client connection failed.\n";
+					std::cerr << "󱘹 Client connection failed.\n";
 					return;
 				}
 				int socket_flags = fcntl(connection->file_descriptor, F_GETFL, 0);
 				if (socket_flags == -1 ||
 					fcntl(connection->file_descriptor, F_SETFL, socket_flags | O_NONBLOCK) == -1) {
-					std::cerr << "LOG: Failed to set non-blocking mode.\n";
+					std::cerr << "󰅙 Failed to set non-blocking mode.\n";
 					close(connection->file_descriptor);
 					return;
 				}
@@ -142,7 +141,7 @@ namespace sews {
 				if (this->_flags & 1) {
 					connection->ssl = SSL_new(this->_ssl_ctx);
 					if (!connection->ssl) {
-						std::cerr << "LOG: SSL_new() failed.\n";
+						std::cerr << "󰅙 SSL_new() failed.\n";
 						close(connection->file_descriptor);
 						delete connection;
 						return;
@@ -161,8 +160,9 @@ namespace sews {
 						client_epoll_event.events =
 							(err == SSL_ERROR_WANT_READ) ? EPOLLIN : EPOLLOUT;
 					} else {
-						std::cerr << "LOG: SSL handshake failed.\n";
-						std::string msg = "use https you dork";
+						std::cerr << "󰅙 SSL handshake failed.\n";
+						std::string msg = Response::text(
+							"You are trying to access via http, please use https in your url.");
 						send(connection->file_descriptor, msg.data(), msg.size(), 0);
 						ERR_print_errors_fp(stderr);
 						SSL_shutdown(connection->ssl);
@@ -174,7 +174,7 @@ namespace sews {
 				}
 				if (epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_ADD,
 							  connection->file_descriptor, &client_epoll_event) != 0) {
-					std::cerr << "LOG: Client epoll register failed.\n";
+					std::cerr << "󰅙 Client epoll register failed.\n";
 					close(connection->file_descriptor);
 					if (this->_flags & 1) {
 						SSL_shutdown(connection->ssl);
@@ -186,7 +186,6 @@ namespace sews {
 				this->_connections.insert(connection);
 			}
 		} else { // Client events
-			std::cout << "Client event: ";
 			Server::Connection* connection = static_cast<Server::Connection*>(poll_event.data.ptr);
 			if (poll_event.events & (EPOLLHUP | EPOLLERR)) {
 				epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, connection->file_descriptor,
@@ -200,7 +199,6 @@ namespace sews {
 				close(connection->file_descriptor);
 				this->_connections.erase(connection);
 			} else if (poll_event.events & EPOLLIN) {
-				std::cout << "request.\n";
 				std::string response = this->_handleSocketData(poll_event);
 				if (response.empty()) {
 					return;
@@ -219,7 +217,7 @@ namespace sews {
 									  connection->file_descriptor, &client_epoll_event);
 							return;
 						}
-						std::cerr << "LOG: Failed to send SSL data.\n";
+						std::cerr << "󰅙 Failed to send SSL data.\n";
 						ERR_print_errors_fp(stderr);
 					}
 					SSL_shutdown(connection->ssl);
@@ -227,9 +225,7 @@ namespace sews {
 				} else {
 					if (send(connection->file_descriptor, response.c_str(), response.size(), 0) ==
 						-1) {
-						std::cerr << "LOG: Failed to send HTML.\n";
-					} else {
-						// FIX: Implement it.
+						std::cerr << "󰅙 Failed to send HTML.\n";
 					}
 				}
 				epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, poll_event.data.fd, nullptr);
@@ -240,14 +236,14 @@ namespace sews {
 	}
 
 	void Server::_setUpTls() {
-		std::cout << "Setting up TLS..\n";
+		std::cout << "󱌢 Setting up TLS..\n";
 		SSL_library_init();
 		SSL_load_error_strings();
 		OpenSSL_add_all_algorithms();
 
 		this->_ssl_ctx = SSL_CTX_new(TLS_server_method());
 		if (!this->_ssl_ctx) {
-			std::cerr << "FATAL: SSL_CTX_new() failed\n";
+			std::cerr << "󰅙 SSL_CTX_new() failed\n";
 			exit(EXIT_FAILURE);
 		}
 		char cwd[ 1024 ];
@@ -258,33 +254,57 @@ namespace sews {
 					0 ||
 				SSL_CTX_use_PrivateKey_file(this->_ssl_ctx, keyPath.c_str(), SSL_FILETYPE_PEM) <=
 					0) {
-				std::cerr << "FATAL: SSL certificate or key failed to load.\n";
+				std::cerr << "󰅙 SSL certificate or key failed to load.\n";
 				ERR_print_errors_fp(stderr);
 				exit(EXIT_FAILURE);
 			}
 		}
-		std::cout << "Setup completed.\n";
+		std::cout << "󱌢 Setup completed.\n";
 	}
 
 	std::string Server::_handleSocketData(epoll_event& poll_event) {
-		// NOTE: Does it need dynamic buffer?
 		Server::Connection* connection = static_cast<Server::Connection*>(poll_event.data.ptr);
-		char buffer[ 1024 * 5 ];
-		ssize_t bytes_read = (this->_flags & 1) == 1
-								 ? SSL_read(connection->ssl, buffer, sizeof(buffer) - 1)
-								 : read(connection->file_descriptor, buffer, sizeof(buffer) - 1);
-		std::cout << "Request: " << buffer;
-		std::string response;
-		if (bytes_read >= 0) {
+		std::vector<char> buffer(1024 * 10);
+		ssize_t bytes_read;
+
+		if ((this->_flags & 1) == 1) {
+			// TLS Mode (SSL_read)
+			bytes_read = SSL_read(connection->ssl, buffer.data(), buffer.size() - 1);
+			if (bytes_read <= 0) {
+				int ssl_error = SSL_get_error(connection->ssl, bytes_read);
+				switch (ssl_error) {
+				case SSL_ERROR_ZERO_RETURN:
+					std::cout << "󰅙 SSL zero return.\n";
+					return "Connection closed.";
+				case SSL_ERROR_WANT_READ:
+				case SSL_ERROR_WANT_WRITE:
+					std::cout << "󰑖 󰒄 SSL wants more data, retrying..\n";
+					return "";
+				case SSL_ERROR_SYSCALL:
+					std::cout << "󰅙 SSL system call error.\n";
+					return "SSL system call error.";
+				default:
+					std::cout << "󰅙 Server SSL error.\n";
+					return "Server SSL error.";
+				}
+			}
+		} else {
+			// Plain HTTP Mode
+			bytes_read = read(connection->file_descriptor, buffer.data(), buffer.size() - 1);
+		}
+		std::string response("");
+		if (bytes_read > 0) {
 			buffer[ bytes_read ] = '\0';
-			response = this->_router.handleRequest(buffer);
+			std::cout << "󰇚 " << buffer.data() << "\n";
+			response = this->_router.handleRequest(std::string(buffer.data(), bytes_read));
 		} else if (bytes_read == 0) {
-			// Unimplemented scope
+			std::cout << "󰅙 No socket reading.\n";
 			response = "No socket reading.";
 		} else {
-			// Unimplemented scope
-			response = "Server error.";
+			std::cout << "󰅙 Server socket reading error.\n";
+			response = "Server socket readin error.";
 		}
+
 		return response;
 	}
 } // namespace sews

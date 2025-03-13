@@ -27,17 +27,13 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <unordered_map>
 
 namespace sews {
-
 	class Request {
 	  public:
-		std::string method;
-		std::string path;
+		std::string method, path, body, raw;
 		std::unordered_map<std::string, std::string> headers;
-		std::string body;
 
 		explicit Request(const std::string& rawRequest);
 	};
-
 } // namespace sews
 
 #endif // !SEWS_REQUEST_HPP

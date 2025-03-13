@@ -25,10 +25,10 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace sews {
 	Request::Request(const std::string& rawRequest) {
-		std::istringstream stream(rawRequest);
+		this->raw = rawRequest;
+		std::istringstream stream(this->raw);
 		stream >> method >> path;
 		std::string headerLine;
-
 		while (std::getline(stream, headerLine) && headerLine != "\r") {
 			size_t pos = headerLine.find(":");
 			if (pos != std::string::npos) {

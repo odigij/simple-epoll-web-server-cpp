@@ -20,21 +20,24 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <filesystem>
+#include <fstream>
+#include <iostream>
 #include <response.hpp>
 #include <router.hpp>
-#include <sstream>
 
 namespace sews {
 	Router::Router() {
-		this->root = new Trie();
+		this->_root = new Trie();
+		this->_registerStatics();
 	}
 
 	Router::~Router() {
-		delete this->root;
-		this->root = nullptr;
+		delete this->_root;
+		this->_root = nullptr;
 	}
 
-	void Router::split(std::vector<std::string>& parts, std::string& route) {
+	void Router::_split(std::vector<std::string>& parts, std::string& route) {
 		std::stringstream ss(route);
 		std::string segment;
 		while (std::getline(ss, segment, '/')) {
@@ -45,11 +48,11 @@ namespace sews {
 	}
 
 	void Router::addRoute(std::string method, std::vector<std::string> routes,
-						  Trie::Handler function) {
+						  Trie::Handler function, std::string mime_type) {
 		for (std::string route : routes) {
 			std::vector<std::string> parts;
-			split(parts, route);
-			Trie* node = root;
+			_split(parts, route);
+			Trie* node = _root;
 			for (const std::string& part : parts) {
 				if (node->children.find(part) == node->children.end()) {
 					node->children[ part ] = new Trie();
@@ -57,16 +60,15 @@ namespace sews {
 				node = node->children[ part ];
 			}
 			node->methods[ method ] = function;
+			node->mime_type = mime_type;
 		}
 	}
 
-	// FIXME: Returns not found for both undefined route or function.
 	std::string Router::handleRequest(const std::string& raw_request) {
 		Request request(raw_request);
-		Trie* node = root;
+		Trie* node = this->_root;
 		std::vector<std::string> parts;
-		split(parts, request.path);
-
+		this->_split(parts, request.path);
 		std::unordered_map<std::string, std::string> params;
 
 		for (const std::string& part : parts) {
@@ -85,16 +87,73 @@ namespace sews {
 					}
 				}
 				if (!foundDynamic) {
-					return Response::notFound(true);
+					return serveStaticErrorPage(404);
 				}
 			}
 		}
 
 		if (node->methods.find(request.method) != node->methods.end()) {
-			return node->methods[ request.method ](request, params);
+			std::string responseBody = node->methods[ request.method ](request, params);
+			std::string detectedMimeType = node->mime_type.empty() ? "text/plain" : node->mime_type;
+			return Response::custom(responseBody, detectedMimeType, 200);
 		} else {
-			return Response::notFound();
+			return serveStaticErrorPage(405);
 		}
 	}
 
+	std::string Router::serveStaticErrorPage(int statusCode) {
+		std::string errorPath = "/" + std::to_string(statusCode) + ".html";
+		Trie* errorNode = this->_root;
+		std::vector<std::string> parts;
+		this->_split(parts, errorPath);
+		for (const std::string& part : parts) {
+			if (errorNode->children.find(part) != errorNode->children.end()) {
+				errorNode = errorNode->children[ part ];
+			} else {
+				errorNode = nullptr;
+				break;
+			}
+		}
+		if (errorNode && errorNode->methods.find("GET") != errorNode->methods.end()) {
+			return Response::custom(errorNode->methods[ "GET" ](Request("GET " + errorPath), {}),
+									"text/html", statusCode);
+		}
+		return Response::custom("Error " + std::to_string(statusCode), "text/plain", statusCode);
+	}
+
+	const std::string
+	Router::handleStaticFile(const sews::Request& request,
+							 const std::unordered_map<std::string, std::string>& params) {
+		std::string file_path = "../assets/public/static" + request.path;
+		std::ifstream file(file_path, std::ios::binary);
+		if (!file) {
+			return serveStaticErrorPage(404);
+		}
+		std::ostringstream contentStream;
+		contentStream << file.rdbuf(); // Read the entire file
+		file.close();
+		std::string mime_type = Response::getMimeType(request.path);
+		if (mime_type == "text/html") {
+			mime_type += "; charset=utf-8";
+		}
+		return contentStream.str();
+	}
+
+	void Router::_registerStatics() {
+		const std::string base_dir = "../assets/public/static";
+		std::vector<std::string> static_paths;
+		std::vector<std::string> mime_types;
+		for (const auto& entry : std::filesystem::recursive_directory_iterator(base_dir)) {
+			if (std::filesystem::is_regular_file(entry)) {
+				std::filesystem::path relative_path =
+					std::filesystem::relative(entry.path(), base_dir);
+				static_paths.push_back(relative_path.string());
+				mime_types.push_back(Response::getMimeType(relative_path.string()));
+			}
+		}
+		this->addRoute("GET", static_paths,
+					   std::bind(&Router::handleStaticFile, this, std::placeholders::_1,
+								 std::placeholders::_2),
+					   "static");
+	}
 } // namespace sews

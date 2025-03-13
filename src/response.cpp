@@ -20,35 +20,110 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <fstream>
 #include <response.hpp>
 #include <sstream>
+#include <unordered_map>
 
 namespace sews {
-	std::string Response::ok(const std::string& body, const std::string& contentType) {
-		return "HTTP/1.1 200 OK\r\nContent-Type: " + contentType +
-			   "\r\nContent-Length: " + std::to_string(body.size()) + "\r\n\r\n" + body;
-	}
-
-	std::string Response::notFound(bool isHtml) {
+	std::string Response::text(const std::string& data, int status) {
 		std::ostringstream responseStream;
-		if (isHtml) {
-			std::string content;
-			std::ifstream file("../assets/public/pages/404.html", std::ios::binary);
-			if (file) {
-				content.insert(content.end(), std::istreambuf_iterator<char>(file),
-							   std::istreambuf_iterator<char>());
-				responseStream << "HTTP/1.1 404 Not Found\r\n"
-							   << "Content-Type: text/html" << "\r\n"
-							   << "Content-Length: " << content.size() << "\r\n\r\n"
-							   << content;
-			}
-		} else {
-			responseStream << "HTTP/1.1 404 Not Found\r\n"
-						   << "Content-Type: text/plain\r\n"
-						   << "Content-Length: 9\r\n\r\n"
-						   << "Not Found";
-		}
+		responseStream << "HTTP/1.1 " << status << " OK\r\n"
+					   << "Content-Type: text/plain\r\n"
+					   << "Content-Length: " << data.size() << "\r\n"
+					   << "Connection: close\r\n"
+					   << "\r\n"
+					   << data;
 		return responseStream.str();
 	}
+
+	std::string Response::json(const std::string& jsonData, int status) {
+		std::ostringstream responseStream;
+		responseStream << "HTTP/1.1 " << status << " OK\r\n"
+					   << "Content-Type: application/json\r\n"
+					   << "Content-Length: " << jsonData.size() << "\r\n"
+					   << "Connection: close\r\n"
+					   << "\r\n"
+					   << jsonData;
+		return responseStream.str();
+	}
+
+	std::string Response::html(const std::string& htmlContent, int status) {
+		std::ostringstream responseStream;
+		responseStream << "HTTP/1.1 " << status << " OK\r\n"
+					   << "Content-Type: text/html\r\n"
+					   << "Content-Length: " << htmlContent.size() << "\r\n"
+					   << "Connection: close\r\n"
+					   << "\r\n"
+					   << htmlContent;
+		return responseStream.str();
+	}
+
+	std::string Response::notFound() {
+		std::string content = "404 Not Found";
+		std::ostringstream responseStream;
+		responseStream << "HTTP/1.1 404 Not Found\r\n"
+					   << "Content-Type: text/plain\r\n"
+					   << "Content-Length: " << content.size() << "\r\n"
+					   << "Connection: close\r\n"
+					   << "\r\n"
+					   << content;
+		return responseStream.str();
+	}
+
+	std::string Response::notAllowed() {
+		std::string content = "405 Not Allowed";
+		std::ostringstream responseStream;
+		responseStream << "HTTP/1.1 405 Not Allowed\r\n"
+					   << "Content-Type: text/plain\r\n"
+					   << "Content-Length: " << content.size() << "\r\n"
+					   << "Connection: close\r\n"
+					   << "\r\n"
+					   << content;
+		return responseStream.str();
+	}
+
+	std::string Response::getMimeType(const std::string& path) {
+		static const std::unordered_map<std::string, std::string> mimeTypes = {
+			{".html", "text/html"},		   {".css", "text/css"},  {".js", "application/javascript"},
+			{".json", "application/json"}, {".png", "image/png"}, {".jpg", "image/jpeg"},
+			{".jpeg", "image/jpeg"},	   {".gif", "image/gif"}, {".ico", "image/x-icon"},
+			{".svg", "image/svg+xml"},	   {".txt", "text/plain"}};
+
+		size_t dotPos = path.find_last_of(".");
+		if (dotPos != std::string::npos) {
+			std::string ext = path.substr(dotPos);
+			auto it = mimeTypes.find(ext);
+			if (it != mimeTypes.end()) {
+				return it->second;
+			}
+		}
+		return "application/octet-stream"; // Default for unknown types
+	}
+
+	std::string Response::fileResponse(const std::string& content, const std::string& path) {
+		std::string mimeType = getMimeType(path);
+
+		std::ostringstream responseStream;
+		responseStream << "HTTP/1.1 200 OK\r\n"
+					   << "Content-Type: " << mimeType << "\r\n"
+					   << "Content-Length: " << content.size() << "\r\n"
+					   << "Connection: close\r\n"
+					   << "\r\n"
+					   << content;
+
+		return responseStream.str();
+	}
+
+	std::string Response::custom(const std::string& content, const std::string& mimeType,
+								 int status) {
+		std::ostringstream responseStream;
+		responseStream << "HTTP/1.1 " << status << " OK\r\n"
+					   << "Content-Type: " << mimeType << "\r\n"
+					   << "Content-Length: " << content.size() << "\r\n"
+					   << "Connection: close\r\n"
+					   << "\r\n"
+					   << content;
+		return responseStream.str();
+	}
+
 } // namespace sews

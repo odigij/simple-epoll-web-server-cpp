@@ -30,16 +30,16 @@ namespace sews {
 	void SignalHandler::handle(int signal) {
 		switch (signal) {
 		case SIGINT:
-			flags |= 1;
+			_flags |= 1;
 			break;
 		case SIGTERM:
-			flags |= 2;
+			_flags |= 2;
 			break;
 		default:
 			break;
 		}
 	}
 	int SignalHandler::getSignal() {
-		return flags;
+		return _flags;
 	}
 } // namespace sews

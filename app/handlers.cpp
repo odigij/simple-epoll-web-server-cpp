@@ -23,85 +23,30 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include "include/handlers.hpp"
 
 #include <fstream>
-#include <iostream>
+#include <response.hpp>
 #include <sstream>
-#include <string>
 
 namespace app {
-	std::string getContentType(const std::string& path) {
-		static const std::unordered_map<std::string, std::string> mimeTypes = {
-			{".html", "text/html"}, {".css", "text/css"},	  {".js", "application/javascript"},
-			{".png", "image/png"},	{".jpg", "image/jpeg"},	  {".jpeg", "image/jpeg"},
-			{".gif", "image/gif"},	{".ico", "image/x-icon"}, {".svg", "image/svg+xml"}};
-		size_t dotPos = path.find_last_of(".");
-		if (dotPos != std::string::npos) {
-			std::string ext = path.substr(dotPos);
-			auto it = mimeTypes.find(ext);
-			if (it != mimeTypes.end()) {
-				return it->second;
-			}
-		}
-		return "application/octet-stream";
-	}
-
-	const std::string handleStaticFile(const sews::Request& request,
-									   const std::unordered_map<std::string, std::string>& params) {
-		std::string filePath = "../assets/public/" + request.path;
-		std::ifstream file(filePath, std::ios::binary);
-		std::ostringstream responseStream;
-		std::string content;
-		if (file) {
-			content.insert(content.end(), std::istreambuf_iterator<char>(file),
-						   std::istreambuf_iterator<char>());
-			responseStream << "HTTP/1.1 200 OK\r\n"
-						   << "Content-Type: " << getContentType(request.path) << "\r\n"
-						   << "Content-Length: " << content.size() << "\r\n"
-						   << "\r\n"
-						   << content;
-		} else {
-			std::ifstream file("../assets/public/pages/404.html", std::ios::binary);
-			content.insert(content.end(), std::istreambuf_iterator<char>(file),
-						   std::istreambuf_iterator<char>());
-			responseStream << "HTTP/1.1 404 Not Found\r\n"
-						   << "Content-Type: " << getContentType(request.path) << "\r\n"
-						   << "Content-Length: " << content.size() << "\r\n"
-						   << "\r\n"
-						   << content;
-		}
-		return responseStream.str();
-	}
 
 	const std::string handleIndex(const sews::Request& request,
 								  const std::unordered_map<std::string, std::string>& params) {
-		std::string content;
-		std::ostringstream responseStream;
-		std::ifstream file("../assets/public/pages/index.html", std::ios::binary);
-		if (file) {
-			content.insert(content.end(), std::istreambuf_iterator<char>(file),
-						   std::istreambuf_iterator<char>());
-			responseStream << "HTTP/1.1 200 OK\r\n"
-						   << "Content-Type: " << "text/html" << "\r\n"
-						   << "Content-Length: " << content.size() << "\r\n"
-						   << "\r\n"
-						   << content;
-		} else {
-			content.insert(content.end(), std::istreambuf_iterator<char>(file),
-						   std::istreambuf_iterator<char>());
-			responseStream << "HTTP/1.1 404 Not Found\r\n"
-						   << "Content-Type: " << "text/html" << "\r\n"
-						   << "Content-Length: " << content.size() << "\r\n"
-						   << "\r\n"
-						   << content;
-		}
-		return responseStream.str();
+		std::ifstream file("../assets/public/index.html", std::ios::binary);
+		std::ostringstream contentStream;
+		contentStream << file.rdbuf();
+		std::string content = contentStream.str();
+		return content;
 	}
 
 	const std::string apiTest(const sews::Request& request,
 							  const std::unordered_map<std::string, std::string>& params) {
 		auto it = params.find("id");
+		std::string responseBody;
 		if (it != params.end()) {
-			return "User profile for user: " + it->second;
+			responseBody = "{Params: " + it->second + '}';
+		} else {
+			responseBody = "{Params: null}";
 		}
-		return "User ID not provided";
+		return sews::Response::json(responseBody);
 	}
+
 } // namespace app

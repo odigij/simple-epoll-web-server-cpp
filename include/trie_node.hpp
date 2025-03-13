@@ -3,8 +3,6 @@
 
 #include <functional>
 #include <request.hpp>
-#include <string>
-#include <unordered_map>
 
 namespace sews {
 	struct Trie {
@@ -12,6 +10,7 @@ namespace sews {
 			const Request&, const std::unordered_map<std::string, std::string>&)>;
 		std::unordered_map<std::string, Trie*> children;
 		std::unordered_map<std::string, Handler> methods;
+		std::string mime_type;
 
 		~Trie() {
 			for (auto& childPair : this->children) {
@@ -19,7 +18,6 @@ namespace sews {
 			}
 		}
 	};
-
 } // namespace sews
 
 #endif // !SEWS_TRIE_NODE_HPP

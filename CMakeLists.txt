@@ -7,28 +7,22 @@ set(CMAKE_CXX_STANDARD 17)
 
 find_package(OpenSSL REQUIRED)
 if(NOT OpenSSL_FOUND)
-    message(FATAL_ERROR "OpenSSL not found. Install it with: sudo apt install libssl-dev")
+  message(FATAL_ERROR "OpenSSL not found. Install it with: sudo apt install libssl-dev")
 endif()
 
 # Collect source files
 file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/app/entry.cpp")
-    message(STATUS "Including: app/entry.cpp")
-    file(GLOB APP_SOURCES ${CMAKE_SOURCE_DIR}/app/*.cpp)
-    list(APPEND SOURCES ${APP_SOURCES})
+  message(STATUS "Including: app/entry.cpp")
+  file(GLOB APP_SOURCES ${CMAKE_SOURCE_DIR}/app/*.cpp)
+  list(APPEND SOURCES ${APP_SOURCES})
 else()
-    message(WARNING "app/entry.cpp is missing. Your app may not function correctly.")
+  message(WARNING "app/entry.cpp is missing. Your app may not function correctly.")
 endif()
 
 # Define project root directory
 set(PROJECT_ROOT_DIR "${CMAKE_SOURCE_DIR}")
-
-# Generate a config.h file with PROJECT_ROOT_DIR definition
-configure_file(
-    ${CMAKE_SOURCE_DIR}/include/config.hpp.in
-    ${CMAKE_BINARY_DIR}/include/generated/config.hpp
-)
 
 # Create executable
 add_executable(${P_NAME} ${SOURCES})

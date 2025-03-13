@@ -25,10 +25,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <app_entry.hpp>
 
 void sews::initializeApp(sews::Router& router) {
-	router.addRoute("GET", {"/", "/home"}, app::handleIndex);
-	router.addRoute("GET",
-					{"/icons/favicon-16x16.png", "/icons/apple-touch-icon.png",
-					 "/styles/stylesheet.css", "/info/site.webmanifest", "/info/about.txt"},
-					app::handleStaticFile);
-	router.addRoute("GET", {"/api/test/:id"}, app::apiTest);
+	router.addRoute("GET", {"/", "/home"}, app::handleIndex, "text/html");
+	router.addRoute("GET", {"/api/test/:parameters"}, app::apiTest, "application/json");
 }
