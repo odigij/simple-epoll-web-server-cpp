@@ -26,5 +26,5 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 void sews::initializeApp(sews::Router& router) {
 	router.addRoute("GET", {"/", "/home"}, app::handleIndex, "text/html");
-	router.addRoute("GET", {"/api/test/:parameters"}, app::apiTest, "application/json");
+	router.addRoute("GET", {"/api/test/:parameter"}, app::apiTest, "application/json");
 }

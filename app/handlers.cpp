@@ -39,7 +39,7 @@ namespace app {
 
 	const std::string apiTest(const sews::Request& request,
 							  const std::unordered_map<std::string, std::string>& params) {
-		auto it = params.find("id");
+		auto it = params.find("parameter");
 		std::string responseBody;
 		if (it != params.end()) {
 			responseBody = "{Params: " + it->second + '}';
