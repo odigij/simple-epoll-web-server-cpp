@@ -1,107 +1,54 @@
-# Simple Epoll Web Server
+# Simple Epoll Web Server (SEWS)
 
-## Description
+## 📌 Description
 
-The Simple Epoll Web Server (SEWS) is a lightweight, single-threaded web server written in **C++**. It explores **epoll-based**, **non-blocking I/O** and **event-driven** architectures. SEWS is **Linux-specific**, relying on **sys/epoll.h** and **POSIX** system calls. 
-## Features
+**SEWS** is a lightweight, experimental web server built in **C++** for learning and exploring web frameworks. It leverages **`sys/epoll`** for non-blocking, event-driven networking and is designed to be simple to use via **SSH on a remote server**. SEWS is **strictly single-threaded**, focusing on efficient I/O handling without multi-threading complexity.
 
-- **Linux-based** – Uses epoll and POSIX APIs.
+It supports **HTTPS via OpenSSL** and serves **static files**, automatically generating **trie-based nodes** for files inside **`assets/public/static`** to optimize lookups. 
 
-- **Single-threaded** – Efficiently handles multiple clients without extra threads.
+**Routing is fully customizable** via the `sews::initializeApp` function, allowing developers to define routes with support for **multiple paths and parameterized URLs** (manual parsing required for multiple parameters).
 
-- **Command-line options** – Supports terminal parameters (`--port`, `--max-request`, `--epoll-count`, `--timeout`, `--flags`, `--help`).
+While not as feature-rich as mainstream web frameworks, **SEWS provides a minimalistic and educational approach** to server development, making it ideal for experimenting with event-driven architectures and low-level networking.
 
-- **Non-blocking mode** – Uses epoll for scalable, event-driven I/O.
+---
 
-- **Handles multiple clients** – Supports concurrent client connections.
+## ✨ **Technical Features**
+| Feature | Description |
+|---------|------------|
+| **Epoll-based I/O** | Uses `epoll` for efficient event-driven networking, enabling non-blocking I/O operations. |
+| **Minimalist, Single-threaded Design** | SEWS is strictly single-threaded, leveraging `sys/epoll` for event-driven concurrency without multi-threading. |
+| **Command-Line Configuration** | Supports server configuration via CLI arguments at startup, allowing flexible initial setup. SEWS uses **JetBrains Mono font** and **Material Design Icons for logs**. |
+| **Static Content Serving** | Automatically detects and serves static files, generating **trie-based nodes** for assets in `assets/public/static`. |
+| **OpenSSL Integration** | Supports **HTTPS connections**, enabling secure communication. |
+| **Custom Routing System** | Allows defining routes via `sews::initializeApp`, supporting multiple paths and parameterized URLs (manual parsing required for multiple parameters). |
 
-- **Serves HTML & CSS** – Can deliver static web content.
+---
 
-- **Customizable router** – Define controllers to manage different request paths.
+## ⚙️ **Command-Line Options**
+SEWS supports various command-line options for configuring server behavior at startup.
 
-- **TLS** – Uses OpenSSL to secure connections.
+| Option | Description | Example |
+|--------|-------------|---------|
+| `-p`   | Set the server’s listening port. | `./sews -p 8080` |
+| `-m`   | Define the maximum number of pending connections in the backlog queue before new requests are refused. | `./sews -m 128` |
+| `-e`   | Set the number of events that can be processed per epoll cycle. | `./sews -e 32` |
+| `-t`   | Specify the timeout (in milliseconds) for epoll waiting. | `./sews -t 500` |
+| `-f`   | Define additional configuration flags for advanced server behavior. | `./sews -f 0` |
+| `--help` | Show all available CLI options and their descriptions. | `./sews --help` |
 
-## Requirements
+---
 
+## 🔧 **Build and Run Instructions**
+
+### **📌 Requirements**
 - **Linux OS** (or WSL if on Windows)
-
 - **C++17 or later**
-
 - **GCC or Clang compiler**
-
 - **CMake**
-
 - **OpenSSL**
 
-## Build and Run Instructions
+### **📌 Steps to Build and Run**
 
-### Prerequisites
-
-Ensure you have CMake and the required dependencies installed before proceeding.
-
-### Steps to Build and Run
-
-1. **Download or Clone the Repository:**
-
+1. **Clone the Repository:**
    ```bash
    git clone <repository_url>
-   ```
-
-   _(Replace `<repository_url>` with the actual repository link.)_
-
-2. **Navigate to the Project Directory:**
-
-   ```bash
-   cd <repository_name>
-   ```
-
-3. **Create and Enter the Build Directory:**
-
-   ```bash
-   mkdir build && cd build
-   ```
-
-4. **Run CMake to Generate Build Files:**
-
-   ```bash
-   cmake ..
-   ```
-
-5. **Compile the Project:**
-
-   ```bash
-   make
-   ```
-
-6. **Generate Cert:**
-
-   ```bash
-   openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes
-   ```
-
-7. **Run the Executable:**
-   ```bash
-   ./sews
-   ```
-
-### Advanced Usage
-
-By default, the server comes with a predefined router and static content handling. To customize request handling, follow these steps:
-
-1. **Create a file named entry.cpp in the app directory.**
-
-2. **Include the app_entry.hpp header:**
-   ```cpp
-   #include "../include/app_entry.hpp"
-   ```
-3. **Define the sews::initializeApp function in entry.cpp to customize the router:**
-   ```cpp
-   void sews::initializeApp(sews::Router& router) {
-    // Define your custom routes and handlers here
-    }
-   ```
-   This allows you to extend and modify the request handling logic according to your application’s needs.
-
-## License
-
-This project is licensed under the **MIT License**.
