@@ -47,8 +47,51 @@ SEWS supports various command-line options for configuring server behavior at st
 - **CMake**
 - **OpenSSL**
 
-### **📌 Steps to Build and Run**
+### 📌 Build and Run Instructions
 
-1. **Clone the Repository:**
+**Clone the Repository:**
    ```bash
-   git clone <repository_url>
+   git clone <https://github.com/odigij/simple-epoll-web-server-cpp.git>
+   ```
+
+**Navigate to the Project Directory:**
+   ```bash
+   cd <repository_name>
+   ```
+
+**Create a Build Directory and Enter It:**
+   ```bash
+   mkdir build && cd build
+   ```
+
+**Generate Build Files with CMake:**
+   ```bash
+   cmake ..
+   ```
+
+**Compile the Project:**
+   ```bash
+   make
+   ```
+
+**(Optional) Generate an SSL Certificate for HTTPS:**
+   If you want to enable **HTTPS**, create a self-signed SSL certificate:
+   ```bash
+   openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes
+   ```
+
+**Run SEWS:**
+   ```bash
+   ./sews --port 8080 &
+   ```
+   This starts the server in the background on port **8080**.
+
+**Check Available CLI Options:**
+   ```bash
+   ./sews --help
+   ```
+   This will display all supported command-line options.
+
+### ✅ Notes
+- The `--port` argument lets you specify the listening port.
+- Run `./sews --help` to see all available options.
