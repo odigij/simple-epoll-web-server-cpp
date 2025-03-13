@@ -51,12 +51,12 @@ SEWS supports various command-line options for configuring server behavior at st
 
 **Clone the Repository:**
    ```bash
-   git clone <https://github.com/odigij/simple-epoll-web-server-cpp.git>
+   git clone https://github.com/odigij/simple-epoll-web-server-cpp.git
    ```
 
 **Navigate to the Project Directory:**
    ```bash
-   cd <repository_name>
+   cd simple-epoll-web-server-cpp
    ```
 
 **Create a Build Directory and Enter It:**
@@ -75,23 +75,19 @@ SEWS supports various command-line options for configuring server behavior at st
    ```
 
 **(Optional) Generate an SSL Certificate for HTTPS:**
-   If you want to enable **HTTPS**, create a self-signed SSL certificate:
+   If you want to enable **HTTPS**, create a self-signed SSL certificate. The default flag option has been set to 1 to enable TLS. You may want to explicitly set it to 0 for HTTP (-f 0):
    ```bash
    openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes
    ```
 
 **Run SEWS:**
    ```bash
-   ./sews --port 8080 &
+   ./sews (optionaly you may want to use "./sews &" to run it in background)
    ```
-   This starts the server in the background on port **8080**.
+   This starts the server in the background on port **8080** as default.
 
 **Check Available CLI Options:**
    ```bash
    ./sews --help
    ```
    This will display all supported command-line options.
-
-### ✅ Notes
-- The `--port` argument lets you specify the listening port.
-- Run `./sews --help` to see all available options.
