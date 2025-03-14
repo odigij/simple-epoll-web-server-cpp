@@ -26,6 +26,7 @@ namespace sews {
 	void SignalHandler::init() {
 		std::signal(SIGINT, handle);
 		std::signal(SIGTERM, handle);
+		std::signal(SIGPIPE, SIG_IGN);
 	}
 	void SignalHandler::handle(int signal) {
 		switch (signal) {

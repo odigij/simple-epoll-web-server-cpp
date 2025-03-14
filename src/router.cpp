@@ -141,19 +141,15 @@ namespace sews {
 
 	void Router::_registerStatics() {
 		const std::string base_dir = "../assets/public/static";
-		std::vector<std::string> static_paths;
-		std::vector<std::string> mime_types;
 		for (const auto& entry : std::filesystem::recursive_directory_iterator(base_dir)) {
 			if (std::filesystem::is_regular_file(entry)) {
 				std::filesystem::path relative_path =
 					std::filesystem::relative(entry.path(), base_dir);
-				static_paths.push_back(relative_path.string());
-				mime_types.push_back(Response::getMimeType(relative_path.string()));
+				this->addRoute("GET", {relative_path.c_str()},
+							   std::bind(&Router::handleStaticFile, this, std::placeholders::_1,
+										 std::placeholders::_2),
+							   Response::getMimeType(relative_path.string()));
 			}
 		}
-		this->addRoute("GET", static_paths,
-					   std::bind(&Router::handleStaticFile, this, std::placeholders::_1,
-								 std::placeholders::_2),
-					   "static");
 	}
 } // namespace sews

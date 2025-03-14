@@ -26,7 +26,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace sews {
 	std::tuple<int, int, int, int, int> handleArgs(int argument_count, char* argument_vector[]) {
-		int port = 8080, maximum_request = 128, epoll_event_size = 64, timeout = 500, flags = 1,
+		int port = 443, maximum_request = 128, epoll_event_size = 64, timeout = 500, flags = 1,
 			option;
 		std::string terminal_message;
 		static struct option long_options[] = {

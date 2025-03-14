@@ -35,7 +35,11 @@ int main(int argc, char* argv[]) {
 			sews::handleArgs(argc, argv);
 		server.start(port, maximumRequest, timeout, flags, epollEventSize);
 		while (sews::SignalHandler::getSignal() == 0) {
-			server.update();
+			try {
+				server.update();
+			} catch (const std::exception& ex) {
+				std::cerr << "Error handling event: " << ex.what() << std::endl;
+			}
 		}
 		exit(EXIT_SUCCESS);
 	} catch (const std::exception& err) {

@@ -20,6 +20,7 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include <algorithm>
 #include <response.hpp>
 #include <sstream>
 #include <unordered_map>
@@ -84,20 +85,38 @@ namespace sews {
 
 	std::string Response::getMimeType(const std::string& path) {
 		static const std::unordered_map<std::string, std::string> mimeTypes = {
-			{".html", "text/html"},		   {".css", "text/css"},  {".js", "application/javascript"},
-			{".json", "application/json"}, {".png", "image/png"}, {".jpg", "image/jpeg"},
-			{".jpeg", "image/jpeg"},	   {".gif", "image/gif"}, {".ico", "image/x-icon"},
-			{".svg", "image/svg+xml"},	   {".txt", "text/plain"}};
+			{".html", "text/html"},
+			{".css", "text/css"},
+			{".js", "application/javascript"},
+			{".json", "application/json"},
+			{".png", "image/png"},
+			{".jpg", "image/jpeg"},
+			{".jpeg", "image/jpeg"},
+			{".gif", "image/gif"},
+			{".ico", "image/x-icon"},
+			{".svg", "image/svg+xml"},
+			{".txt", "text/plain"},
+			{".woff", "font/woff"},
+			{".woff2", "font/woff2"},
+			{".ttf", "font/ttf"},
+			{".eot", "application/vnd.ms-fontobject"},
+			{".mp3", "audio/mpeg"},
+			{".mp4", "video/mp4"},
+			{".xml", "application/xml"},
+			{".pdf", "application/pdf"},
+			{".zip", "application/zip"}};
 
 		size_t dotPos = path.find_last_of(".");
-		if (dotPos != std::string::npos) {
+		if (dotPos != std::string::npos && dotPos != path.length() - 1) {
 			std::string ext = path.substr(dotPos);
+			std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
 			auto it = mimeTypes.find(ext);
 			if (it != mimeTypes.end()) {
 				return it->second;
 			}
 		}
-		return "application/octet-stream"; // Default for unknown types
+
+		return "application/octet-stream"; // Default for unknown file types
 	}
 
 	std::string Response::fileResponse(const std::string& content, const std::string& path) {
@@ -121,9 +140,10 @@ namespace sews {
 					   << "Content-Type: " << mimeType << "\r\n"
 					   << "Content-Length: " << content.size() << "\r\n"
 					   << "Connection: close\r\n"
+					   /*<< "Connection: keep-alive\r\n"*/
+					   /*<< "Keep-Alive: timeout=1, max=100\r\n"*/
 					   << "\r\n"
 					   << content;
 		return responseStream.str();
 	}
-
 } // namespace sews

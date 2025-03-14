@@ -128,17 +128,21 @@ namespace sews {
 						   &client_address_size);
 				if (connection->file_descriptor < 0) {
 					std::cerr << "󱘹 Client connection failed.\n";
+					delete connection;
 					return;
 				}
+
 				int socket_flags = fcntl(connection->file_descriptor, F_GETFL, 0);
 				if (socket_flags == -1 ||
 					fcntl(connection->file_descriptor, F_SETFL, socket_flags | O_NONBLOCK) == -1) {
 					std::cerr << "󰅙 Failed to set non-blocking mode.\n";
 					close(connection->file_descriptor);
+					delete connection;
 					return;
 				}
-				int op, ret;
-				if (this->_flags & 1) {
+
+				int ret = 0;
+				if (this->_flags & 1) { // HTTPS Mode
 					connection->ssl = SSL_new(this->_ssl_ctx);
 					if (!connection->ssl) {
 						std::cerr << "󰅙 SSL_new() failed.\n";
@@ -147,24 +151,29 @@ namespace sews {
 						return;
 					}
 					SSL_set_fd(connection->ssl, connection->file_descriptor);
+					SSL_set_accept_state(connection->ssl);
 					ret = SSL_accept(connection->ssl);
 				} else {
 					connection->ssl = nullptr;
 				}
+
 				epoll_event client_epoll_event;
 				client_epoll_event.events = EPOLLIN;
 				client_epoll_event.data.ptr = connection;
+
 				if (this->_flags & 1 && ret <= 0) {
 					int err = SSL_get_error(connection->ssl, ret);
 					if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
 						client_epoll_event.events =
 							(err == SSL_ERROR_WANT_READ) ? EPOLLIN : EPOLLOUT;
 					} else {
-						std::cerr << "󰅙 SSL handshake failed.\n";
-						std::string msg = Response::text(
-							"You are trying to access via http, please use https in your url.");
-						send(connection->file_descriptor, msg.data(), msg.size(), 0);
+						std::cerr << "󰅙 SSL handshake failed with error: " << err << "\n";
 						ERR_print_errors_fp(stderr);
+
+						std::string msg = Response::text(
+							"You are trying to access via HTTP, please use HTTPS in your URL.");
+						send(connection->file_descriptor, msg.data(), msg.size(), 0);
+
 						SSL_shutdown(connection->ssl);
 						SSL_free(connection->ssl);
 						close(connection->file_descriptor);
@@ -172,6 +181,7 @@ namespace sews {
 						return;
 					}
 				}
+
 				if (epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_ADD,
 							  connection->file_descriptor, &client_epoll_event) != 0) {
 					std::cerr << "󰅙 Client epoll register failed.\n";
@@ -194,10 +204,9 @@ namespace sews {
 					SSL_shutdown(connection->ssl);
 					SSL_free(connection->ssl);
 				}
-				epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, connection->file_descriptor,
-						  nullptr);
 				close(connection->file_descriptor);
 				this->_connections.erase(connection);
+				delete connection;
 			} else if (poll_event.events & EPOLLIN) {
 				std::string response = this->_handleSocketData(poll_event);
 				if (response.empty()) {
@@ -231,34 +240,70 @@ namespace sews {
 				epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, poll_event.data.fd, nullptr);
 				close(connection->file_descriptor);
 				this->_connections.erase(connection);
+				delete connection;
 			}
 		}
 	}
 
 	void Server::_setUpTls() {
 		std::cout << "󱌢 Setting up TLS..\n";
-		SSL_library_init();
-		SSL_load_error_strings();
-		OpenSSL_add_all_algorithms();
-
+		static bool initialized = false;
+		if (!initialized) {
+			SSL_library_init();
+			SSL_load_error_strings();
+			OpenSSL_add_all_algorithms();
+			initialized = true;
+		}
 		this->_ssl_ctx = SSL_CTX_new(TLS_server_method());
 		if (!this->_ssl_ctx) {
 			std::cerr << "󰅙 SSL_CTX_new() failed\n";
+			ERR_print_errors_fp(stderr);
 			exit(EXIT_FAILURE);
 		}
+
+		SSL_CTX_set_cipher_list(this->_ssl_ctx, "HIGH:!aNULL:!MD5");
+		SSL_CTX_set_options(this->_ssl_ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 |
+												SSL_OP_NO_TLSv1_1);
+		SSL_CTX_set_session_cache_mode(this->_ssl_ctx, SSL_SESS_CACHE_SERVER);
+		SSL_CTX_set_options(this->_ssl_ctx, SSL_OP_NO_TICKET);
+		SSL_CTX_set_info_callback(this->_ssl_ctx, [](const SSL* ssl, int where, int ret) {
+			if (where & SSL_CB_HANDSHAKE_START) {
+				std::cout << "󰒊 SSL handshake started.\n";
+			}
+			if (where & SSL_CB_HANDSHAKE_DONE) {
+				std::cout << "󱅣 SSL handshake completed successfully.\n";
+			}
+			if (where & SSL_CB_ALERT) {
+				std::cerr << "󱈸 SSL ALERT: " << SSL_alert_desc_string_long(ret) << "\n";
+			}
+		});
+
 		char cwd[ 1024 ];
 		if (getcwd(cwd, sizeof(cwd)) != NULL) {
 			std::string certPath = std::string(cwd) + "/server.crt";
 			std::string keyPath = std::string(cwd) + "/server.key";
+
 			if (SSL_CTX_use_certificate_file(this->_ssl_ctx, certPath.c_str(), SSL_FILETYPE_PEM) <=
-					0 ||
-				SSL_CTX_use_PrivateKey_file(this->_ssl_ctx, keyPath.c_str(), SSL_FILETYPE_PEM) <=
-					0) {
-				std::cerr << "󰅙 SSL certificate or key failed to load.\n";
+				0) {
+				std::cerr << "󰅙 Failed to load SSL certificate from: " << certPath << "\n";
 				ERR_print_errors_fp(stderr);
-				exit(EXIT_FAILURE);
+				return;
+			}
+
+			if (SSL_CTX_use_PrivateKey_file(this->_ssl_ctx, keyPath.c_str(), SSL_FILETYPE_PEM) <=
+				0) {
+				std::cerr << "󰅙 Failed to load SSL private key from: " << keyPath << "\n";
+				ERR_print_errors_fp(stderr);
+				return;
+			}
+
+			if (!SSL_CTX_check_private_key(this->_ssl_ctx)) {
+				std::cerr << "󰅙 Private key does not match the certificate\n";
+				ERR_print_errors_fp(stderr);
+				return;
 			}
 		}
+
 		std::cout << "󱌢 Setup completed.\n";
 	}
 
