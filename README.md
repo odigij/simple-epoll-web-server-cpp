@@ -1,5 +1,9 @@
 # Simple Epoll Web Server (SEWS)
 
+## Warning
+
+**SEWS** is in **WIP**. There are many things to do. Everyone is welcome to contribute.
+
 ## 📌 Description
 
 **SEWS** is a lightweight, experimental web server built in **C++** for learning and exploring web frameworks. It leverages **`sys/epoll`** for non-blocking, event-driven networking and is designed to be simple to use via **SSH on a remote server**. SEWS is **strictly single-threaded**, focusing on efficient I/O handling without multi-threading complexity.
