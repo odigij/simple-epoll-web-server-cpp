@@ -31,7 +31,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 namespace sews {
 	class Server {
 	  public:
-		Server(Router& router);
+		Server(Router&);
 		Server(Server&&) = default;
 		Server(const Server&) = default;
 		Server& operator=(Server&&) = delete;
@@ -43,8 +43,10 @@ namespace sews {
 	  private:
 		int _flags, _file_descriptor, _epoll_file_descriptor, _timeout;
 		struct Connection {
-			int file_descriptor;
-			SSL* ssl;
+			int file_descriptor{-1};
+			SSL* ssl{nullptr};
+			std::string buffer{""};
+			int offset{0};
 		};
 		std::set<Server::Connection*> _connections;
 		std::vector<epoll_event> _epoll_pool;
@@ -52,9 +54,11 @@ namespace sews {
 		Router& _router;
 		void _createSocket(int port);
 		void _initSocket(int backlog);
-		void _handleEvents(epoll_event& poll_event);
-		std::string _handleSocketData(epoll_event& poll_event);
+		void _handleEvents(epoll_event&);
+		void _handleClientEvents(epoll_event&);
+		void _readClientSocket(epoll_event&);
 		void _setUpTls();
+		void _clear(Server::Connection&);
 	};
 } // namespace sews
 

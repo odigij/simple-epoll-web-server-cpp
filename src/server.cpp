@@ -28,8 +28,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <response.hpp>
 #include <server.hpp>
 #include <sstream>
-#include <sys/epoll.h>
-#include <sys/socket.h>
 #include <unistd.h>
 
 namespace sews {
@@ -39,13 +37,7 @@ namespace sews {
 	Server::~Server() {
 		std::cout << "󰩹 Cleaning server connections..\n";
 		for (auto connection : this->_connections) {
-			if (this->_flags & 1) {
-				SSL_shutdown(connection->ssl);
-				SSL_free(connection->ssl);
-			}
-			epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, connection->file_descriptor,
-					  nullptr);
-			close(connection->file_descriptor);
+			this->_clear(*connection);
 		}
 		std::cout << "󰒏 Shutting down the server.\n";
 		close(this->_epoll_file_descriptor);
@@ -58,7 +50,7 @@ namespace sews {
 		std::ostringstream server_info;
 		server_info << "󰣖 Settings: ";
 		if (this->_flags & 1) {
-			server_info << "󰒃 https";
+			server_info << "https";
 			this->_setUpTls();
 		} else {
 			server_info << "http";
@@ -74,7 +66,12 @@ namespace sews {
 			epoll_wait(this->_epoll_file_descriptor, this->_epoll_pool.data(),
 					   this->_epoll_pool.size(), this->_timeout);
 		for (int index(0); index < active_event_count; index++) {
-			this->_handleEvents(this->_epoll_pool.at(index));
+			epoll_event& poll_event = this->_epoll_pool.at(index);
+			if (this->_file_descriptor == poll_event.data.fd) {
+				this->_handleEvents(poll_event);
+				continue;
+			}
+			this->_handleClientEvents(poll_event);
 		}
 	}
 
@@ -114,133 +111,135 @@ namespace sews {
 	}
 
 	void Server::_handleEvents(epoll_event& poll_event) {
-		if (poll_event.data.fd == this->_file_descriptor) { // Server events
-			std::cout << "󰛴 Server event: ";
-			if (poll_event.events & (EPOLLHUP | EPOLLERR)) {
-				throw std::runtime_error("󰅙 Server socket closed unexpectedly.\n");
-			} else if (poll_event.events & EPOLLIN) {
-				std::cout << "󱇬 New connection.\n";
-				struct sockaddr_in client_address;
-				socklen_t client_address_size = sizeof(client_address);
-				Server::Connection* connection = new Server::Connection();
-				connection->file_descriptor =
-					accept(this->_file_descriptor, (struct sockaddr*)&client_address,
-						   &client_address_size);
-				if (connection->file_descriptor < 0) {
-					std::cerr << "󱘹 Client connection failed.\n";
-					delete connection;
-					return;
-				}
-
-				int socket_flags = fcntl(connection->file_descriptor, F_GETFL, 0);
-				if (socket_flags == -1 ||
-					fcntl(connection->file_descriptor, F_SETFL, socket_flags | O_NONBLOCK) == -1) {
-					std::cerr << "󰅙 Failed to set non-blocking mode.\n";
-					close(connection->file_descriptor);
-					delete connection;
-					return;
-				}
-
-				int ret = 0;
-				if (this->_flags & 1) { // HTTPS Mode
-					connection->ssl = SSL_new(this->_ssl_ctx);
-					if (!connection->ssl) {
-						std::cerr << "󰅙 SSL_new() failed.\n";
-						close(connection->file_descriptor);
-						delete connection;
-						return;
-					}
-					SSL_set_fd(connection->ssl, connection->file_descriptor);
-					SSL_set_accept_state(connection->ssl);
-					ret = SSL_accept(connection->ssl);
-				} else {
-					connection->ssl = nullptr;
-				}
-
-				epoll_event client_epoll_event;
-				client_epoll_event.events = EPOLLIN;
-				client_epoll_event.data.ptr = connection;
-
-				if (this->_flags & 1 && ret <= 0) {
-					int err = SSL_get_error(connection->ssl, ret);
-					if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
-						client_epoll_event.events =
-							(err == SSL_ERROR_WANT_READ) ? EPOLLIN : EPOLLOUT;
-					} else {
-						std::cerr << "󰅙 SSL handshake failed with error: " << err << "\n";
-						ERR_print_errors_fp(stderr);
-
-						std::string msg = Response::text(
-							"You are trying to access via HTTP, please use HTTPS in your URL.");
-						send(connection->file_descriptor, msg.data(), msg.size(), 0);
-
-						SSL_shutdown(connection->ssl);
-						SSL_free(connection->ssl);
-						close(connection->file_descriptor);
-						delete connection;
-						return;
-					}
-				}
-
-				if (epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_ADD,
-							  connection->file_descriptor, &client_epoll_event) != 0) {
-					std::cerr << "󰅙 Client epoll register failed.\n";
-					close(connection->file_descriptor);
-					if (this->_flags & 1) {
-						SSL_shutdown(connection->ssl);
-						SSL_free(connection->ssl);
-					}
-					delete connection;
-					return;
-				}
-				this->_connections.insert(connection);
+		std::cout << "󰛴 Server event: ";
+		if (poll_event.events & (EPOLLHUP | EPOLLERR)) {
+			throw std::runtime_error("󰅙 Server socket closed unexpectedly.\n");
+		} else if (poll_event.events & EPOLLIN) {
+			std::cout << "󱇬 New connection.\n";
+			struct sockaddr_in client_address;
+			socklen_t client_address_size = sizeof(client_address);
+			Server::Connection* connection = new Server::Connection();
+			connection->file_descriptor = accept(
+				this->_file_descriptor, (struct sockaddr*)&client_address, &client_address_size);
+			if (connection->file_descriptor < 0) {
+				std::cerr << "󱘹 Client connection failed.\n";
+				delete connection;
+				return;
 			}
-		} else { // Client events
-			Server::Connection* connection = static_cast<Server::Connection*>(poll_event.data.ptr);
-			if (poll_event.events & (EPOLLHUP | EPOLLERR)) {
-				epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, connection->file_descriptor,
-						  nullptr);
-				if (this->_flags & 1) {
-					SSL_shutdown(connection->ssl);
-					SSL_free(connection->ssl);
-				}
+
+			int socket_flags = fcntl(connection->file_descriptor, F_GETFL, 0);
+			if (socket_flags == -1 ||
+				fcntl(connection->file_descriptor, F_SETFL, socket_flags | O_NONBLOCK) == -1) {
+				std::cerr << "󰅙 Failed to set non-blocking mode.\n";
 				close(connection->file_descriptor);
-				this->_connections.erase(connection);
 				delete connection;
-			} else if (poll_event.events & EPOLLIN) {
-				std::string response = this->_handleSocketData(poll_event);
-				if (response.empty()) {
+				return;
+			}
+
+			int ret = 0;
+			if (this->_flags & 1) { // HTTPS Mode
+				connection->ssl = SSL_new(this->_ssl_ctx);
+				if (!connection->ssl) {
+					std::cerr << "󰅙 SSL_new() failed.\n";
+					close(connection->file_descriptor);
+					delete connection;
 					return;
 				}
-				if (this->_flags & 1) {
-					int bytes_written =
-						SSL_write(connection->ssl, response.c_str(), response.size());
-					if (bytes_written <= 0) {
-						int err = SSL_get_error(connection->ssl, bytes_written);
-						if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
-							epoll_event client_epoll_event;
-							client_epoll_event.data.ptr = connection;
-							client_epoll_event.events =
-								(err == SSL_ERROR_WANT_READ) ? EPOLLIN : EPOLLOUT;
-							epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_MOD,
-									  connection->file_descriptor, &client_epoll_event);
-							return;
-						}
-						std::cerr << "󰅙 Failed to send SSL data.\n";
-						ERR_print_errors_fp(stderr);
-					}
+				SSL_set_fd(connection->ssl, connection->file_descriptor);
+				SSL_set_accept_state(connection->ssl);
+				ret = SSL_accept(connection->ssl);
+			} else {
+				connection->ssl = nullptr;
+			}
+
+			epoll_event client_epoll_event;
+			client_epoll_event.events = EPOLLIN;
+			client_epoll_event.data.ptr = connection;
+
+			if (this->_flags & 1 && ret <= 0) {
+				int err = SSL_get_error(connection->ssl, ret);
+				if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
+					client_epoll_event.events = (err == SSL_ERROR_WANT_READ) ? EPOLLIN : EPOLLOUT;
+				} else {
+					std::cerr << "󰅙 SSL handshake failed with error: " << err << "\n";
+					ERR_print_errors_fp(stderr);
+
+					std::string msg = Response::text(
+						"You are trying to access via HTTP, please use HTTPS in your URL.");
+					send(connection->file_descriptor, msg.data(), msg.size(), 0);
+
 					SSL_shutdown(connection->ssl);
 					SSL_free(connection->ssl);
-				} else {
-					if (send(connection->file_descriptor, response.c_str(), response.size(), 0) ==
-						-1) {
-						std::cerr << "󰅙 Failed to send HTML.\n";
-					}
+					close(connection->file_descriptor);
+					delete connection;
+					return;
 				}
-				epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, poll_event.data.fd, nullptr);
+			}
+			if (epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_ADD, connection->file_descriptor,
+						  &client_epoll_event) != 0) {
+				std::cerr << "󰅙 Client epoll register failed.\n";
+				if (this->_flags & 1) {
+					SSL_shutdown(connection->ssl);
+					SSL_free(connection->ssl);
+				}
 				close(connection->file_descriptor);
-				this->_connections.erase(connection);
 				delete connection;
+				return;
+			}
+			this->_connections.insert(connection);
+		}
+	}
+
+	void Server::_handleClientEvents(epoll_event& poll_event) {
+		Server::Connection* connection = static_cast<Server::Connection*>(poll_event.data.ptr);
+		if (poll_event.events & (EPOLLHUP | EPOLLERR)) {
+			this->_clear(*connection);
+		} else if (poll_event.events & EPOLLIN) {
+			this->_readClientSocket(poll_event);
+			if (connection->buffer.empty()) {
+				return;
+			}
+			poll_event.events = EPOLLOUT;
+			epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_MOD, connection->file_descriptor,
+					  &poll_event);
+		} else if (poll_event.events & EPOLLOUT) {
+			if (connection->buffer.empty()) {
+				return;
+			}
+			connection->buffer = this->_router.handleRequest(connection->buffer.data());
+			char* ptr = connection->buffer.data() + connection->offset;
+			int remaining = connection->buffer.size() - connection->offset;
+			int bytes_written{0};
+			if ((this->_flags & 1) == 0) {
+				bytes_written = send(connection->file_descriptor, ptr, remaining, 0);
+				if (bytes_written <= 0) {
+					std::cerr << "󰅙 Failed to send HTML.\n";
+				}
+			} else {
+				bytes_written = SSL_write(connection->ssl, ptr, remaining);
+				if (bytes_written <= 0) {
+					int err = SSL_get_error(connection->ssl, bytes_written);
+					if (err == SSL_ERROR_WANT_READ || err == SSL_ERROR_WANT_WRITE) {
+						poll_event.events = (err == SSL_ERROR_WANT_READ) ? EPOLLIN : EPOLLOUT;
+						epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_MOD,
+								  connection->file_descriptor, &poll_event);
+						return;
+					}
+					std::cerr << "󰅙 Failed to send SSL data.\n";
+					ERR_print_errors_fp(stderr);
+				}
+			}
+			if (bytes_written > 0) {
+				connection->offset += bytes_written;
+				if (connection->offset < connection->buffer.size()) {
+					poll_event.events = EPOLLOUT;
+					epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_MOD,
+							  connection->file_descriptor, &poll_event);
+				} else {
+					connection->buffer.clear();
+					connection->offset = 0;
+					this->_clear(*connection);
+				}
 			}
 		}
 	}
@@ -260,8 +259,8 @@ namespace sews {
 			ERR_print_errors_fp(stderr);
 			exit(EXIT_FAILURE);
 		}
-
-		SSL_CTX_set_cipher_list(this->_ssl_ctx, "HIGH:!aNULL:!MD5");
+		SSL_CTX_set_cipher_list(this->_ssl_ctx,
+								"TLS_AES_256_GCM_SHA384:TLS_CHACHA20_POLY1305_SHA256");
 		SSL_CTX_set_options(this->_ssl_ctx, SSL_OP_NO_SSLv2 | SSL_OP_NO_SSLv3 | SSL_OP_NO_TLSv1 |
 												SSL_OP_NO_TLSv1_1);
 		SSL_CTX_set_session_cache_mode(this->_ssl_ctx, SSL_SESS_CACHE_SERVER);
@@ -307,49 +306,53 @@ namespace sews {
 		std::cout << "󱌢 Setup completed.\n";
 	}
 
-	std::string Server::_handleSocketData(epoll_event& poll_event) {
-		Server::Connection* connection = static_cast<Server::Connection*>(poll_event.data.ptr);
-		std::vector<char> buffer(1024 * 10);
-		ssize_t bytes_read;
-
-		if ((this->_flags & 1) == 1) {
-			// TLS Mode (SSL_read)
-			bytes_read = SSL_read(connection->ssl, buffer.data(), buffer.size() - 1);
-			if (bytes_read <= 0) {
-				int ssl_error = SSL_get_error(connection->ssl, bytes_read);
-				switch (ssl_error) {
-				case SSL_ERROR_ZERO_RETURN:
-					std::cout << "󰅙 SSL zero return.\n";
-					return "Connection closed.";
-				case SSL_ERROR_WANT_READ:
-				case SSL_ERROR_WANT_WRITE:
-					std::cout << "󰑖 󰒄 SSL wants more data, retrying..\n";
-					return "";
-				case SSL_ERROR_SYSCALL:
-					std::cout << "󰅙 SSL system call error.\n";
-					return "SSL system call error.";
-				default:
-					std::cout << "󰅙 Server SSL error.\n";
-					return "Server SSL error.";
-				}
-			}
-		} else {
-			// Plain HTTP Mode
-			bytes_read = read(connection->file_descriptor, buffer.data(), buffer.size() - 1);
+	void Server::_clear(Server::Connection& connection) {
+		if (this->_flags & 1) {
+			SSL_shutdown(connection.ssl);
+			SSL_free(connection.ssl);
 		}
-		std::string response("");
-		if (bytes_read > 0) {
-			buffer[ bytes_read ] = '\0';
-			std::cout << "󰇚 " << buffer.data() << "\n";
-			response = this->_router.handleRequest(std::string(buffer.data(), bytes_read));
-		} else if (bytes_read == 0) {
-			std::cout << "󰅙 No socket reading.\n";
-			response = "No socket reading.";
-		} else {
-			std::cout << "󰅙 Server socket reading error.\n";
-			response = "Server socket readin error.";
-		}
-
-		return response;
+		epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_DEL, connection.file_descriptor, nullptr);
+		close(connection.file_descriptor);
+		this->_connections.erase(&connection);
+		delete &connection;
 	}
+
+	void Server::_readClientSocket(epoll_event& poll_event) {
+		Server::Connection* connection = static_cast<Server::Connection*>(poll_event.data.ptr);
+		std::vector<char> buffer(1024);
+		ssize_t bytes_read = 0;
+		if ((this->_flags & 1) == 0) {
+			bytes_read = read(connection->file_descriptor, buffer.data(), buffer.size() - 1);
+		} else {
+			bytes_read = SSL_read(connection->ssl, buffer.data(), buffer.size() - 1);
+		}
+		if (bytes_read > 0) {
+			buffer[ bytes_read ] = '\0'; // Null-terminate for logging or string operations
+			std::cout << "Received: " << buffer.data() << "\n";
+			connection->buffer = buffer.data();
+		} else if (bytes_read == 0) {
+			std::cout << "Connection closed by peer.\n";
+			this->_clear(*connection);
+			return;
+		} else {
+			if (this->_flags & 1) {
+				int ssl_error = SSL_get_error(connection->ssl, bytes_read);
+				if (ssl_error == SSL_ERROR_ZERO_RETURN) {
+					std::cout << "󰅙 SSL zero return.\n";
+				} else if (ssl_error == SSL_ERROR_WANT_READ) {
+					std::cout << "󰑖 SSL wants more data, retrying..\n";
+					return;
+				} else if (ssl_error == SSL_ERROR_WANT_WRITE) {
+					std::cout << "󰑖 SSL wants more data, retrying..\n";
+					return;
+				} else if (ssl_error == SSL_ERROR_SYSCALL) {
+					std::cout << "󰅙 SSL system call error.\n";
+				}
+			} else {
+				std::cout << "󰅙 No socket reading.\n";
+			}
+			this->_clear(*connection);
+		}
+	}
+
 } // namespace sews

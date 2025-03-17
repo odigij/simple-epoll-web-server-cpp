@@ -29,7 +29,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 namespace sews {
 	class Request {
 	  public:
-		std::string method, path, body, raw;
+		std::string method, path, http_version, body, raw;
 		std::unordered_map<std::string, std::string> headers;
 
 		explicit Request(const std::string& rawRequest);

@@ -22,7 +22,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <filesystem>
 #include <fstream>
-#include <iostream>
 #include <response.hpp>
 #include <router.hpp>
 
@@ -70,7 +69,6 @@ namespace sews {
 		std::vector<std::string> parts;
 		this->_split(parts, request.path);
 		std::unordered_map<std::string, std::string> params;
-
 		for (const std::string& part : parts) {
 			if (node->children.find(part) != node->children.end()) {
 				node = node->children[ part ];
@@ -91,7 +89,6 @@ namespace sews {
 				}
 			}
 		}
-
 		if (node->methods.find(request.method) != node->methods.end()) {
 			std::string responseBody = node->methods[ request.method ](request, params);
 			std::string detectedMimeType = node->mime_type.empty() ? "text/plain" : node->mime_type;
