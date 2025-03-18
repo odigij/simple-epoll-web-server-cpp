@@ -2,3 +2,4 @@ build/
 .cache/
 extern/
 include/generated/
+*.bak/

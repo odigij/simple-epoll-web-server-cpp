@@ -199,6 +199,11 @@ namespace sews {
 			if (connection->buffer.empty()) {
 				return;
 			}
+			if (!connection->response_generated) {
+				connection->buffer = this->_router.handleRequest(connection->buffer.data());
+				connection->response_generated = true;
+				connection->offset = 0;
+			}
 			poll_event.events = EPOLLOUT;
 			epoll_ctl(this->_epoll_file_descriptor, EPOLL_CTL_MOD, connection->file_descriptor,
 					  &poll_event);
@@ -206,16 +211,15 @@ namespace sews {
 			if (connection->buffer.empty()) {
 				return;
 			}
-			connection->buffer = this->_router.handleRequest(connection->buffer.data());
 			char* ptr = connection->buffer.data() + connection->offset;
 			int remaining = connection->buffer.size() - connection->offset;
 			int bytes_written{0};
-			if ((this->_flags & 1) == 0) {
+			if ((this->_flags & 1) == 0) { // Plain HTTP
 				bytes_written = send(connection->file_descriptor, ptr, remaining, 0);
 				if (bytes_written <= 0) {
 					std::cerr << "󰅙 Failed to send HTML.\n";
 				}
-			} else {
+			} else { // HTTPS (TLS)
 				bytes_written = SSL_write(connection->ssl, ptr, remaining);
 				if (bytes_written <= 0) {
 					int err = SSL_get_error(connection->ssl, bytes_written);
@@ -229,6 +233,7 @@ namespace sews {
 					ERR_print_errors_fp(stderr);
 				}
 			}
+
 			if (bytes_written > 0) {
 				connection->offset += bytes_written;
 				if (connection->offset < connection->buffer.size()) {
@@ -327,7 +332,7 @@ namespace sews {
 			bytes_read = SSL_read(connection->ssl, buffer.data(), buffer.size() - 1);
 		}
 		if (bytes_read > 0) {
-			buffer[ bytes_read ] = '\0'; // Null-terminate for logging or string operations
+			buffer[ bytes_read ] = '\0';
 			std::cout << "Received: " << buffer.data() << "\n";
 			connection->buffer = buffer.data();
 		} else if (bytes_read == 0) {

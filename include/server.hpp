@@ -47,6 +47,7 @@ namespace sews {
 			SSL* ssl{nullptr};
 			std::string buffer{""};
 			int offset{0};
+			bool response_generated{false};
 		};
 		std::set<Server::Connection*> _connections;
 		std::vector<epoll_event> _epoll_pool;

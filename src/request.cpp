@@ -27,30 +27,22 @@ namespace sews {
 	Request::Request(const std::string& rawRequest) {
 		this->raw = rawRequest;
 		std::istringstream stream(this->raw);
-
-		// Read first line: Method, Path, HTTP Version
 		stream >> method >> path >> http_version;
-
-		// Read headers
 		std::string headerLine;
 		while (std::getline(stream, headerLine) && headerLine != "\r") {
 			if (headerLine.back() == '\r') {
-				headerLine.pop_back(); // Remove trailing \r if present
+				headerLine.pop_back();
 			}
-
 			size_t pos = headerLine.find(":");
 			if (pos != std::string::npos) {
 				std::string key = headerLine.substr(0, pos);
 				std::string value = headerLine.substr(pos + 1);
 
-				// Trim whitespace from value
 				value.erase(0, value.find_first_not_of(" \t"));
 				value.erase(value.find_last_not_of(" \t") + 1);
 				headers[ key ] = value;
 			}
 		}
-
-		// Read body (if exists)
 		std::stringstream bodyStream;
 		bodyStream << stream.rdbuf();
 		body = bodyStream.str();
