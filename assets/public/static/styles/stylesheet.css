@@ -1,203 +1,203 @@
 /* ===== General Styles ===== */
 body {
-  background-color: #f4f9f9;
-  font-family: "JetBrainsMono Nerd Font", monospace;
-  color: #1e3a5f;
-  margin: 0;
-  padding: 0;
-  font-size: 16pt;
+	background-color: #f4f9f9;
+	font-family: "JetBrainsMono Nerd Font", monospace;
+	color: #1e3a5f;
+	margin: 0;
+	padding: 0;
+	font-size: 16pt;
 }
 
 /* ===== Title & Headings ===== */
 .sews_title {
-  color: #1e3a5f;
-  font-size: 28pt;
-  text-align: center;
-  margin-bottom: 25px;
+	color: #1e3a5f;
+	font-size: 28pt;
+	text-align: center;
+	margin-bottom: 25px;
 }
 
 .sews_heading {
-  color: #1e3a5f;
-  font-size: 22pt;
-  margin-top: 30px;
-  border-bottom: 3px solid #1e3a5f;
-  padding-bottom: 5px;
+	color: #1e3a5f;
+	font-size: 22pt;
+	margin-top: 30px;
+	border-bottom: 3px solid #1e3a5f;
+	padding-bottom: 5px;
 }
 
 /* ===== Sections ===== */
 .sews_section {
-  margin: 40px auto;
-  padding: 25px;
-  max-width: 75%;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
-  transition: box-shadow 0.3s ease-in-out;
+	margin: 40px auto;
+	padding: 25px;
+	max-width: 75%;
+	background: #ffffff;
+	border-radius: 12px;
+	box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+	transition: box-shadow 0.3s ease-in-out;
 }
 
 /* Hover effect for a smoother feel */
 .sews_section:hover {
-  box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
+	box-shadow: 0px 6px 20px rgba(0, 0, 0, 0.15);
 }
 
 /* ===== Lists & Markers ===== */
 .sews_list {
-  list-style: none;
-  padding-left: 20px;
-  font-size: 16pt;
-  line-height: 25pt;
+	list-style: none;
+	padding-left: 20px;
+	font-size: 16pt;
+	line-height: 25pt;
 }
 
 .sews_list li {
-  margin-bottom: 10px;
+	margin-bottom: 10px;
 }
 
 /* Custom Icons for Lists */
 .sews_list_highlight li::marker {
-  content: " ";
+	content: " ";
 }
 .sews_list_requirements li::marker {
-  content: " ";
+	content: " ";
 }
 .sews_list_instructions li::marker {
-  content: "󰞷 ";
+	content: "󰞷 ";
 }
 .sews_list_build_run li::marker {
-  content: "󰁚 ";
+	content: "󰁚 ";
 }
 
 /* ===== Paragraphs & Typography ===== */
 .sews_paragraph {
-  text-align: justify;
-  line-height: 25pt;
+	text-align: justify;
+	line-height: 25pt;
 }
 
 /* ===== Tables (Improved Responsiveness) ===== */
 .sews_table {
-  display: table;
-  width: 100%;
-  max-width: 100%;
-  border-collapse: collapse;
-  table-layout: auto; /* Allows columns to adjust */
-  line-height: 1.6;
+	display: table;
+	width: 100%;
+	max-width: 100%;
+	border-collapse: collapse;
+	table-layout: auto; /* Allows columns to adjust */
+	line-height: 1.6;
 }
 
 .sews_table th,
 .sews_table td {
-  padding: 12px;
-  border: 1px solid #ccc;
-  text-align: left;
-  word-wrap: break-word; /* Prevents text overflow */
+	padding: 12px;
+	border: 1px solid #ccc;
+	text-align: left;
+	word-wrap: break-word; /* Prevents text overflow */
 }
 
 .sews_table th {
-  background-color: #f4f4f4;
-  font-weight: bold;
+	background-color: #f4f4f4;
+	font-weight: bold;
 }
 
 /* Improve table row visibility */
 .sews_table tr:nth-child(even) {
-  background-color: #f9fbfc;
+	background-color: #f9fbfc;
 }
 
 /* Enable table scrolling on small screens */
 @media (max-width: 768px) {
-  .sews_table {
-    display: block;
-    overflow-x: auto;
-    white-space: nowrap; /* Prevents text from breaking */
-  }
+	.sews_table {
+		display: block;
+		overflow-x: auto;
+		white-space: nowrap; /* Prevents text from breaking */
+	}
 }
 
 /* ===== Code Styling ===== */
 .sews_code {
-  font-family: "Courier New", monospace;
-  background: #eef2f3;
-  padding: 3px 7px;
-  border-radius: 5px;
-  color: #1e3a5f;
-  font-size: 15pt;
+	font-family: "Courier New", monospace;
+	background: #eef2f3;
+	padding: 3px 7px;
+	border-radius: 5px;
+	color: #1e3a5f;
+	font-size: 15pt;
 }
 
 /* Preformatted Code Blocks */
 .sews_pre {
-  background: #eef2f3;
-  padding: 15px;
-  border-radius: 6px;
-  overflow-x: auto;
-  font-size: 15pt;
-  line-height: 1.5;
+	background: #eef2f3;
+	padding: 15px;
+	border-radius: 6px;
+	overflow-x: auto;
+	font-size: 15pt;
+	line-height: 1.5;
 }
 
 /* Consistency in pre/code blocks */
 .sews_pre .sews_code {
-  background: none;
-  padding: 0;
+	background: none;
+	padding: 0;
 }
 
 /* ===== Footer ===== */
 .sews_footer p {
-  text-align: center;
-  color: #1e3a5f;
-  font-size: 14pt;
-  margin-bottom: 25px;
+	text-align: center;
+	color: #1e3a5f;
+	font-size: 14pt;
+	margin-bottom: 25px;
 }
 
 /* ===== 🚀 Responsive Adjustments 🚀 ===== */
 @media (max-width: 1024px) {
-  .sews_section {
-    max-width: 85%;
-  }
+	.sews_section {
+		max-width: 85%;
+	}
 }
 
 @media (max-width: 768px) {
-  body {
-    font-size: 14pt;
-  }
+	body {
+		font-size: 14pt;
+	}
 
-  .sews_title {
-    font-size: 24pt;
-  }
+	.sews_title {
+		font-size: 24pt;
+	}
 
-  .sews_heading {
-    font-size: 20pt;
-  }
+	.sews_heading {
+		font-size: 20pt;
+	}
 
-  .sews_section {
-    max-width: 90%;
-    padding: 20px;
-  }
+	.sews_section {
+		max-width: 90%;
+		padding: 20px;
+	}
 
-  .sews_table th,
-  .sews_table td {
-    padding: 8px;
-  }
+	.sews_table th,
+	.sews_table td {
+		padding: 8px;
+	}
 
-  .sews_code {
-    font-size: 14pt;
-  }
+	.sews_code {
+		font-size: 14pt;
+	}
 }
 
 /* Extreme small devices (phones) */
 @media (max-width: 480px) {
-  body {
-    font-size: 13pt;
-  }
+	body {
+		font-size: 13pt;
+	}
 
-  .sews_title {
-    font-size: 20pt;
-  }
+	.sews_title {
+		font-size: 20pt;
+	}
 
-  .sews_heading {
-    font-size: 18pt;
-  }
+	.sews_heading {
+		font-size: 18pt;
+	}
 
-  .sews_section {
-    max-width: 95%;
-    padding: 15px;
-  }
+	.sews_section {
+		max-width: 95%;
+		padding: 15px;
+	}
 
-  .sews_code {
-    font-size: 13pt;
-  }
+	.sews_code {
+		font-size: 13pt;
+	}
 }
