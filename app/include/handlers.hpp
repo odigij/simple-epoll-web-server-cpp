@@ -23,14 +23,14 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #ifndef APP_HANDLERS_HPP
 #define APP_HANDLERS_HPP
 
-#include <request.hpp>
 #include <string>
+#include "sews/request.hpp"
 
-namespace app {
-	const std::string handleIndex(const sews::Request& request,
-								  const std::unordered_map<std::string, std::string>& params);
-	const std::string apiTest(const sews::Request& request,
-							  const std::unordered_map<std::string, std::string>& params);
+namespace app
+{
+	const std::string handleIndex(const sews::Request &request,
+								  const std::unordered_map<std::string, std::string> &params);
+	const std::string apiTest(const sews::Request &request, const std::unordered_map<std::string, std::string> &params);
 } // namespace app
 
 #endif

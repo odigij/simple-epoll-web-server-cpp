@@ -20,27 +20,32 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <request.hpp>
 #include <sstream>
+#include "sews/request.hpp"
 
-namespace sews {
-	Request::Request(const std::string& rawRequest) {
+namespace sews
+{
+	Request::Request(const std::string &rawRequest)
+	{
 		this->raw = rawRequest;
 		std::istringstream stream(this->raw);
 		stream >> method >> path >> http_version;
 		std::string headerLine;
-		while (std::getline(stream, headerLine) && headerLine != "\r") {
-			if (headerLine.back() == '\r') {
+		while (std::getline(stream, headerLine) && headerLine != "\r")
+		{
+			if (headerLine.back() == '\r')
+			{
 				headerLine.pop_back();
 			}
 			size_t pos = headerLine.find(":");
-			if (pos != std::string::npos) {
+			if (pos != std::string::npos)
+			{
 				std::string key = headerLine.substr(0, pos);
 				std::string value = headerLine.substr(pos + 1);
 
 				value.erase(0, value.find_first_not_of(" \t"));
 				value.erase(value.find_last_not_of(" \t") + 1);
-				headers[ key ] = value;
+				headers[key] = value;
 			}
 		}
 		std::stringstream bodyStream;

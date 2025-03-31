@@ -20,16 +20,17 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "include/handlers.hpp"
-
 #include <fstream>
-#include <response.hpp>
 #include <sstream>
+#include "include/handlers.hpp"
+#include "sews/response.hpp"
 
-namespace app {
+namespace app
+{
 
-	const std::string handleIndex(const sews::Request& request,
-								  const std::unordered_map<std::string, std::string>& params) {
+	const std::string handleIndex(const sews::Request &request,
+								  const std::unordered_map<std::string, std::string> &params)
+	{
 		std::ifstream file("../assets/public/index.html", std::ios::binary);
 		std::ostringstream contentStream;
 		contentStream << file.rdbuf();
@@ -37,13 +38,16 @@ namespace app {
 		return content;
 	}
 
-	const std::string apiTest(const sews::Request& request,
-							  const std::unordered_map<std::string, std::string>& params) {
+	const std::string apiTest(const sews::Request &request, const std::unordered_map<std::string, std::string> &params)
+	{
 		auto it = params.find("parameter");
 		std::string responseBody;
-		if (it != params.end()) {
+		if (it != params.end())
+		{
 			responseBody = "{Params: " + it->second + '}';
-		} else {
+		}
+		else
+		{
 			responseBody = "{Params: null}";
 		}
 		return sews::Response::json(responseBody);

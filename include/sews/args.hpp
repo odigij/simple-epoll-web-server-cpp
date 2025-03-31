@@ -20,47 +20,14 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SEWS_SERVER_HPP
-#define SEWS_SERVER_HPP
+#ifndef SEWS_ARGS_HPP
+#define SEWS_ARGS_HPP
 
-#include <openssl/ssl.h>
-#include <router.hpp>
-#include <set>
-#include <sys/epoll.h>
+#include <tuple>
 
-namespace sews {
-	class Server {
-	  public:
-		Server(Router&);
-		Server(Server&&) = default;
-		Server(const Server&) = default;
-		Server& operator=(Server&&) = delete;
-		Server& operator=(const Server&) = delete;
-		~Server();
-		void start(int port, int backlog, int timeout, int flags, int epoll_pool_size);
-		void update();
-
-	  private:
-		int _flags, _file_descriptor, _epoll_file_descriptor, _timeout;
-		struct Connection {
-			int file_descriptor{-1};
-			SSL* ssl{nullptr};
-			std::string buffer{""};
-			int offset{0};
-			bool response_generated{false};
-		};
-		std::set<Server::Connection*> _connections;
-		std::vector<epoll_event> _epoll_pool;
-		SSL_CTX* _ssl_ctx;
-		Router& _router;
-		void _createSocket(int port);
-		void _initSocket(int backlog);
-		void _handleEvents(epoll_event&);
-		void _handleClientEvents(epoll_event&);
-		void _readClientSocket(epoll_event&);
-		void _setUpTls();
-		void _clear(Server::Connection&);
-	};
+namespace sews
+{
+	std::tuple<int, int, int, int, int> handleArgs(int argument_count, char *argument_vector[]);
 } // namespace sews
 
-#endif // !SEWS_SERVER_HPP
+#endif // !SEWS_ARGS_HPP

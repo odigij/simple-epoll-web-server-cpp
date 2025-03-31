@@ -20,11 +20,11 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
+#include "sews/app_entry.hpp"
 #include "include/handlers.hpp"
 
-#include <app_entry.hpp>
-
-void sews::initializeApp(sews::Router& router) {
+void sews::initializeApp(sews::Router &router)
+{
 	router.addRoute("GET", {"/", "/home"}, app::handleIndex, "text/html");
 	router.addRoute("GET", {"/api/test/:parameter"}, app::apiTest, "application/json");
 }

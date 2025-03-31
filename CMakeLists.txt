@@ -11,6 +11,11 @@ if(NOT OpenSSL_FOUND)
   message(FATAL_ERROR "OpenSSL not found. Install it by a suitable package manager.")
 endif()
 
+find_package(fmt REQUIRED)
+if(NOT fmt_FOUND)
+  message(FATAL_ERROR "fmt not found. Install it by a suitable package manager.")
+endif()
+
 file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
 
 if(EXISTS "${CMAKE_SOURCE_DIR}/app/entry.cpp")
@@ -32,4 +37,8 @@ target_include_directories(${PROJECT_NAME} PRIVATE
     ${CMAKE_SOURCE_DIR}/include
 )
 
-target_link_libraries(${PROJECT_NAME} OpenSSL::SSL OpenSSL::Crypto)
+target_link_libraries(${PROJECT_NAME}
+    OpenSSL::SSL
+    OpenSSL::Crypto
+    fmt::fmt
+)

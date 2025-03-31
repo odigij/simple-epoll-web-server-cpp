@@ -20,30 +20,37 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <iostream>
-#include <sews.hpp>
+#include "sews/logger.hpp"
+#include "sews/sews.hpp"
 
 volatile sig_atomic_t sews::SignalHandler::_flags = 0;
 
-int main(int argc, char* argv[]) {
-	try {
+int main(int argc, char *argv[])
+{
+	try
+	{
 		sews::SignalHandler::init();
 		sews::Router router;
 		sews::Server server(router);
 		sews::initializeApp(router);
-		auto [ port, maximumRequest, epollEventSize, timeout, flags ] =
-			sews::handleArgs(argc, argv);
+		auto [port, maximumRequest, epollEventSize, timeout, flags] = sews::handleArgs(argc, argv);
 		server.start(port, maximumRequest, timeout, flags, epollEventSize);
-		while (sews::SignalHandler::getSignal() == 0) {
-			try {
+		while (sews::SignalHandler::getSignal() == 0)
+		{
+			try
+			{
 				server.update();
-			} catch (const std::exception& ex) {
-				std::cerr << "Error handling event: " << ex.what() << std::endl;
+			}
+			catch (const std::exception &ex)
+			{
+				sews::logger::log(sews::logger::Mode::ERROR, fmt::format("Server update exception: {}", ex.what()));
 			}
 		}
 		exit(EXIT_SUCCESS);
-	} catch (const std::exception& err) {
-		std::cerr << err.what();
+	}
+	catch (const std::exception &ex)
+	{
+		sews::logger::log(sews::logger::Mode::ERROR, fmt::format("Server fatal exception: {}", ex.what()));
 		exit(EXIT_FAILURE);
 	}
 }

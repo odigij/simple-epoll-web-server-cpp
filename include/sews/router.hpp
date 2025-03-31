@@ -20,21 +20,35 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SEWS_SIGNAL_HPP
-#define SEWS_SIGNAL_HPP
+#ifndef SEWS_ROUTER_HPP
+#define SEWS_ROUTER_HPP
 
-#include <csignal>
+#include <vector>
+#include "trie_node.hpp"
 
-namespace sews {
-	class SignalHandler {
+namespace sews
+{
+	class Router
+	{
 	  public:
-		static void init();
-		static void handle(int signal);
-		static int getSignal();
+		Router();
+		Router(Router &&) = default;
+		Router(const Router &) = default;
+		Router &operator=(Router &&) = default;
+		Router &operator=(const Router &) = default;
+		~Router();
+		void addRoute(std::string method, std::vector<std::string> routes, Trie::Handler function,
+					  std::string mime_type);
+		std::string handleRequest(const std::string &raw_request);
 
 	  private:
-		static volatile sig_atomic_t _flags;
+		Trie *_root;
+		void _split(std::vector<std::string> &parts, std::string &route);
+		void _registerStatics();
+		const std::string handleStaticFile(const sews::Request &request,
+										   const std::unordered_map<std::string, std::string> &params);
+		std::string serveStaticErrorPage(int statusCode);
 	};
 } // namespace sews
 
-#endif // !SEWS_SIGNAL_HPP
+#endif // !SEWS_ROUTER_HPP

@@ -20,13 +20,18 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SEWS_APP_HPP
-#define SEWS_APP_HPP
+#ifndef SEWS_HPP
+#define SEWS_HPP
 
-#include <router.hpp>
+// This file serves as a bridge to multiple headers.
+// Some files might include this without using it directly.
 
-namespace sews {
-	void initializeApp(Router&);
-} // namespace sews
+#include "sews/app_entry.hpp"
+#include "args.hpp"
+#include "request.hpp"
+#include "response.hpp"
+#include "router.hpp"
+#include "server.hpp"
+#include "signal.hpp"
 
-#endif // !SEWS_APP_HPP
+#endif // !SEWS_HPP

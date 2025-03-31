@@ -20,34 +20,25 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SEWS_ROUTER_HPP
-#define SEWS_ROUTER_HPP
+#include "sews/logger.hpp"
+#include <chrono>
+#include <iomanip>
+#include <iostream>
+#include <sstream>
 
-#include <trie_node.hpp>
-#include <vector>
+std::string sews::logger::get_timestamp()
+{
+	std::chrono::time_point now = std::chrono::system_clock::now();
+	std::time_t in_time = std::chrono::system_clock::to_time_t(now);
+	std::chrono::duration ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+	std::stringstream ss;
+	ss << std::put_time(std::localtime(&in_time), "%F %T") << '.' << std::setfill('0') << std::setw(3) << ms.count();
+	return ss.str();
+}
 
-namespace sews {
-	class Router {
-	  public:
-		Router();
-		Router(Router&&) = default;
-		Router(const Router&) = default;
-		Router& operator=(Router&&) = default;
-		Router& operator=(const Router&) = default;
-		~Router();
-		void addRoute(std::string method, std::vector<std::string> routes, Trie::Handler function,
-					  std::string mime_type);
-		std::string handleRequest(const std::string& raw_request);
-
-	  private:
-		Trie* _root;
-		void _split(std::vector<std::string>& parts, std::string& route);
-		void _registerStatics();
-		const std::string
-		handleStaticFile(const sews::Request& request,
-						 const std::unordered_map<std::string, std::string>& params);
-		std::string serveStaticErrorPage(int statusCode);
-	};
-} // namespace sews
-
-#endif // !SEWS_ROUTER_HPP
+void sews::logger::log(Mode mode, const std::string &message)
+{
+	std::ostream &out = (mode == ERROR) ? std::cerr : std::cout;
+	std::string tag = (mode == ERROR) ? "[ERROR]" : "[INFO]";
+	out << "[" << get_timestamp() << "] " << tag << " " << message << std::endl;
+}

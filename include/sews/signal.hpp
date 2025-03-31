@@ -20,32 +20,23 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include "sews/signal.hpp"
+#ifndef SEWS_SIGNAL_HPP
+#define SEWS_SIGNAL_HPP
+
+#include <csignal>
 
 namespace sews
 {
-	void SignalHandler::init()
+	class SignalHandler
 	{
-		std::signal(SIGINT, handle);
-		std::signal(SIGTERM, handle);
-		std::signal(SIGPIPE, SIG_IGN);
-	}
-	void SignalHandler::handle(int signal)
-	{
-		switch (signal)
-		{
-			case SIGINT:
-				_flags |= 1;
-				break;
-			case SIGTERM:
-				_flags |= 2;
-				break;
-			default:
-				break;
-		}
-	}
-	int SignalHandler::getSignal()
-	{
-		return _flags;
-	}
+	  public:
+		static void init();
+		static void handle(int signal);
+		static int getSignal();
+
+	  private:
+		static volatile sig_atomic_t _flags;
+	};
 } // namespace sews
+
+#endif // !SEWS_SIGNAL_HPP

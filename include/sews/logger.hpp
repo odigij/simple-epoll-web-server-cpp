@@ -20,18 +20,25 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SEWS_HPP
-#define SEWS_HPP
+#ifndef SEWS_LOGGER_HPP
+#define SEWS_LOGGER_HPP
 
-// This file serves as a bridge to multiple headers.
-// Some files might include this without using it directly.
+#include <ctime>
+#include <string>
+#include <fmt/format.h>
 
-#include <app_entry.hpp>
-#include <args.hpp>
-#include <request.hpp>
-#include <response.hpp>
-#include <router.hpp>
-#include <server.hpp>
-#include <signal.hpp>
+namespace sews
+{
+	namespace logger
+	{
+		enum Mode
+		{
+			INFO,
+			ERROR,
+		};
+		std::string get_timestamp();
+		void log(Mode, const std::string &);
+	} // namespace logger
+} // namespace sews
 
-#endif // !SEWS_HPP
+#endif // !SEWS_LOGGER_HPP

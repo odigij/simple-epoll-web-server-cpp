@@ -20,13 +20,22 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SEWS_ARGS_HPP
-#define SEWS_ARGS_HPP
+#ifndef SEWS_REQUEST_HPP
+#define SEWS_REQUEST_HPP
 
-#include <tuple>
+#include <string>
+#include <unordered_map>
 
-namespace sews {
-	std::tuple<int, int, int, int, int> handleArgs(int argument_count, char* argument_vector[]);
+namespace sews
+{
+	class Request
+	{
+	  public:
+		std::string method, path, http_version, body, raw;
+		std::unordered_map<std::string, std::string> headers;
+
+		explicit Request(const std::string &rawRequest);
+	};
 } // namespace sews
 
-#endif // !SEWS_ARGS_HPP
+#endif // !SEWS_REQUEST_HPP
