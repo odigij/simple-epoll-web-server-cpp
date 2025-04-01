@@ -31,13 +31,10 @@ namespace sews
 	{
 	  public:
 		static std::string text(const std::string &data, int status = 200);
-		static std::string json(const std::string &jsonData, int status = 200);
-		static std::string html(const std::string &htmlContent, int status = 200);
-		static std::string fileResponse(const std::string &content, const std::string &path);
 		static std::string custom(const std::string &content, const std::string &mimeType, int status);
+		static std::string getMimeType(const std::string &path);
 		static std::string notFound();
 		static std::string notAllowed();
-		static std::string getMimeType(const std::string &path);
 	};
 } // namespace sews
 #endif

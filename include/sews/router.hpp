@@ -24,6 +24,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #define SEWS_ROUTER_HPP
 
 #include <vector>
+#include "nlohmann/json_fwd.hpp"
 #include "trie_node.hpp"
 
 namespace sews
@@ -40,6 +41,7 @@ namespace sews
 		void addRoute(std::string method, std::vector<std::string> routes, Trie::Handler function,
 					  std::string mime_type);
 		std::string handleRequest(const std::string &raw_request);
+		std::string debugRouteHandler(const Request &, const std::unordered_map<std::string, std::string> &);
 
 	  private:
 		Trie *_root;
@@ -48,6 +50,7 @@ namespace sews
 		const std::string handleStaticFile(const sews::Request &request,
 										   const std::unordered_map<std::string, std::string> &params);
 		std::string serveStaticErrorPage(int statusCode);
+		void collectRoutes(Trie *node, std::string currentPath, std::vector<nlohmann::json> &routes);
 	};
 } // namespace sews
 

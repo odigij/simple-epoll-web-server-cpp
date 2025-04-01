@@ -26,12 +26,13 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 // This file serves as a bridge to multiple headers.
 // Some files might include this without using it directly.
 
-#include "sews/app_entry.hpp"
+#include "app_entry.hpp"
 #include "args.hpp"
 #include "request.hpp"
 #include "response.hpp"
 #include "router.hpp"
 #include "server.hpp"
 #include "signal.hpp"
+#include "logger.hpp"
 
 #endif // !SEWS_HPP

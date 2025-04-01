@@ -21,9 +21,10 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <fstream>
-#include <sstream>
+#include <iostream>
 #include "include/handlers.hpp"
-#include "sews/response.hpp"
+#include "nlohmann/json_fwd.hpp"
+#include "external/nlohmann/json.hpp"
 
 namespace app
 {
@@ -34,23 +35,34 @@ namespace app
 		std::ifstream file("../assets/public/index.html", std::ios::binary);
 		std::ostringstream contentStream;
 		contentStream << file.rdbuf();
-		std::string content = contentStream.str();
-		return content;
+		return contentStream.str();
+	}
+
+	std::unordered_map<std::string, std::string> parseQueryString(const std::string &query)
+	{
+		std::unordered_map<std::string, std::string> result;
+		std::stringstream ss(query);
+		std::string pair;
+
+		while (std::getline(ss, pair, '&'))
+		{
+			size_t eq = pair.find('=');
+			if (eq != std::string::npos)
+			{
+				std::string key = pair.substr(0, eq);
+				std::string value = pair.substr(eq + 1);
+				result[key] = value;
+			}
+		}
+		return result;
 	}
 
 	const std::string apiTest(const sews::Request &request, const std::unordered_map<std::string, std::string> &params)
 	{
-		auto it = params.find("parameter");
-		std::string responseBody;
-		if (it != params.end())
-		{
-			responseBody = "{Params: " + it->second + '}';
-		}
-		else
-		{
-			responseBody = "{Params: null}";
-		}
-		return sews::Response::json(responseBody);
+		nlohmann::json jsonResponse;
+		jsonResponse["id"] = params.count("id") ? params.at("id") : nullptr;
+		jsonResponse["type"] = params.count("type") ? params.at("type") : nullptr;
+		return jsonResponse.dump(4);
 	}
 
 } // namespace app

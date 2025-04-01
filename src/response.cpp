@@ -39,30 +39,6 @@ namespace sews
 		return responseStream.str();
 	}
 
-	std::string Response::json(const std::string &jsonData, int status)
-	{
-		std::ostringstream responseStream;
-		responseStream << "HTTP/1.1 " << status << " OK\r\n"
-					   << "Content-Type: application/json\r\n"
-					   << "Content-Length: " << jsonData.size() << "\r\n"
-					   << "Connection: close\r\n"
-					   << "\r\n"
-					   << jsonData;
-		return responseStream.str();
-	}
-
-	std::string Response::html(const std::string &htmlContent, int status)
-	{
-		std::ostringstream responseStream;
-		responseStream << "HTTP/1.1 " << status << " OK\r\n"
-					   << "Content-Type: text/html\r\n"
-					   << "Content-Length: " << htmlContent.size() << "\r\n"
-					   << "Connection: close\r\n"
-					   << "\r\n"
-					   << htmlContent;
-		return responseStream.str();
-	}
-
 	std::string Response::notFound()
 	{
 		std::string content = "404 Not Found";
@@ -113,21 +89,6 @@ namespace sews
 		}
 
 		return "application/octet-stream"; // Default for unknown file types
-	}
-
-	std::string Response::fileResponse(const std::string &content, const std::string &path)
-	{
-		std::string mimeType = getMimeType(path);
-
-		std::ostringstream responseStream;
-		responseStream << "HTTP/1.1 200 OK\r\n"
-					   << "Content-Type: " << mimeType << "\r\n"
-					   << "Content-Length: " << content.size() << "\r\n"
-					   << "Connection: close\r\n"
-					   << "\r\n"
-					   << content;
-
-		return responseStream.str();
 	}
 
 	std::string Response::custom(const std::string &content, const std::string &mimeType, int status)

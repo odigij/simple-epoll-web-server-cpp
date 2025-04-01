@@ -22,7 +22,9 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include <filesystem>
 #include <fstream>
+#include "nlohmann/json.hpp"
 #include "sews/response.hpp"
+#include "sews/trie_node.hpp"
 #include "sews/router.hpp"
 
 namespace sews
@@ -60,16 +62,28 @@ namespace sews
 			std::vector<std::string> parts;
 			_split(parts, route);
 			Trie *node = _root;
+
 			for (const std::string &part : parts)
 			{
+				// Only create if not already there
 				if (node->children.find(part) == node->children.end())
 				{
 					node->children[part] = new Trie();
+
+					// ✅ Set DYNAMIC at creation time, on the edge being created
+					if (!part.empty() && part[0] == ':')
+					{
+						node->children[part]->flags |= NodeFlags::DYNAMIC;
+					}
 				}
+
+				// Step into it regardless
 				node = node->children[part];
 			}
+
 			node->methods[method] = function;
 			node->mime_type = mime_type;
+			node->flags |= NodeFlags::VALID;
 		}
 	}
 
@@ -80,15 +94,17 @@ namespace sews
 		std::vector<std::string> parts;
 		this->_split(parts, request.path);
 		std::unordered_map<std::string, std::string> params;
-		for (const std::string &part : parts)
+
+		for (size_t i = 0; i < parts.size(); ++i)
 		{
+			const std::string &part = parts[i];
+
 			if (node->children.find(part) != node->children.end())
 			{
 				node = node->children[part];
 			}
 			else
 			{
-				bool foundDynamic = false;
 				for (auto &childPair : node->children)
 				{
 					const std::string &key = childPair.first;
@@ -97,26 +113,29 @@ namespace sews
 						std::string paramName = key.substr(1);
 						params[paramName] = part;
 						node = childPair.second;
-						foundDynamic = true;
 						break;
 					}
 				}
-				if (!foundDynamic)
+				if (!(node->flags & NodeFlags::DYNAMIC))
 				{
 					return serveStaticErrorPage(404);
 				}
 			}
 		}
+
+		if (!(node->flags & NodeFlags::VALID))
+		{
+			return serveStaticErrorPage(404);
+		}
+
 		if (node->methods.find(request.method) != node->methods.end())
 		{
 			std::string responseBody = node->methods[request.method](request, params);
 			std::string detectedMimeType = node->mime_type.empty() ? "text/plain" : node->mime_type;
 			return Response::custom(responseBody, detectedMimeType, 200);
 		}
-		else
-		{
-			return serveStaticErrorPage(405);
-		}
+
+		return serveStaticErrorPage(405);
 	}
 
 	std::string Router::serveStaticErrorPage(int statusCode)
@@ -142,7 +161,9 @@ namespace sews
 			return Response::custom(errorNode->methods["GET"](Request("GET " + errorPath), {}), "text/html",
 									statusCode);
 		}
-		return Response::custom("Error " + std::to_string(statusCode), "text/plain", statusCode);
+		nlohmann::json json;
+		json["status-code"] = statusCode;
+		return Response::custom(json.dump(), "application/json", statusCode);
 	}
 
 	const std::string Router::handleStaticFile(const sews::Request &request,
@@ -179,4 +200,38 @@ namespace sews
 			}
 		}
 	}
+
+	void Router::collectRoutes(Trie *node, std::string currentPath, std::vector<nlohmann::json> &routes)
+	{
+		for (const auto &[segment, child] : node->children)
+		{
+			std::string fullPath = currentPath + "/" + segment;
+
+			if (child->flags & NodeFlags::VALID)
+			{
+				for (const auto &methodPair : child->methods)
+				{
+					nlohmann::json routeEntry;
+					routeEntry["method"] = methodPair.first;
+					routeEntry["path"] = fullPath;
+					routeEntry["mime"] = child->mime_type;
+					routeEntry["dynamic"] = bool(child->flags & NodeFlags::DYNAMIC);
+					routes.push_back(routeEntry);
+				}
+			}
+
+			collectRoutes(child, fullPath, routes); // recursive walk
+		}
+	}
+
+	std::string Router::debugRouteHandler(const Request &, const std::unordered_map<std::string, std::string> &)
+	{
+		std::vector<nlohmann::json> routes;
+		collectRoutes(this->_root, "", routes);
+
+		nlohmann::json output;
+		output["routes"] = routes;
+		return output.dump(); // or .dump() if you want raw
+	}
+
 } // namespace sews
