@@ -28,41 +28,25 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 namespace app
 {
-
 	const std::string handleIndex(const sews::Request &request,
 								  const std::unordered_map<std::string, std::string> &params)
 	{
 		std::ifstream file("../assets/public/index.html", std::ios::binary);
-		std::ostringstream contentStream;
-		contentStream << file.rdbuf();
-		return contentStream.str();
-	}
-
-	std::unordered_map<std::string, std::string> parseQueryString(const std::string &query)
-	{
-		std::unordered_map<std::string, std::string> result;
-		std::stringstream ss(query);
-		std::string pair;
-
-		while (std::getline(ss, pair, '&'))
-		{
-			size_t eq = pair.find('=');
-			if (eq != std::string::npos)
-			{
-				std::string key = pair.substr(0, eq);
-				std::string value = pair.substr(eq + 1);
-				result[key] = value;
-			}
-		}
-		return result;
+		std::ostringstream content_stream;
+		content_stream << file.rdbuf();
+		return content_stream.str();
 	}
 
 	const std::string apiTest(const sews::Request &request, const std::unordered_map<std::string, std::string> &params)
 	{
-		nlohmann::json jsonResponse;
-		jsonResponse["id"] = params.count("id") ? params.at("id") : nullptr;
-		jsonResponse["type"] = params.count("type") ? params.at("type") : nullptr;
-		return jsonResponse.dump(4);
+		auto query_params = request.query_params;
+		nlohmann::json json_response;
+		json_response["id"] = params.count("id") ? params.at("id") : nullptr;
+		json_response["type"] = params.count("type") ? params.at("type") : nullptr;
+		for (auto pair : query_params)
+		{
+			json_response["queries"][pair.first] = pair.second;
+		}
+		return json_response.dump(4);
 	}
-
 } // namespace app

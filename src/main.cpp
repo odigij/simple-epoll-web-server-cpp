@@ -22,7 +22,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "sews/sews.hpp"
 
-volatile sig_atomic_t sews::SignalHandler::_flags = 0;
+volatile sig_atomic_t sews::SignalHandler::_flags{0};
 
 int main(int argc, char *argv[])
 {
@@ -32,8 +32,8 @@ int main(int argc, char *argv[])
 		sews::Router router;
 		sews::Server server(router);
 		sews::initializeApp(router);
-		auto [port, maximumRequest, epollEventSize, timeout, flags] = sews::handleArgs(argc, argv);
-		server.start(port, maximumRequest, timeout, flags, epollEventSize);
+		auto [port, maximum_request, epoll_event_size, time_out, flags] = sews::handleArgs(argc, argv);
+		server.start(port, maximum_request, time_out, flags, epoll_event_size);
 		while (sews::SignalHandler::getSignal() == 0)
 		{
 			try

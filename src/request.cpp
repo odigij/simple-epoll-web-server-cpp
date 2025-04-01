@@ -30,26 +30,54 @@ namespace sews
 		this->raw = rawRequest;
 		std::istringstream stream(this->raw);
 		stream >> method >> path >> http_version;
-		std::string headerLine;
-		while (std::getline(stream, headerLine) && headerLine != "\r")
+
+		size_t query_start_position = path.find('?');
+		if (query_start_position != std::string::npos)
 		{
-			if (headerLine.back() == '\r')
-			{
-				headerLine.pop_back();
-			}
-			size_t pos = headerLine.find(":");
+			this->query_string = path.substr(query_start_position + 1);
+			path = path.substr(0, query_start_position);
+			this->query_params = this->parseQueryString(this->query_string);
+		}
+
+		std::string header_line;
+		while (std::getline(stream, header_line) && header_line != "\r")
+		{
+			if (!header_line.empty() && header_line.back() == '\r')
+				header_line.pop_back();
+
+			size_t pos = header_line.find(":");
 			if (pos != std::string::npos)
 			{
-				std::string key = headerLine.substr(0, pos);
-				std::string value = headerLine.substr(pos + 1);
-
+				std::string key = header_line.substr(0, pos);
+				std::string value = header_line.substr(pos + 1);
 				value.erase(0, value.find_first_not_of(" \t"));
 				value.erase(value.find_last_not_of(" \t") + 1);
 				headers[key] = value;
 			}
 		}
-		std::stringstream bodyStream;
-		bodyStream << stream.rdbuf();
-		body = bodyStream.str();
+
+		std::stringstream body_stream;
+		body_stream << stream.rdbuf();
+		body = body_stream.str();
 	}
+
+	std::unordered_map<std::string, std::string> sews::Request::parseQueryString(const std::string &query)
+	{
+		std::unordered_map<std::string, std::string> result;
+		std::stringstream ss(query);
+		std::string pair;
+
+		while (std::getline(ss, pair, '&'))
+		{
+			size_t eq = pair.find('=');
+			if (eq != std::string::npos)
+			{
+				std::string key = pair.substr(0, eq);
+				std::string value = pair.substr(eq + 1);
+				result[key] = value;
+			}
+		}
+		return result;
+	}
+
 } // namespace sews

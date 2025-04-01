@@ -65,19 +65,17 @@ namespace sews
 
 			for (const std::string &part : parts)
 			{
-				// Only create if not already there
+
 				if (node->children.find(part) == node->children.end())
 				{
 					node->children[part] = new Trie();
 
-					// ✅ Set DYNAMIC at creation time, on the edge being created
 					if (!part.empty() && part[0] == ':')
 					{
 						node->children[part]->flags |= NodeFlags::DYNAMIC;
 					}
 				}
 
-				// Step into it regardless
 				node = node->children[part];
 			}
 
@@ -176,7 +174,7 @@ namespace sews
 			return serveStaticErrorPage(404);
 		}
 		std::ostringstream contentStream;
-		contentStream << file.rdbuf(); // Read the entire file
+		contentStream << file.rdbuf();
 		file.close();
 		std::string mime_type = Response::getMimeType(request.path);
 		if (mime_type == "text/html")
@@ -220,7 +218,7 @@ namespace sews
 				}
 			}
 
-			collectRoutes(child, fullPath, routes); // recursive walk
+			collectRoutes(child, fullPath, routes);
 		}
 	}
 
@@ -231,7 +229,7 @@ namespace sews
 
 		nlohmann::json output;
 		output["routes"] = routes;
-		return output.dump(); // or .dump() if you want raw
+		return output.dump();
 	}
 
 } // namespace sews
