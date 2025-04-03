@@ -28,37 +28,33 @@ namespace sews
 	Request::Request(const std::string &rawRequest)
 	{
 		this->raw = rawRequest;
-		std::istringstream stream(this->raw);
-		stream >> method >> path >> http_version;
-
+		std::istringstream iss(this->raw);
+		iss >> this->method >> this->path >> this->http_version;
 		size_t query_start_position = path.find('?');
 		if (query_start_position != std::string::npos)
 		{
 			this->query_string = path.substr(query_start_position + 1);
-			path = path.substr(0, query_start_position);
+			this->path = path.substr(0, query_start_position);
 			this->query_params = this->parseQueryString(this->query_string);
 		}
-
 		std::string header_line;
-		while (std::getline(stream, header_line) && header_line != "\r")
+		while (std::getline(iss, header_line) && header_line != "\r")
 		{
 			if (!header_line.empty() && header_line.back() == '\r')
+			{
 				header_line.pop_back();
-
-			size_t pos = header_line.find(":");
+			}
+			size_t pos(header_line.find(":"));
 			if (pos != std::string::npos)
 			{
-				std::string key = header_line.substr(0, pos);
-				std::string value = header_line.substr(pos + 1);
+				std::string key(header_line.substr(0, pos));
+				std::string value(header_line.substr(pos + 1));
 				value.erase(0, value.find_first_not_of(" \t"));
 				value.erase(value.find_last_not_of(" \t") + 1);
 				headers[key] = value;
 			}
 		}
-
-		std::stringstream body_stream;
-		body_stream << stream.rdbuf();
-		body = body_stream.str();
+		body = iss.rdbuf()->str();
 	}
 
 	std::unordered_map<std::string, std::string> sews::Request::parseQueryString(const std::string &query)
@@ -66,18 +62,16 @@ namespace sews
 		std::unordered_map<std::string, std::string> result;
 		std::stringstream ss(query);
 		std::string pair;
-
 		while (std::getline(ss, pair, '&'))
 		{
 			size_t eq = pair.find('=');
-			if (eq != std::string::npos)
+			std::string key = pair.substr(0, eq);
+			if (!key.empty() && eq != std::string::npos)
 			{
-				std::string key = pair.substr(0, eq);
 				std::string value = pair.substr(eq + 1);
 				result[key] = value;
 			}
 		}
 		return result;
 	}
-
 } // namespace sews

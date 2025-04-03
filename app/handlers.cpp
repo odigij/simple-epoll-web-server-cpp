@@ -21,7 +21,6 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
 #include <fstream>
-#include <iostream>
 #include "include/handlers.hpp"
 #include "nlohmann/json_fwd.hpp"
 #include "external/nlohmann/json.hpp"

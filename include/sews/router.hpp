@@ -33,10 +33,6 @@ namespace sews
 	{
 	  public:
 		Router();
-		Router(Router &&) = default;
-		Router(const Router &) = default;
-		Router &operator=(Router &&) = default;
-		Router &operator=(const Router &) = default;
 		~Router();
 		void addRoute(std::string method, std::vector<std::string> routes, Trie::Handler function,
 					  std::string mime_type);
@@ -45,12 +41,12 @@ namespace sews
 
 	  private:
 		Trie *_root;
-		void _split(std::vector<std::string> &parts, std::string &route);
+		void _split(std::vector<std::string> &parts, const std::string &route);
 		void _registerStatics();
 		const std::string handleStaticFile(const sews::Request &request,
 										   const std::unordered_map<std::string, std::string> &params);
 		std::string serveStaticErrorPage(int statusCode);
-		void collectRoutes(Trie *node, std::string currentPath, std::vector<nlohmann::json> &routes);
+		void collectRoutes(Trie *node, const std::string currentPath, std::vector<nlohmann::json> &routes);
 	};
 } // namespace sews
 

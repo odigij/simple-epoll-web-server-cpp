@@ -22,9 +22,9 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 
 #include "sews/logger.hpp"
 #include <chrono>
+#include <fmt/format.h>
 #include <iomanip>
 #include <iostream>
-#include <sstream>
 
 std::string sews::logger::get_timestamp()
 {
@@ -39,6 +39,18 @@ std::string sews::logger::get_timestamp()
 void sews::logger::log(Mode mode, const std::string &message)
 {
 	std::ostream &out = (mode == ERROR) ? std::cerr : std::cout;
-	std::string tag = (mode == ERROR) ? "[ERROR]" : "[INFO]";
-	out << "[" << get_timestamp() << "] " << tag << " " << message << std::endl;
+	std::string tag;
+	switch (mode)
+	{
+		case INFO:
+			tag = "INFO";
+			break;
+		case WARN:
+			tag = "WARN";
+			break;
+		case ERROR:
+			tag = "ERROR";
+			break;
+	}
+	out << fmt::format("[ {} | {} ] {}\n", get_timestamp(), tag, message);
 }

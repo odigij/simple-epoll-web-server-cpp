@@ -34,6 +34,7 @@ namespace sews
 		enum Mode
 		{
 			INFO,
+			WARN,
 			ERROR,
 		};
 		std::string get_timestamp();

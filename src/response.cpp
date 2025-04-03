@@ -32,8 +32,10 @@ namespace sews
 		std::ostringstream responseStream;
 		responseStream << "HTTP/1.1 " << status << " OK\r\n"
 					   << "Content-Type: text/plain\r\n"
-					   << "Content-Length: " << data.size() << "\r\n"
-					   << "Connection: close\r\n"
+					   << "Content-Length: " << data.size()
+					   << "\r\n"
+					   // << "Connection: close\r\n"
+					   << "Connection: keep-alive\r\n"
 					   << "\r\n"
 					   << data;
 		return responseStream.str();
@@ -45,8 +47,10 @@ namespace sews
 		std::ostringstream responseStream;
 		responseStream << "HTTP/1.1 404 Not Found\r\n"
 					   << "Content-Type: text/plain\r\n"
-					   << "Content-Length: " << content.size() << "\r\n"
-					   << "Connection: close\r\n"
+					   << "Content-Length: " << content.size()
+					   << "\r\n"
+					   // << "Connection: close\r\n"
+					   << "Connection: keep-alive\r\n"
 					   << "\r\n"
 					   << content;
 		return responseStream.str();
@@ -58,8 +62,10 @@ namespace sews
 		std::ostringstream responseStream;
 		responseStream << "HTTP/1.1 405 Not Allowed\r\n"
 					   << "Content-Type: text/plain\r\n"
-					   << "Content-Length: " << content.size() << "\r\n"
-					   << "Connection: close\r\n"
+					   << "Content-Length: " << content.size()
+					   << "\r\n"
+					   // << "Connection: close\r\n"
+					   << "Connection: keep-alive\r\n"
 					   << "\r\n"
 					   << content;
 		return responseStream.str();
@@ -96,10 +102,11 @@ namespace sews
 		std::ostringstream responseStream;
 		responseStream << "HTTP/1.1 " << status << " OK\r\n"
 					   << "Content-Type: " << mimeType << "\r\n"
-					   << "Content-Length: " << content.size() << "\r\n"
-					   << "Connection: close\r\n"
-					   /*<< "Connection: keep-alive\r\n"*/
-					   /*<< "Keep-Alive: timeout=1, max=100\r\n"*/
+					   << "Content-Length: " << content.size()
+					   << "\r\n"
+					   // << "Connection: close\r\n"
+					   << "Connection: keep-alive\r\n"
+					   // << "Keep-Alive: timeout=1, max=100\r\n"
 					   << "\r\n"
 					   << content;
 		return responseStream.str();

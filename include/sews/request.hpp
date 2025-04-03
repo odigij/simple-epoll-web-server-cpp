@@ -31,6 +31,7 @@ namespace sews
 	class Request
 	{
 	  public:
+		Request();
 		explicit Request(const std::string &rawRequest);
 		std::string method, path, http_version, body, raw, query_string;
 		std::unordered_map<std::string, std::string> query_params;

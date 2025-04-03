@@ -20,7 +20,6 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <filesystem>
 #include <fstream>
 #include "nlohmann/json.hpp"
 #include "sews/response.hpp"
@@ -41,7 +40,7 @@ namespace sews
 		this->_root = nullptr;
 	}
 
-	void Router::_split(std::vector<std::string> &parts, std::string &route)
+	void Router::_split(std::vector<std::string> &parts, const std::string &route)
 	{
 		std::stringstream ss(route);
 		std::string segment;
@@ -57,15 +56,13 @@ namespace sews
 	void Router::addRoute(std::string method, std::vector<std::string> routes, Trie::Handler function,
 						  std::string mime_type)
 	{
-		for (std::string route : routes)
+		for (const std::string &route : routes)
 		{
 			std::vector<std::string> parts;
 			_split(parts, route);
 			Trie *node = _root;
-
 			for (const std::string &part : parts)
 			{
-
 				if (node->children.find(part) == node->children.end())
 				{
 					node->children[part] = new Trie();
@@ -75,10 +72,8 @@ namespace sews
 						node->children[part]->flags |= NodeFlags::DYNAMIC;
 					}
 				}
-
 				node = node->children[part];
 			}
-
 			node->methods[method] = function;
 			node->mime_type = mime_type;
 			node->flags |= NodeFlags::VALID;
@@ -92,25 +87,22 @@ namespace sews
 		std::vector<std::string> parts;
 		this->_split(parts, request.path);
 		std::unordered_map<std::string, std::string> params;
-
-		for (size_t i = 0; i < parts.size(); ++i)
+		for (std::string &part : parts)
 		{
-			const std::string &part = parts[i];
-
 			if (node->children.find(part) != node->children.end())
 			{
 				node = node->children[part];
 			}
 			else
 			{
-				for (auto &childPair : node->children)
+				for (const std::pair<const std::basic_string<char>, sews::Trie *> &child_pair : node->children)
 				{
-					const std::string &key = childPair.first;
+					const std::string &key = child_pair.first;
 					if (!key.empty() && key[0] == ':')
 					{
-						std::string paramName = key.substr(1);
-						params[paramName] = part;
-						node = childPair.second;
+						std::string param_name = key.substr(1);
+						params[param_name] = part;
+						node = child_pair.second;
 						break;
 					}
 				}
@@ -120,43 +112,40 @@ namespace sews
 				}
 			}
 		}
-
 		if (!(node->flags & NodeFlags::VALID))
 		{
 			return serveStaticErrorPage(404);
 		}
-
 		if (node->methods.find(request.method) != node->methods.end())
 		{
-			std::string responseBody = node->methods[request.method](request, params);
-			std::string detectedMimeType = node->mime_type.empty() ? "text/plain" : node->mime_type;
-			return Response::custom(responseBody, detectedMimeType, 200);
+			std::string response_body = node->methods[request.method](request, params);
+			std::string detected_mime_type = node->mime_type.empty() ? "text/plain" : node->mime_type;
+			return Response::custom(response_body, detected_mime_type, 200);
 		}
-
 		return serveStaticErrorPage(405);
 	}
 
 	std::string Router::serveStaticErrorPage(int statusCode)
 	{
-		std::string errorPath = "/" + std::to_string(statusCode) + ".html";
-		Trie *errorNode = this->_root;
+		std::string error_path = "/" + std::to_string(statusCode) + ".html";
+		Trie *error_node = this->_root;
 		std::vector<std::string> parts;
-		this->_split(parts, errorPath);
+		this->_split(parts, error_path);
 		for (const std::string &part : parts)
 		{
-			if (errorNode->children.find(part) != errorNode->children.end())
+			if (error_node->children.find(part) != error_node->children.end())
 			{
-				errorNode = errorNode->children[part];
+				error_node = error_node->children[part];
 			}
 			else
 			{
-				errorNode = nullptr;
+				error_node = nullptr;
 				break;
 			}
 		}
-		if (errorNode && errorNode->methods.find("GET") != errorNode->methods.end())
+		if (error_node && error_node->methods.find("GET") != error_node->methods.end())
 		{
-			return Response::custom(errorNode->methods["GET"](Request("GET " + errorPath), {}), "text/html",
+			return Response::custom(error_node->methods["GET"](Request("GET " + error_path), {}), "text/html",
 									statusCode);
 		}
 		nlohmann::json json;
@@ -173,15 +162,15 @@ namespace sews
 		{
 			return serveStaticErrorPage(404);
 		}
-		std::ostringstream contentStream;
-		contentStream << file.rdbuf();
+		std::ostringstream os;
+		os << file.rdbuf();
 		file.close();
 		std::string mime_type = Response::getMimeType(request.path);
 		if (mime_type == "text/html")
 		{
 			mime_type += "; charset=utf-8";
 		}
-		return contentStream.str();
+		return os.str();
 	}
 
 	void Router::_registerStatics()
@@ -199,26 +188,24 @@ namespace sews
 		}
 	}
 
-	void Router::collectRoutes(Trie *node, std::string currentPath, std::vector<nlohmann::json> &routes)
+	void Router::collectRoutes(Trie *node, const std::string currentPath, std::vector<nlohmann::json> &routes)
 	{
 		for (const auto &[segment, child] : node->children)
 		{
-			std::string fullPath = currentPath + "/" + segment;
-
+			std::string full_path = currentPath + "/" + segment;
 			if (child->flags & NodeFlags::VALID)
 			{
-				for (const auto &methodPair : child->methods)
+				for (const auto &method_pair : child->methods)
 				{
-					nlohmann::json routeEntry;
-					routeEntry["method"] = methodPair.first;
-					routeEntry["path"] = fullPath;
-					routeEntry["mime"] = child->mime_type;
-					routeEntry["dynamic"] = bool(child->flags & NodeFlags::DYNAMIC);
-					routes.push_back(routeEntry);
+					nlohmann::json route_entry;
+					route_entry["method"] = method_pair.first;
+					route_entry["path"] = full_path;
+					route_entry["mime"] = child->mime_type;
+					route_entry["dynamic"] = bool(child->flags & NodeFlags::DYNAMIC);
+					routes.push_back(route_entry);
 				}
 			}
-
-			collectRoutes(child, fullPath, routes);
+			collectRoutes(child, full_path, routes);
 		}
 	}
 
@@ -226,7 +213,6 @@ namespace sews
 	{
 		std::vector<nlohmann::json> routes;
 		collectRoutes(this->_root, "", routes);
-
 		nlohmann::json output;
 		output["routes"] = routes;
 		return output.dump();

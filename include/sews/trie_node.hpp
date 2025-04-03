@@ -23,7 +23,6 @@ namespace sews
 		std::unordered_map<std::string, Handler> methods;
 		std::string mime_type;
 		uint8_t flags{0};
-
 		~Trie()
 		{
 			for (auto &childPair : this->children)

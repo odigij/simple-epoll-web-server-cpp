@@ -45,11 +45,11 @@ int main(int argc, char *argv[])
 				sews::logger::log(sews::logger::Mode::ERROR, fmt::format("Server update exception: {}", ex.what()));
 			}
 		}
-		exit(EXIT_SUCCESS);
 	}
 	catch (const std::exception &ex)
 	{
 		sews::logger::log(sews::logger::Mode::ERROR, fmt::format("Server fatal exception: {}", ex.what()));
 		exit(EXIT_FAILURE);
 	}
+	exit(EXIT_SUCCESS);
 }

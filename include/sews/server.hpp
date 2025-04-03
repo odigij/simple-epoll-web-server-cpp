@@ -26,6 +26,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #include <set>
 #include <sys/epoll.h>
 #include <openssl/ssl.h>
+#include <chrono>
 #include "router.hpp"
 
 namespace sews
@@ -43,14 +44,24 @@ namespace sews
 		void update();
 
 	  private:
-		int _flags, _file_descriptor, _epoll_file_descriptor, _timeout;
+		int _flags, _file_descriptor, _epoll_file_descriptor, _timeout, _timer_fd;
+		size_t _max_connection_count{1024}, _max_request_size{1204 * 8};
+		enum ConnState : uint8_t
+		{
+			HANDSHAKE,
+			READING,
+			PROCESSING,
+			WRITING,
+			CLOSED
+		};
 		struct Connection
 		{
-			int file_descriptor{-1};
+			int file_descriptor{-1}, write_offset{0}, requests_handled{0};
 			SSL *ssl{nullptr};
-			std::string buffer{""};
-			int offset{0};
-			bool response_generated{false};
+			std::string read_buffer, write_buffer;
+			ConnState state;
+			bool keep_alive{false};
+			std::chrono::steady_clock::time_point handshake_start_time, last_active;
 		};
 		std::set<Server::Connection *> _connections;
 		std::vector<epoll_event> _epoll_pool;
@@ -60,10 +71,13 @@ namespace sews
 		void _initSocket(int backlog);
 		void _handleEvents(epoll_event &);
 		void _handleClientEvents(epoll_event &);
-		void _readClientSocket(epoll_event &);
 		void _setUpTls();
-		void _clear(Server::Connection &);
+		void _updateEpoll(Server::Connection *, uint32_t events);
+		void _resumeTlsHandshake(Connection *, epoll_event &event);
+		void _writeToClient(Connection *, epoll_event &event);
+		void _readFromClient(Connection *, epoll_event &event);
+		void _processRequest(Connection *);
+		void _clear(Server::Connection *);
 	};
 } // namespace sews
-
 #endif // !SEWS_SERVER_HPP
