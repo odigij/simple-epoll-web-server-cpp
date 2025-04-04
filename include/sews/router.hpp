@@ -24,7 +24,7 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 #define SEWS_ROUTER_HPP
 
 #include <vector>
-#include "nlohmann/json_fwd.hpp"
+#include "nlohmann/json.hpp"
 #include "trie_node.hpp"
 
 namespace sews

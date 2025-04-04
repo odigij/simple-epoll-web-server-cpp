@@ -22,11 +22,11 @@ if(EXISTS "${CMAKE_SOURCE_DIR}/app/entry.cpp")
   file(GLOB APP_SOURCES ${CMAKE_SOURCE_DIR}/app/*.cpp)
   list(APPEND SOURCES ${APP_SOURCES})
 else()
-  message(WARNING "app/entry.cpp is missing. If you have custom routes your app won't work correctly.")
+  message(FATAL_ERROR "app/entry.cpp is missing.")
 endif()
 
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/assets")
-  message(WARNING "assets directory is missing! Your app may not function correctly.")
+  message(FATAL_ERROR "assets directory is missing!")
 endif()
 
 set(PROJECT_ROOT_DIR "${CMAKE_SOURCE_DIR}")

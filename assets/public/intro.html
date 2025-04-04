@@ -1,0 +1,48 @@
+<div class="sews_section">
+	<h1 class="sews_heading">󰈙 Introduction</h1>
+
+	<p class="sews_paragraph">
+		This is the main index route, manually registered at
+		<span class="sews_highlight">127.0.0.1:{port}/</span> using SEWS’s internal routing system.
+		Unlike static assets such as CSS, JavaScript, or images located in
+		<span class="sews_highlight">assets/public/static</span>, this route is served dynamically by an
+		application-defined handler.
+	</p>
+
+	<p class="sews_paragraph">
+		The handler is defined in
+		<span class="sews_highlight">app/include/handlers.hpp</span> and
+		<span class="sews_highlight">app/handlers.cpp</span>, typically under a function like
+		<span class="sews_highlight">app::handleIndex()</span>. It is registered explicitly in
+		<span class="sews_highlight">app/entry.cpp</span>, inside
+		<span class="sews_highlight">void sews::initializeApp(sews::Router &router)</span> — the main
+		entry point for defining application routes.
+	</p>
+
+	<p class="sews_paragraph">
+		SEWS provides a minimal but flexible routing system. Routes are manually defined, support path
+		parameters, allow for MIME-type specification, and invoke user-defined handlers for each
+		request. Route handling is low-level by design for now — you parse what you need, return what
+		you want. Previous iterations of SEWS closed connections immediately after each response, which
+		caused unnecessary re-fetching of assets. This version maintains persistent connections with
+		internal tracking and automatic timeout-based cleanup.
+	</p>
+
+	<p class="sews_paragraph">
+		This page was rendered using the <span class="sews_highlight">Inja</span> template engine and
+		<span class="sews_highlight">nlohmann-json</span>. Templates are stored in
+		<span class="sews_highlight">assets/public/</span>. The top-level template is
+		<span class="sews_highlight">layout.html</span>, which includes
+		<span class="sews_highlight">intro.html</span> content. Template data is injected as JSON from
+		the route handler.
+	</p>
+
+	<p class="sews_paragraph">
+		You’ve likely run SEWS using <span class="sews_highlight">./sews</span>. If you want to run it
+		in the background and log all output, you can use:
+		<span class="sews_highlight">./sews >> sews.log 2>&1 &amp;&nbsp;disown</span>
+		Alternatively, use <span class="sews_highlight">nohup</span> to automatically prevent it from
+		being killed when the terminal closes:
+		<span class="sews_highlight">nohup ./sews >> sews.log 2>&1 &</span>
+	</p>
+</div>

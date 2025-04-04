@@ -83,6 +83,7 @@ namespace sews
 
 	void Server::update()
 	{
+		// TODO: Remove failed events via try-catch
 		const int active_event_count = epoll_wait(this->_epoll_file_descriptor, this->_epoll_pool.data(),
 												  this->_epoll_pool.size(), this->_timeout);
 		for (int index(0); index < active_event_count; index++)

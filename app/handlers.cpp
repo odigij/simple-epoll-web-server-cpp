@@ -20,32 +20,52 @@ OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE
 OR OTHER DEALINGS IN THE SOFTWARE.
 */
 
-#include <fstream>
 #include "include/handlers.hpp"
-#include "nlohmann/json_fwd.hpp"
 #include "external/nlohmann/json.hpp"
+#include "external/inja/inja.hpp"
 
 namespace app
 {
+	static inja::Environment env("../assets/public/");
+
 	const std::string handleIndex(const sews::Request &request,
 								  const std::unordered_map<std::string, std::string> &params)
 	{
-		std::ifstream file("../assets/public/index.html", std::ios::binary);
-		std::ostringstream content_stream;
-		content_stream << file.rdbuf();
-		return content_stream.str();
+		nlohmann::json data;
+		data["title"] = "SEWS - Intro";
+		data["content"] = env.render_file("intro.html", data);
+		return env.render_file("layout.html", data);
 	}
 
-	const std::string apiTest(const sews::Request &request, const std::unordered_map<std::string, std::string> &params)
+	const std::string handleRouteVisualization(const sews::Request &request,
+											   const std::unordered_map<std::string, std::string> &params)
+	{
+		nlohmann::json data;
+		data["title"] = "SEWS - Routes";
+		data["content"] = env.render_file("routes.html", data);
+		return env.render_file("layout.html", data);
+	}
+
+	const std::string handleDynamicRouteTest(const sews::Request &request,
+											 const std::unordered_map<std::string, std::string> &params)
+	{
+		nlohmann::json data;
+		data["title"] = "SEWS - Dynamic Route Test";
+		data["content"] = env.render_file("dynamic-route.html", data);
+		return env.render_file("layout.html", data);
+	}
+
+	const std::string handleTestDynamicRoute(const sews::Request &request,
+											 const std::unordered_map<std::string, std::string> &params)
 	{
 		auto query_params = request.query_params;
-		nlohmann::json json_response;
-		json_response["id"] = params.count("id") ? params.at("id") : nullptr;
-		json_response["type"] = params.count("type") ? params.at("type") : nullptr;
+		nlohmann::json data;
+		data["response"]["id"] = params.count("id") ? params.at("id") : nullptr;
+		data["response"]["type"] = params.count("type") ? params.at("type") : nullptr;
 		for (auto pair : query_params)
 		{
-			json_response["queries"][pair.first] = pair.second;
+			data["response"]["queries"][pair.first] = pair.second;
 		}
-		return json_response.dump(4);
+		return data.dump(4);
 	}
 } // namespace app

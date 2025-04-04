@@ -26,8 +26,10 @@ OR OTHER DEALINGS IN THE SOFTWARE.
 void sews::initializeApp(sews::Router &router)
 {
 	router.addRoute("GET", {"/", "/home"}, app::handleIndex, "text/html");
-	router.addRoute("GET", {"/api/test/:id/:type"}, app::apiTest, "application/json");
-	router.addRoute("GET", {"/debug/routes"},
+	router.addRoute("GET", {"/test/visualize-routes"}, app::handleRouteVisualization, "text/html");
+	router.addRoute("GET", {"/test/dynamic-route"}, app::handleDynamicRouteTest, "text/html");
+	router.addRoute("GET", {"/test/routes/dynamic/:id/:type"}, app::handleTestDynamicRoute, "application/json");
+	router.addRoute("GET", {"/test/routes"},
 					std::bind(&Router::debugRouteHandler, &router, std::placeholders::_1, std::placeholders::_2),
 					"application/json");
 }
