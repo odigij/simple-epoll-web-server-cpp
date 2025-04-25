@@ -1,45 +1,49 @@
 cmake_minimum_required(VERSION 3.10)
-project(sews VERSION 1.0)
+project(sews VERSION 2.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+set(PROJECT_ROOT_DIR "${CMAKE_SOURCE_DIR}")
+set(TEST_DIR "${CMAKE_SOURCE_DIR}/test")
 
-find_package(OpenSSL REQUIRED)
+find_package(OpenSSL)
 if(NOT OpenSSL_FOUND)
-  message(FATAL_ERROR "OpenSSL not found. Install it by a suitable package manager.")
-endif()
-
-find_package(fmt REQUIRED)
-if(NOT fmt_FOUND)
-  message(FATAL_ERROR "fmt not found. Install it by a suitable package manager.")
-endif()
-
-file(GLOB SOURCES ${CMAKE_SOURCE_DIR}/src/*.cpp)
-
-if(EXISTS "${CMAKE_SOURCE_DIR}/app/entry.cpp")
-  file(GLOB APP_SOURCES ${CMAKE_SOURCE_DIR}/app/*.cpp)
-  list(APPEND SOURCES ${APP_SOURCES})
+  message(WARNING "Package not found: OpenSSL")
 else()
-  message(FATAL_ERROR "app/entry.cpp is missing.")
+  message("Package found: OpenSSL")
 endif()
+find_package(fmt)
+if(NOT fmt_FOUND)
+  message(WARNING "Package not found: fmt")
+else()
+  message("Package found: fmt")
+endif()
+file(GLOB_RECURSE ALL_SOURCE ${CMAKE_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE APP_SOURCE ${CMAKE_SOURCE_DIR}/app/*.cpp)
+list(APPEND ALL_SOURCE ${APP_SOURCE})
 
 if(NOT EXISTS "${CMAKE_SOURCE_DIR}/assets")
-  message(FATAL_ERROR "assets directory is missing!")
+  message(WARNING "Directory does not exists: ${CMAKE_SOURCE_DIR}/assets")
 endif()
 
-set(PROJECT_ROOT_DIR "${CMAKE_SOURCE_DIR}")
-
-add_executable(${PROJECT_NAME} ${SOURCES})
-
+add_executable(${PROJECT_NAME} ${ALL_SOURCE})
 target_include_directories(${PROJECT_NAME} PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-    ${CMAKE_SOURCE_DIR}/include/external
+  ${CMAKE_SOURCE_DIR}/include
+  ${CMAKE_SOURCE_DIR}/include/external
 )
-
-target_link_libraries(${PROJECT_NAME}
+if(OpenSSL_FOUND)
+  target_link_libraries(${PROJECT_NAME}
     OpenSSL::SSL
     OpenSSL::Crypto
+  )
+endif()
+if(fmt_FOUND)
+  target_link_libraries(${PROJECT_NAME}
     fmt::fmt
-)
+  )
+endif()
+
+enable_testing()
+add_subdirectory(${TEST_DIR})
