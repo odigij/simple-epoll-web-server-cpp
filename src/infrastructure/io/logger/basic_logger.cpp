@@ -1,4 +1,5 @@
 #include "sews/infrastructure/io/logger/basic_logger.hpp"
+#include "sews/core/enums/log_type.hpp"
 #include <iostream>
 #include <chrono>
 #include <iomanip>
@@ -7,15 +8,32 @@ namespace sews::io::logger
 {
 	BasicLogger::BasicLogger(void)
 	{
+		log(enums::LogType::INFO, "\033[36mBasic Logger:\033[0m Initialized.");
 	}
 
 	BasicLogger::~BasicLogger(void)
 	{
+		log(enums::LogType::INFO, "\033[36mBasic Logger:\033[0m Terminated");
 	}
 
 	void BasicLogger::log(enums::LogType flag, std::string_view message)
 	{
 		std::ostream &out = (flag == enums::LogType::ERROR) ? std::cerr : std::cout;
+		switch (flag)
+		{
+			case enums::LogType::INFO:
+				out << "\033[32m"; // Green
+				break;
+			case enums::LogType::WARNING:
+				out << "\033[33m"; // Yellow
+				break;
+			case enums::LogType::ERROR:
+				out << "\033[31m"; // Red
+				break;
+			default:
+				out << "\033[0m"; // Reset
+				break;
+		}
 		out << " [ " << getTimestamp() << " | ";
 		switch (flag)
 		{
@@ -35,7 +53,7 @@ namespace sews::io::logger
 				out << "UNKNOWN";
 				break;
 		}
-		out << " ] " << message << '\n';
+		out << " ] " << "\033[0m" << message << "\033[0m\n";
 	}
 
 	std::string BasicLogger::getTimestamp(void)

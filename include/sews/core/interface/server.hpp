@@ -3,9 +3,9 @@
 
 namespace sews::interface
 {
-	struct Server
+	struct Dispatcher
 	{
-		virtual ~Server(void);
+		virtual ~Dispatcher(void);
 		virtual void run(void) = 0;
 	};
 } // namespace sews::interface

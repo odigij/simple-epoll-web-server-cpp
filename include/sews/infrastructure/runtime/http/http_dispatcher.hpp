@@ -12,12 +12,11 @@
 
 namespace sews::runtime::http
 {
-	struct Dispatcher : public interface::Server
+	struct Dispatcher : public interface::Dispatcher
 	{
 		Dispatcher(std::unique_ptr<interface::Acceptor> acceptor, std::unique_ptr<interface::SocketLoop> socketLoop,
 				   std::unique_ptr<interface::RequestParser> parser, std::unique_ptr<interface::MessageHandler> handler,
-				   std::unique_ptr<interface::ResponseSerializer> serializer,
-				   std::unique_ptr<interface::Logger> logger);
+				   std::unique_ptr<interface::ResponseSerializer> serializer, interface::Logger *logger);
 
 		~Dispatcher(void) override;
 		void run(void) override;

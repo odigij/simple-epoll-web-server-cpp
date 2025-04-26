@@ -1,19 +1,29 @@
 #include "sews/infrastructure/io/epoll/socket_poll.hpp"
-#include "sews/core/enums/socket_event.hpp"
 #include <algorithm>
-#include <cstdio>
-#include <sys/epoll.h>
+#include <string>
+#include <cstring>
 
 namespace sews::io::epoll
 {
-	SocketLoop::SocketLoop() : epollFd(epoll_create1(0))
+	SocketLoop::SocketLoop(size_t size, interface::Logger *logger) : epollFd(epoll_create1(0)), logger(logger)
 	{
 		if (epollFd < 0)
 		{
+			logger->log(
+				enums::LogType::ERROR,
+				std::string("\033[36mEpoll Socket Loop:\033[0m Failed to initialize epoll fd, \033[31merrno -> ") +
+					strerror(errno));
 			perror("epoll_create1");
 			exit(EXIT_FAILURE);
 		}
-		epoll_events.resize(64);
+		epoll_events.reserve(size);
+
+		logger->log(enums::LogType::INFO, "\033[36mEpoll Socket Loop:\033[0m Initialized.");
+	}
+
+	SocketLoop::~SocketLoop(void)
+	{
+		logger->log(enums::LogType::INFO, "\033[36mEpoll Socket Loop:\033[0m Terminated.");
 	}
 
 	void SocketLoop::registerChannel(interface::Channel &channel)
@@ -26,23 +36,35 @@ namespace sews::io::epoll
 					.fd = clientFd,
 				},
 		};
-		epoll_ctl(epollFd, EPOLL_CTL_ADD, channel.getFd(), &epollEvent);
-		// TODO: Implement "epoll_ctl" error handling.
+
+		if (epoll_ctl(epollFd, EPOLL_CTL_ADD, channel.getFd(), &epollEvent) != 0)
+		{
+			logger->log(enums::LogType::ERROR,
+						std::string("\033[36mEpoll Socket Loop:\033[0m Failed to register fd, \033[31merrno -> ") +
+							strerror(errno));
+		}
 	}
 
 	void SocketLoop::unregisterChannel(interface::Channel &channel)
 	{
 		const int clientFd{channel.getFd()};
-		epoll_ctl(epollFd, EPOLL_CTL_DEL, channel.getFd(), nullptr);
+		if (epoll_ctl(epollFd, EPOLL_CTL_DEL, channel.getFd(), nullptr))
+		{
+			logger->log(enums::LogType::ERROR,
+						std::string("\033[36mEpoll Socket Loop:\033[0m Failed to delete fd, \033[31merrno -> ") +
+							strerror(errno));
+		}
 	}
 
 	void SocketLoop::poll(const std::vector<interface::Channel *> &watched,
 						  std::vector<interface::SocketEvent> &outEvents)
 	{
-		const int readyEventCount{epoll_wait(epollFd, epoll_events.data(), epoll_events.size(), 300)};
+		const int readyEventCount{epoll_wait(epollFd, epoll_events.data(), epoll_events.capacity(), 300)};
 		if (readyEventCount < 0)
 		{
-			// TODO: Handle epoll_wait error.
+			logger->log(enums::LogType::ERROR,
+						std::string("\033[36mEpoll Socket Loop:\033[0m Failed to wait, \033[31merrno -> ") +
+							strerror(errno));
 		}
 		for (int i{0}; i < readyEventCount; ++i)
 		{
@@ -109,18 +131,25 @@ namespace sews::io::epoll
 					break;
 			}
 		}
-		epoll_event ev{
+		epoll_event epollEvent{
 			.events = flags,
 			.data =
 				{
 					.fd = channel.getFd(),
 				},
 		};
-		if (epoll_ctl(epollFd, EPOLL_CTL_MOD, channel.getFd(), &ev) == -1)
+		if (epoll_ctl(epollFd, EPOLL_CTL_MOD, channel.getFd(), &epollEvent) == -1)
 		{
-			// TODO: Handle error & log it.
 			perror("epoll_ctl: mod");
-			// optional: throw or log error
+			logger->log(enums::LogType::ERROR,
+						std::string("\033[36mEpoll Socket Loop:\033[0m Failed to wait, \033[31merrno -> ") +
+							strerror(errno));
+			// NOTE: May need to throw an exception here.
 		}
+	}
+
+	size_t SocketLoop::getEventCapacity() const
+	{
+		return epoll_events.capacity();
 	}
 } // namespace sews::io::epoll

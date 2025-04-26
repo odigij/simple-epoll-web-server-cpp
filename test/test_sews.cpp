@@ -4,6 +4,7 @@
 #include "sews/infrastructure/format/http/handler_adapter.hpp"
 #include "sews/infrastructure/format/http/request_parser.hpp"
 #include "sews/infrastructure/format/http/response_serializer.hpp"
+#include "sews/infrastructure/io/logger/null_logger.hpp"
 #include <iostream>
 #include <memory>
 #include <sstream>
@@ -27,11 +28,12 @@ int main()
 	{ // HTTP
 		std::string request_path_main_segment("/test/http");
 
-		format::http::RequestParser requestParser;
-		format::http::ResponseSerializer responseSerializer;
+		io::logger::NullLogger nullLogger;
+		format::http::RequestParser requestParser(&nullLogger);
+		format::http::ResponseSerializer responseSerializer(&nullLogger);
 
 		test::http::TestHandler httpHandler;
-		format::http::HandlerAdapter httpHandlerAdapter(httpHandler);
+		format::http::HandlerAdapter httpHandlerAdapter(httpHandler, &nullLogger);
 
 		format::http::Request request;
 		request.method = "GET";

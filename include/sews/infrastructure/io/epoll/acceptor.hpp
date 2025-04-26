@@ -3,19 +3,21 @@
 
 #include "sews/core/interface/acceptor.hpp"
 #include "sews/core/interface/channel.hpp"
+#include "sews/core/interface/logger.hpp"
 #include <memory>
 
 namespace sews::io::epoll
 {
 	struct Acceptor : public interface::Acceptor
 	{
-		explicit Acceptor(int fd);
+		explicit Acceptor(int fd, interface::Logger *logger);
 		~Acceptor(void) override;
 		std::unique_ptr<interface::Channel> accept(void) override;
 		interface::Channel &channel(void) override;
 
 	  private:
 		std::unique_ptr<interface::Channel> serverChannel;
+		interface::Logger *logger;
 	};
 } // namespace sews::io::epoll
 

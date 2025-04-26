@@ -2,5 +2,5 @@
 
 namespace sews::interface
 {
-	Server::~Server(void) = default;
+	Dispatcher::~Dispatcher(void) = default;
 }

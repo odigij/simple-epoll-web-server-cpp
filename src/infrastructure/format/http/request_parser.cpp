@@ -4,6 +4,16 @@
 
 namespace sews::format::http
 {
+	RequestParser::RequestParser(interface::Logger *logger) : logger(logger)
+	{
+		logger->log(enums::LogType::INFO, "\033[36mHTTP Request Parser:\033[0m Initialized.");
+	}
+
+	RequestParser::~RequestParser(void)
+	{
+		logger->log(enums::LogType::INFO, "\033[36mHTTP Request Parser:\033[0m Terminated.");
+	}
+
 	std::unique_ptr<interface::Message> RequestParser::parse(const std::string &raw)
 	{
 		std::istringstream iss(raw);
@@ -11,7 +21,7 @@ namespace sews::format::http
 
 		iss >> request->method >> request->path >> request->version;
 
-		std::string buffer{""};
+		std::string buffer{};
 		std::getline(iss, buffer);
 		while (std::getline(iss, buffer))
 		{
@@ -49,7 +59,6 @@ namespace sews::format::http
 			iss.read(&body[0], contentLength);
 			request->body = body;
 		}
-
 		return request;
 	}
 } // namespace sews::format::http
