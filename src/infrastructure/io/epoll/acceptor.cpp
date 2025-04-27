@@ -7,7 +7,7 @@
 
 namespace sews::io::epoll
 {
-	Acceptor::Acceptor(int fd, interface::Logger *logger)
+	Acceptor::Acceptor(int fd, std::shared_ptr<interface::Logger> logger)
 		: serverChannel(std::make_unique<transport::PlainTextChannel>(fd)), logger(logger)
 	{
 		logger->log(enums::LogType::INFO, "\033[36mEpoll Acceptor:\033[0m Initialized.");

@@ -4,13 +4,14 @@
 #include "sews/core/interface/channel.hpp"
 #include "sews/core/interface/logger.hpp"
 #include "sews/core/interface/socket_loop.hpp"
+#include <memory>
 #include <sys/epoll.h>
 
 namespace sews::io::epoll
 {
 	struct SocketLoop : public interface::SocketLoop
 	{
-		SocketLoop(size_t size, interface::Logger *logger);
+		SocketLoop(size_t size, std::shared_ptr<interface::Logger> logger);
 		~SocketLoop(void) override;
 		void registerChannel(interface::Channel &channel) override;
 		void unregisterChannel(interface::Channel &channel) override;
@@ -22,7 +23,7 @@ namespace sews::io::epoll
 	  private:
 		int epollFd{-1};
 		std::vector<epoll_event> epoll_events;
-		interface::Logger *logger;
+		std::shared_ptr<interface::Logger> logger;
 	};
 } // namespace sews::io::epoll
 

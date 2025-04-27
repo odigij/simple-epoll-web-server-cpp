@@ -5,7 +5,7 @@
 
 namespace sews::format::http
 {
-	ResponseSerializer::ResponseSerializer(interface::Logger *logger) : logger(logger)
+	ResponseSerializer::ResponseSerializer(std::shared_ptr<interface::Logger> logger) : logger(logger)
 	{
 		logger->log(enums::LogType::INFO, "\033[36mHttp Response Serializer:\033[0m Initialized.");
 	}

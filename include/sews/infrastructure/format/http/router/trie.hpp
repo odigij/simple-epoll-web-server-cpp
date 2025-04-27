@@ -11,7 +11,7 @@ namespace sews::format::http
 {
 	struct TrieRouter : public interface::Router
 	{
-		TrieRouter(interface::Logger *logger);
+		TrieRouter(std::shared_ptr<interface::Logger> logger);
 		~TrieRouter(void) override;
 		void add(std::string_view method, std::string_view path, interface::MessageHandler *handler) override;
 		void remove(std::string_view method, std::string_view path) override;
@@ -24,7 +24,7 @@ namespace sews::format::http
 			std::unordered_map<std::string, interface::MessageHandler *> handlers;
 		};
 		std::unique_ptr<Node> root;
-		interface::Logger *logger;
+		std::shared_ptr<interface::Logger> logger;
 		void split(std::vector<std::string> &segments, const std::string &path) const;
 	};
 } // namespace sews::format::http

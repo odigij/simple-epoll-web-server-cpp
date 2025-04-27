@@ -2,7 +2,7 @@
 
 namespace sews::connection
 {
-	Manager::Manager(interface::Logger *logger) : logger(logger)
+	Manager::Manager(std::shared_ptr<interface::Logger> logger) : logger(logger)
 	{
 		logger->log(enums::LogType::INFO, "\033[36mConnection Manager:\033[0m Initialized.");
 	}

@@ -5,7 +5,7 @@
 
 namespace sews::format::http
 {
-	TrieRouter::TrieRouter(interface::Logger *logger) : logger(logger), root(std::make_unique<Node>())
+	TrieRouter::TrieRouter(std::shared_ptr<interface::Logger> logger) : logger(logger), root(std::make_unique<Node>())
 	{
 		logger->log(enums::LogType::INFO, "\033[36mTrie Router:\033[0m Initialized.");
 	}

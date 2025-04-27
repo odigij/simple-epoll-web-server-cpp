@@ -4,7 +4,7 @@
 
 namespace sews::format::http
 {
-	RequestParser::RequestParser(interface::Logger *logger) : logger(logger)
+	RequestParser::RequestParser(std::shared_ptr<interface::Logger> logger) : logger(logger)
 	{
 		logger->log(enums::LogType::INFO, "\033[36mHTTP Request Parser:\033[0m Initialized.");
 	}

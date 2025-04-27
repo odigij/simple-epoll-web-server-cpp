@@ -10,12 +10,12 @@ namespace sews::format::http
 {
 	struct RequestParser : public interface::RequestParser
 	{
-		RequestParser(interface::Logger *logger);
+		RequestParser(std::shared_ptr<interface::Logger> logger);
 		~RequestParser(void) override;
 		std::unique_ptr<interface::Message> parse(const std::string &raw) override;
 
 	  private:
-		interface::Logger *logger;
+		std::shared_ptr<interface::Logger> logger;
 	};
 } // namespace sews::format::http
 

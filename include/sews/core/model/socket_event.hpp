@@ -1,5 +1,5 @@
-#ifndef SEWS_CORE_INTERFACE_SOCKET_EVENT_HPP
-#define SEWS_CORE_INTERFACE_SOCKET_EVENT_HPP
+#ifndef SEWS_CORE_MODEL_SOCKET_EVENT_HPP
+#define SEWS_CORE_MODEL_SOCKET_EVENT_HPP
 
 #include "sews/core/enums/socket_event.hpp"
 #include "sews/core/interface/channel.hpp"
@@ -30,4 +30,4 @@ namespace sews::model
 	};
 } // namespace sews::model
 
-#endif // !SEWS_CORE_INTERFACE_SOCKET_EVENT_HPP
+#endif // !SEWS_CORE_MODEL_SOCKET_EVENT_HPP

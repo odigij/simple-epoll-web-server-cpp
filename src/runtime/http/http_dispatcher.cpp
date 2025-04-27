@@ -1,4 +1,5 @@
 #include "sews/runtime/http/http_dispatcher.hpp"
+#include "sews/core/stop_flag.hpp"
 #include "sews/infrastructure/format/http/request.hpp"
 #include "sews/infrastructure/format/http/response.hpp"
 #include "sews/infrastructure/io/epoll/socket_poll.hpp"
@@ -10,12 +11,13 @@ namespace sews::runtime::http
 						   std::unique_ptr<interface::SocketLoop> socketLoop,
 						   std::unique_ptr<interface::ConnectionManager> connectionManager,
 						   std::unique_ptr<interface::Router> router, std::unique_ptr<interface::RequestParser> parser,
-						   std::unique_ptr<interface::ResponseSerializer> serializer, interface::Logger *logger)
+						   std::unique_ptr<interface::ResponseSerializer> serializer,
+						   std::shared_ptr<interface::Logger> logger)
 		: acceptor(std::move(acceptor)), socketLoop(std::move(socketLoop)),
 		  connectionManager(std::move(connectionManager)), router(std::move(router)), parser(std::move(parser)),
 		  serializer(std::move(serializer)), logger(logger)
 	{
-		logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Initialized.");
+		this->logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Initialized.");
 	}
 
 	Dispatcher::~Dispatcher(void)
@@ -49,7 +51,7 @@ namespace sews::runtime::http
 		// [X] Connection manager.
 		// [X] Implement routing.
 
-		while (true)
+		while (!stopFlag.load())
 		{
 			watched.push_back(&serverChannel);
 			connectionManager->forEach([&](interface::Channel &channel) { watched.push_back(&channel); });
@@ -221,5 +223,15 @@ namespace sews::runtime::http
 			events.clear();
 			watched.clear();
 		}
+
+		logger->log(enums::LogType::INFO,
+					"\033[36mHttp Dispatcher:\033[0m Shutting down, closing active connections...");
+
+		connectionManager->forEach([&](interface::Channel &channel) { socketLoop->unregisterChannel(channel); });
+		socketLoop->unregisterChannel(serverChannel);
+		connectionManager->clear();
+		serverChannel.close();
+
+		logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Shutdown complete.");
 	};
 } // namespace sews::runtime::http

@@ -1,11 +1,13 @@
 #include "sews/infrastructure/io/epoll/socket_poll.hpp"
+#include "sews/core/stop_flag.hpp"
 #include <algorithm>
 #include <string>
 #include <cstring>
 
 namespace sews::io::epoll
 {
-	SocketLoop::SocketLoop(size_t size, interface::Logger *logger) : epollFd(epoll_create1(0)), logger(logger)
+	SocketLoop::SocketLoop(size_t size, std::shared_ptr<interface::Logger> logger)
+		: epollFd(epoll_create1(0)), logger(logger)
 	{
 		if (epollFd < 0)
 		{
@@ -47,7 +49,6 @@ namespace sews::io::epoll
 
 	void SocketLoop::unregisterChannel(interface::Channel &channel)
 	{
-		const int clientFd{channel.getFd()};
 		if (epoll_ctl(epollFd, EPOLL_CTL_DEL, channel.getFd(), nullptr))
 		{
 			logger->log(enums::LogType::ERROR,
@@ -61,9 +62,17 @@ namespace sews::io::epoll
 		const int readyEventCount{epoll_wait(epollFd, epoll_events.data(), epoll_events.capacity(), 300)};
 		if (readyEventCount < 0)
 		{
-			logger->log(enums::LogType::ERROR,
-						std::string("\033[36mEpoll Socket Loop:\033[0m Failed to wait, \033[31merrno -> ") +
-							strerror(errno));
+			if (stopFlag.load())
+			{
+				logger->log(enums::LogType::WARNING,
+							std::string("\033[36mEpoll Socket Loop:\033[0m Terminated due to ") + strerror(errno));
+			}
+			else
+			{
+				logger->log(enums::LogType::ERROR,
+							std::string("\033[36mEpoll Socket Loop:\033[0m Failed to wait, \033[31merrno -> ") +
+								strerror(errno));
+			}
 		}
 		for (int i{0}; i < readyEventCount; ++i)
 		{

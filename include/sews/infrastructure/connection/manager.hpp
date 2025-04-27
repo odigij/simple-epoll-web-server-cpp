@@ -9,7 +9,7 @@ namespace sews::connection
 {
 	struct Manager : public interface::ConnectionManager
 	{
-		Manager(interface::Logger *logger);
+		Manager(std::shared_ptr<interface::Logger> logger);
 		~Manager(void) override;
 		void add(std::unique_ptr<interface::Channel> channel) override;
 		void remove(interface::Channel &channel) override;
@@ -22,7 +22,7 @@ namespace sews::connection
 	  private:
 		std::unordered_map<int, std::unique_ptr<interface::Channel>> channels;
 		std::vector<interface::Channel *> closedChannels;
-		interface::Logger *logger;
+		std::shared_ptr<interface::Logger> logger;
 	};
 } // namespace sews::connection
 

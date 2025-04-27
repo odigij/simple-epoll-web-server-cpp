@@ -17,7 +17,8 @@ namespace sews::runtime::http
 		Dispatcher(std::unique_ptr<interface::Acceptor> acceptor, std::unique_ptr<interface::SocketLoop> socketLoop,
 				   std::unique_ptr<interface::ConnectionManager> connectionManager,
 				   std::unique_ptr<interface::Router> router, std::unique_ptr<interface::RequestParser> parser,
-				   std::unique_ptr<interface::ResponseSerializer> serializer, interface::Logger *logger);
+				   std::unique_ptr<interface::ResponseSerializer> serializer,
+				   std::shared_ptr<interface::Logger> logger);
 
 		~Dispatcher(void) override;
 		void run(void) override;
@@ -29,7 +30,7 @@ namespace sews::runtime::http
 		std::unique_ptr<interface::Router> router;
 		std::unique_ptr<interface::RequestParser> parser;
 		std::unique_ptr<interface::ResponseSerializer> serializer;
-		std::unique_ptr<interface::Logger> logger;
+		std::shared_ptr<interface::Logger> logger;
 	};
 } // namespace sews::runtime::http
 
