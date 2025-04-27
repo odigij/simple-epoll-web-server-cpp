@@ -13,7 +13,7 @@ namespace sews::io::epoll
 		explicit Acceptor(int fd, interface::Logger *logger);
 		~Acceptor(void) override;
 		std::unique_ptr<interface::Channel> accept(void) override;
-		interface::Channel &channel(void) override;
+		interface::Channel &getListener(void) override;
 
 	  private:
 		std::unique_ptr<interface::Channel> serverChannel;

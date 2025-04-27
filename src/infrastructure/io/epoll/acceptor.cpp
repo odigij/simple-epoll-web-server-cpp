@@ -38,7 +38,7 @@ namespace sews::io::epoll
 		return std::make_unique<sews::transport::PlainTextChannel>(clientFd);
 	}
 
-	interface::Channel &Acceptor::channel(void)
+	interface::Channel &Acceptor::getListener(void)
 	{
 		return *serverChannel;
 	}

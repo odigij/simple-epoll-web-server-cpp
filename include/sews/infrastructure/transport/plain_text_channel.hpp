@@ -14,7 +14,6 @@ namespace sews::transport
 		ssize_t readRaw(char *buffer, size_t len) override;
 		ssize_t writeRaw(const char *buffer, size_t len) override;
 		void close(void) override;
-		// TODO: Refactor response bullshit.
 		std::string &getResponse(void);
 
 	  private:

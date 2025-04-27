@@ -9,11 +9,10 @@ namespace sews::runtime::http
 	Dispatcher::Dispatcher(std::unique_ptr<interface::Acceptor> acceptor,
 						   std::unique_ptr<interface::SocketLoop> socketLoop,
 						   std::unique_ptr<interface::ConnectionManager> connectionManager,
-						   std::unique_ptr<interface::RequestParser> parser,
-						   std::unique_ptr<interface::MessageHandler> handler,
+						   std::unique_ptr<interface::Router> router, std::unique_ptr<interface::RequestParser> parser,
 						   std::unique_ptr<interface::ResponseSerializer> serializer, interface::Logger *logger)
 		: acceptor(std::move(acceptor)), socketLoop(std::move(socketLoop)),
-		  connectionManager(std::move(connectionManager)), parser(std::move(parser)), handler(std::move(handler)),
+		  connectionManager(std::move(connectionManager)), router(std::move(router)), parser(std::move(parser)),
 		  serializer(std::move(serializer)), logger(logger)
 	{
 		logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Initialized.");
@@ -26,10 +25,10 @@ namespace sews::runtime::http
 
 	void Dispatcher::run(void)
 	{
-		interface::Channel &serverChannel{acceptor->channel()};
+		interface::Channel &serverChannel{acceptor->getListener()};
 		socketLoop->registerChannel(serverChannel);
 		std::vector<interface::Channel *> watched;
-		std::vector<interface::SocketEvent> events;
+		std::vector<model::SocketEvent> events;
 		std::vector<char> buffer(8192);
 		ssize_t bytesRead{0};
 
@@ -48,27 +47,26 @@ namespace sews::runtime::http
 		// [X] Reserve vectors.
 		// [X] Log socket details.
 		// [X] Connection manager.
-		// [] Implement routing.
+		// [X] Implement routing.
 
 		while (true)
 		{
 			watched.push_back(&serverChannel);
 			connectionManager->forEach([&](interface::Channel &channel) { watched.push_back(&channel); });
-
 			socketLoop->poll(watched, events);
 
 			// NOTE:
 			// - Do not modify container (events) while in loop.
 			// - Do not clear buffer vector unless you re-assign, let it over-write.
-			for (interface::SocketEvent &event : events)
+			for (model::SocketEvent &event : events)
 			{
 				if (event.channel.getFd() == serverChannel.getFd())
 				{
-					logger->log(enums::LogType::INFO, "\033[36mHttp dispatcher:\033[0m Incoming connection request.");
+					logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Incoming connection request.");
 					std::unique_ptr<interface::Channel> clientChannel{acceptor->accept()};
 					if (!clientChannel)
 					{
-						logger->log(enums::LogType::ERROR, "\033[36mHttp dispatcher:\033[0m Failed to accept channel.");
+						logger->log(enums::LogType::ERROR, "\033[36mHttp Dispatcher:\033[0m Failed to accept channel.");
 						continue;
 					}
 
@@ -79,13 +77,17 @@ namespace sews::runtime::http
 
 				if (event.flag == enums::SocketEvent::HANGUP)
 				{
-					logger->log(enums::LogType::INFO, "\033[36mHttp dispatcher:\033[0m Connection closed by the peer.");
+					logger->log(
+						enums::LogType::INFO,
+						"\033[36mHttp Dispatcher:\033[0m Connection closed by the peer, marking it for termination.");
 					connectionManager->remove(event.channel);
 					continue;
 				}
-				else if (event.flag == enums::SocketEvent::ERROR)
+
+				if (event.flag == enums::SocketEvent::ERROR)
 				{
-					logger->log(enums::LogType::ERROR, "\033[36mHttp dispatcher:\033[0m Connection lost.");
+					logger->log(enums::LogType::ERROR,
+								"\033[36mHttp Dispatcher:\033[0m Connection lost, marking it for termination.");
 					connectionManager->remove(event.channel);
 					continue;
 				}
@@ -94,7 +96,7 @@ namespace sews::runtime::http
 					dynamic_cast<transport::PlainTextChannel *>(&event.channel)};
 				if (!plainTextChannel)
 				{
-					logger->log(enums::LogType::ERROR, "\033[36mHttp dispatcher:\033[0m Failed to cast channel.");
+					logger->log(enums::LogType::ERROR, "\033[36mHttp Dispatcher:\033[0m Failed to cast channel.");
 					continue;
 				}
 
@@ -106,16 +108,17 @@ namespace sews::runtime::http
 					{
 						connectionManager->remove(event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::ERROR});
-						logger->log(enums::LogType::WARNING,
-									"\033[36mHttp dispatcher:\033[0m Failed to read bytes, peer doesn't answer.");
+						logger->log(enums::LogType::WARNING, "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, "
+															 "peer doesn't answer. Channel marked to be closed.");
 						continue;
 					}
+
 					if (bytesRead < 0)
 					{
 						connectionManager->remove(event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::ERROR});
-						logger->log(enums::LogType::ERROR,
-									"\033[36mHttp dispatcher:\033[0m Failed to read bytes, closing peer socket.");
+						logger->log(enums::LogType::ERROR, "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, "
+														   "connection abruptly closed. Channel marked to be closed.");
 						continue;
 					}
 
@@ -124,48 +127,80 @@ namespace sews::runtime::http
 
 					if (!message) // Gracefully fallback
 					{
-						logger->log(enums::LogType::ERROR, "\033[36mHttp dispatcher:\033[0m Failed to parse request.");
-						logger->log(enums::LogType::WARNING,
-									"\033[36mHttp dispatcher:\033[0m Sending “Internal Error” response anyway.");
+						logger->log(enums::LogType::ERROR,
+									"\033[36mHttp Dispatcher:\033[0m Failed to parse raw request.");
+						logger->log(
+							enums::LogType::WARNING,
+							"\033[36mHttp Dispatcher:\033[0m Sending \033[33mInternal Error\033[0m response anyway.");
 						format::http::Response errorResponse;
 						errorResponse.status = 500;
 						errorResponse.statusText = "Internal Error";
 						errorResponse.version = "HTTP/1.1";
 						errorResponse.headers["Connection"] = "close";
 						plainTextChannel->getResponse() = serializer->serialize(errorResponse);
-						// fdsToClose.push_back(event.channel.getFd());
+						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
+						continue;
 					}
-					else
-					{
-						auto *req = dynamic_cast<format::http::Request *>(message.get()); // Using "message" as request.
 
-						std::unique_ptr<interface::Message> response{handler->handle(*message)};
-						if (!response) // Gracefully fallback
-						{
-							logger->log(enums::LogType::ERROR,
-										"\033[36mHttp dispatcher:\033[0m Handler returned null response.");
-							logger->log(enums::LogType::WARNING,
-										"\033[36mHttp dispatcher:\033[0m Sending “Internal Error” response anyway.");
-							format::http::Response errorResponse;
-							errorResponse.status = 500;
-							errorResponse.statusText = "Internal Error";
-							errorResponse.version = "HTTP/1.1";
-							errorResponse.headers["Connection"] = "close";
-							plainTextChannel->getResponse() = serializer->serialize(errorResponse);
-							continue;
-						}
-						plainTextChannel->getResponse() = serializer->serialize(*response);
-						if (!req)
-						{
-							logger->log(enums::LogType::ERROR,
-										"\033[36mHttp dispatcher:\033[0m Parsed message was not a Request.");
-						}
-						else
-						{
-							logger->log(enums::LogType::INFO,
-										"\033[36mHttp dispatcher:\033[0m " + req->method + ' ' + req->path);
-						}
+					format::http::Request *req =
+						dynamic_cast<format::http::Request *>(message.get()); // Using "message" as request.
+
+					if (!req)
+					{
+						logger->log(enums::LogType::ERROR,
+									"\033[36mHttp Dispatcher:\033[0m Failed to cast message as request.");
+						logger->log(
+							enums::LogType::WARNING,
+							"\033[36mHttp Dispatcher:\033[0m Sending \033[33mInternal Error\033[0m response anyway.");
+						format::http::Response errorResponse;
+						errorResponse.status = 500;
+						errorResponse.statusText = "Internal Error";
+						errorResponse.version = "HTTP/1.1";
+						errorResponse.headers["Connection"] = "close";
+						plainTextChannel->getResponse() = serializer->serialize(errorResponse);
+						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
+						continue;
 					}
+
+					logger->log(enums::LogType::INFO,
+								"\033[36mHttp Dispatcher: \033[33m" + req->method + ' ' + req->path);
+
+					interface::MessageHandler *handler{router->match(*req)};
+
+					if (!handler) // Gracefully fallback
+					{
+						logger->log(enums::LogType::WARNING, "\033[36mHttp Dispatcher:\033[0m No handler found for "
+															 "request, sending \033[33m404 Not Found\033[0m anyway.");
+						format::http::Response notFoundResp;
+						notFoundResp.status = 404;
+						notFoundResp.statusText = "Not Found";
+						notFoundResp.version = "HTTP/1.1";
+						notFoundResp.headers["Connection"] = "close";
+						plainTextChannel->getResponse() = serializer->serialize(notFoundResp);
+						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
+						continue;
+					}
+
+					std::unique_ptr<interface::Message> response{handler->handle(*message)};
+					if (!response) // Gracefully fallback
+					{
+						logger->log(enums::LogType::ERROR,
+									"\033[36mHttp Dispatcher:\033[0m Handler returned null pointer.");
+						logger->log(
+							enums::LogType::WARNING,
+							"\033[36mHttp Dispatcher:\033[0m Sending \033[33mInternal Error\033[0m response anyway.");
+						format::http::Response errorResponse;
+						errorResponse.status = 500;
+						errorResponse.statusText = "Internal Error";
+						errorResponse.version = "HTTP/1.1";
+						errorResponse.headers["Connection"] = "close";
+						plainTextChannel->getResponse() = serializer->serialize(errorResponse);
+						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
+						continue;
+					}
+
+					plainTextChannel->getResponse() = serializer->serialize(*response);
+
 					socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
 				}
 

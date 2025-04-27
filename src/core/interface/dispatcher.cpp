@@ -1,4 +1,4 @@
-#include "sews/core/interface/server.hpp"
+#include "sews/core/interface/dispatcher.hpp"
 
 namespace sews::interface
 {

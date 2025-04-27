@@ -15,7 +15,7 @@ namespace sews::io::epoll
 		void registerChannel(interface::Channel &channel) override;
 		void unregisterChannel(interface::Channel &channel) override;
 		void poll(const std::vector<interface::Channel *> &watched,
-				  std::vector<interface::SocketEvent> &outEvents) override;
+				  std::vector<model::SocketEvent> &outEvents) override;
 		void updateEvents(interface::Channel &channel, std::initializer_list<enums::SocketEvent> events) override;
 		size_t getEventCapacity() const;
 

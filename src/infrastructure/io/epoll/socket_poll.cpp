@@ -56,8 +56,7 @@ namespace sews::io::epoll
 		}
 	}
 
-	void SocketLoop::poll(const std::vector<interface::Channel *> &watched,
-						  std::vector<interface::SocketEvent> &outEvents)
+	void SocketLoop::poll(const std::vector<interface::Channel *> &watched, std::vector<model::SocketEvent> &outEvents)
 	{
 		const int readyEventCount{epoll_wait(epollFd, epoll_events.data(), epoll_events.capacity(), 300)};
 		if (readyEventCount < 0)

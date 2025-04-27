@@ -29,6 +29,7 @@ namespace sews::connection
 			auto it = channels.find(channel->getFd());
 			if (it != channels.end())
 			{
+				it->second->close();
 				channels.erase(it);
 			}
 		}
