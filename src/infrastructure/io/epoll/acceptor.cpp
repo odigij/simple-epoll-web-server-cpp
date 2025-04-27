@@ -32,8 +32,9 @@ namespace sews::io::epoll
 		inet_ntop(AF_INET, &(clientAddr.sin_addr), ip, INET_ADDRSTRLEN);
 		uint16_t port = ntohs(clientAddr.sin_port);
 
-		logger->log(enums::LogType::INFO, "\033[36mEpoll Acceptor:\033[0m Accepted connection from \033[33m" +
-											  std::string(ip) + ":" + std::to_string(port));
+		logger->log(enums::LogType::INFO, "\033[36mEpoll Acceptor:\033[0m Accepted connection from; \033[33m fd= " +
+											  std::to_string(clientFd) + ", ip:port= " + std::string(ip) + ":" +
+											  std::to_string(port));
 
 		return std::make_unique<sews::transport::PlainTextChannel>(clientFd);
 	}

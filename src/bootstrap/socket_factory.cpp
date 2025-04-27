@@ -6,7 +6,7 @@
 
 namespace sews::bootstrap
 {
-	int createSocket(int port)
+	const int createSocket(int port)
 	{
 		int serverFd = ::socket(AF_INET, SOCK_STREAM, 0);
 		if (serverFd < 0)

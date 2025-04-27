@@ -18,8 +18,6 @@ int main(int argc, char *argv[])
 		logger.log(sews::enums::LogType::ERROR, "\033[36mSEWS: \033[33mFailed to create server socket.");
 		return 1;
 	}
-	sews::test::http::HelloWorldPlainText helloWorldPlainTextHandler;
-	sews::test::http::HelloWorldHtml helloWorldHtmlHandler;
 
 	auto acceptor = std::make_unique<sews::io::epoll::Acceptor>(serverFd, &logger);
 	auto socketLoop = std::make_unique<sews::io::epoll::SocketLoop>(64, &logger);
@@ -27,6 +25,9 @@ int main(int argc, char *argv[])
 	auto router = std::make_unique<sews::format::http::TrieRouter>(&logger);
 	auto parser = std::make_unique<sews::format::http::RequestParser>(&logger);
 	auto serializer = std::make_unique<sews::format::http::ResponseSerializer>(&logger);
+
+	sews::test::http::HelloWorldPlainText helloWorldPlainTextHandler;
+	sews::test::http::HelloWorldHtml helloWorldHtmlHandler;
 
 	router->add("GET", "test/http/plain-text", &helloWorldPlainTextHandler);
 	router->add("GET", "test/http/html", &helloWorldHtmlHandler);

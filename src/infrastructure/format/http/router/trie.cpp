@@ -5,9 +5,8 @@
 
 namespace sews::format::http
 {
-	TrieRouter::TrieRouter(interface::Logger *logger) : logger(logger)
+	TrieRouter::TrieRouter(interface::Logger *logger) : logger(logger), root(std::make_unique<Node>())
 	{
-		root = std::make_unique<Node>();
 		logger->log(enums::LogType::INFO, "\033[36mTrie Router:\033[0m Initialized.");
 	}
 
@@ -38,7 +37,7 @@ namespace sews::format::http
 		}
 		currentNode->handlers[safeCopyMethod] = handler;
 		logger->log(enums::LogType::INFO,
-					"\033[36mTrie Router:\033[0m Registering: " + safeCopyMethod + ' ' + safeCopyPath);
+					"\033[36mTrie Router:\033[0m Registering \033[33m" + safeCopyMethod + ' ' + safeCopyPath);
 	}
 
 	void TrieRouter::remove(std::string_view method, std::string_view path)

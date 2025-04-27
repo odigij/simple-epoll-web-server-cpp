@@ -10,8 +10,12 @@ namespace sews::format::http
 {
 	struct Response : public sews::interface::Message
 	{
+		Response(void);
+		Response(int status, std::string_view statusText, std::string_view version,
+				 std::unordered_map<std::string, std::string> headers, std::string body);
+		~Response(void) override;
 		int status{200};
-		std::string statusText{"OK"}, version{"HTTP/1.1"}, body{""};
+		std::string statusText{"OK"}, version{"HTTP/1.1"}, body{};
 		std::unordered_map<std::string, std::string> headers;
 
 		enums::MessageType type(void) const override;

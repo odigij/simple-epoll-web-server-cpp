@@ -8,6 +8,11 @@ namespace sews::format::http
 {
 	struct Request : public sews::interface::Message
 	{
+		Request(void);
+		Request(std::string_view method, std::string_view path, std::string_view version,
+				std::unordered_map<std::string, std::string> headers, std::string_view body);
+		~Request(void) override;
+
 		std::string method, path, version, body;
 		std::unordered_map<std::string, std::string> headers;
 
