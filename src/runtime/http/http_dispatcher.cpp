@@ -1,4 +1,4 @@
-#include "sews/infrastructure/runtime/http/http_dispatcher.hpp"
+#include "sews/runtime/http/http_dispatcher.hpp"
 #include "sews/infrastructure/format/http/request.hpp"
 #include "sews/infrastructure/format/http/response.hpp"
 #include "sews/infrastructure/io/epoll/socket_poll.hpp"
@@ -8,11 +8,13 @@ namespace sews::runtime::http
 {
 	Dispatcher::Dispatcher(std::unique_ptr<interface::Acceptor> acceptor,
 						   std::unique_ptr<interface::SocketLoop> socketLoop,
+						   std::unique_ptr<interface::ConnectionManager> connectionManager,
 						   std::unique_ptr<interface::RequestParser> parser,
 						   std::unique_ptr<interface::MessageHandler> handler,
 						   std::unique_ptr<interface::ResponseSerializer> serializer, interface::Logger *logger)
-		: acceptor(std::move(acceptor)), socketLoop(std::move(socketLoop)), parser(std::move(parser)),
-		  handler(std::move(handler)), serializer(std::move(serializer)), logger(logger)
+		: acceptor(std::move(acceptor)), socketLoop(std::move(socketLoop)),
+		  connectionManager(std::move(connectionManager)), parser(std::move(parser)), handler(std::move(handler)),
+		  serializer(std::move(serializer)), logger(logger)
 	{
 		logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Initialized.");
 	}
@@ -29,7 +31,6 @@ namespace sews::runtime::http
 		std::vector<interface::Channel *> watched;
 		std::vector<interface::SocketEvent> events;
 		std::vector<char> buffer(8192);
-		std::vector<int> fdsToClose;
 		ssize_t bytesRead{0};
 
 		if (auto *epollLoop = dynamic_cast<sews::io::epoll::SocketLoop *>(socketLoop.get()))
@@ -46,16 +47,13 @@ namespace sews::runtime::http
 		// [] No unconditional loop.
 		// [X] Reserve vectors.
 		// [X] Log socket details.
-		// [] Connection manager.
+		// [X] Connection manager.
 		// [] Implement routing.
 
 		while (true)
 		{
 			watched.push_back(&serverChannel);
-			for (std::pair<const int, std::unique_ptr<sews::interface::Channel>> &pair : activeChannels)
-			{
-				watched.push_back(pair.second.get());
-			}
+			connectionManager->forEach([&](interface::Channel &channel) { watched.push_back(&channel); });
 
 			socketLoop->poll(watched, events);
 
@@ -75,20 +73,20 @@ namespace sews::runtime::http
 					}
 
 					socketLoop->registerChannel(*clientChannel);
-					activeChannels[clientChannel->getFd()] = std::move(clientChannel);
+					connectionManager->add(std::move(clientChannel));
 					continue;
 				}
 
 				if (event.flag == enums::SocketEvent::HANGUP)
 				{
 					logger->log(enums::LogType::INFO, "\033[36mHttp dispatcher:\033[0m Connection closed by the peer.");
-					fdsToClose.push_back(event.channel.getFd());
+					connectionManager->remove(event.channel);
 					continue;
 				}
 				else if (event.flag == enums::SocketEvent::ERROR)
 				{
 					logger->log(enums::LogType::ERROR, "\033[36mHttp dispatcher:\033[0m Connection lost.");
-					fdsToClose.push_back(event.channel.getFd());
+					connectionManager->remove(event.channel);
 					continue;
 				}
 
@@ -106,7 +104,7 @@ namespace sews::runtime::http
 
 					if (bytesRead == 0)
 					{
-						fdsToClose.push_back(event.channel.getFd());
+						connectionManager->remove(event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::ERROR});
 						logger->log(enums::LogType::WARNING,
 									"\033[36mHttp dispatcher:\033[0m Failed to read bytes, peer doesn't answer.");
@@ -114,7 +112,7 @@ namespace sews::runtime::http
 					}
 					if (bytesRead < 0)
 					{
-						fdsToClose.push_back(event.channel.getFd());
+						connectionManager->remove(event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::ERROR});
 						logger->log(enums::LogType::ERROR,
 									"\033[36mHttp dispatcher:\033[0m Failed to read bytes, closing peer socket.");
@@ -180,18 +178,11 @@ namespace sews::runtime::http
 				}
 			}
 
-			for (int fd : fdsToClose)
-			{
-				auto it = activeChannels.find(fd);
-				if (it != activeChannels.end())
-				{
-					socketLoop->unregisterChannel(*it->second);
-					activeChannels.erase(it);
-				}
-			}
+			connectionManager->forEachClosed(
+				[&](interface::Channel &channel) { socketLoop->unregisterChannel(channel); });
+			connectionManager->clear();
 
 			bytesRead = 0;
-			fdsToClose.clear();
 			events.clear();
 			watched.clear();
 		}
