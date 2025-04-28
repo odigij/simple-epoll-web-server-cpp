@@ -1,68 +1,86 @@
-# Simple Epoll Web Server (SEWS)
+# SEWS — Modular Event-Driven Server Framework (C++)
 
-## Description
-
-**SEWS** is a lightweight, experimental web server written in **C++**. It’s built for learning and exploration, not production. It uses **`sys/epoll`** for non-blocking, event-driven I/O and is intentionally **single-threaded** to keep complexity down.
-
-It includes **HTTPS support** via OpenSSL and serves **static files** by generating **trie-based lookup nodes** for anything in `assets/public/static`. Routing is configured via `sews::initializeApp`, supporting **multiple path aliases** and **basic path parameter matching** (you must handle parameter parsing yourself).
-
-SEWS is a low-level HTTP server skeleton, not a framework. It provides basic parsing of incoming HTTP requests through the sews::Request class, including method, path, headers, query parameters, and body. There is no middleware system, thread pool, or high-level routing abstraction — all behavior is defined manually and explicitly.
+![Status: Experimental](https://img.shields.io/badge/status-experimental-orange) ![License: MIT](https://img.shields.io/badge/license-MIT-green) ![Platform: Linux](https://img.shields.io/badge/platform-Linux-blue) ![C++14](https://img.shields.io/badge/C++-14%2B-blue)
 
 ---
 
-## Technical Features
+**SEWS** began as a tightly coupled experiment but has **evolved** into a **modular, extensible server framework skeleton**, built in **modern C++** for clarity, control, and minimalism.
 
-| Feature                        | Description                                                                |
-| ------------------------------ | -------------------------------------------------------------------------- |
-| **Epoll-based I/O**            | Uses `epoll` for efficient event-driven, non-blocking networking.          |
-| **Single-threaded Design**     | All operations run on one thread; concurrency is handled by epoll.         |
-| **Command-Line Configuration** | Startup behavior is controlled via CLI flags.                              |
-| **Static Content Serving**     | Serves files in `assets/public/static` via trie-optimized path resolution. |
-| **OpenSSL Integration**        | HTTPS supported using OpenSSL; HTTP can be enabled with a flag.            |
-| **Custom Routing System**      | Routes are defined manually with basic support for parameters.             |
+SEWS provides a clean, runtime-separated architecture ready for multiple protocols, live metrics, and future extensibility — while intentionally keeping external dependencies minimal.
 
 ---
 
-## Command-Line Options
+## Project Status
 
-| Option   | Description                                               | Example          |
-| -------- | --------------------------------------------------------- | ---------------- |
-| `-p`     | Set the server port.                                      | `./sews -p 8080` |
-| `-m`     | Max pending connections in the backlog queue.             | `./sews -m 128`  |
-| `-e`     | Max number of epoll events per cycle.                     | `./sews -e 32`   |
-| `-t`     | Timeout (ms) for epoll wait.                              | `./sews -t 500`  |
-| `-f`     | Flag to control extra behavior (e.g. TLS enable/disable). | `./sews -f 0`    |
-| `--help` | Show all available CLI options.                           | `./sews --help`  |
+> **SEWS is under active development.**  
+> It is **experimental** and **not production-ready**.
+>
+> Core modules (HTTP/1.1, metrics exporter, router) are functional, but advanced features (multi-threading, SSL/TLS support, dynamic backend loading) are planned.
 
 ---
 
-## Build and Run Instructions
+## Current Modules
 
-### Requirements
+| Module | Purpose |
+|:-------|:--------|
+| **Socket Loop (Epoll-based)** | Non-blocking, event-driven I/O using `epoll`. |
+| **Dispatcher** | Drives event polling and delegates message handling. |
+| **Connection Manager** | Tracks and manages active client connections. |
+| **Router (Trie-based)** | Efficient HTTP/1.1 method-path matching. |
+| **Request Parser & Response Serializer (HTTP/1.1)** | Parses incoming requests and serializes responses. |
+| **Metrics Manager** | Tracks live server metrics, exports via HTTP `/metrics`. |
+| **Logger** | Basic modular logging framework (with null logger support). |
 
-- Linux OS (or WSL)
-- C++17-compatible compiler (GCC/Clang)
-- CMake
-- OpenSSL
-- FMT
+---
 
-### Instructions
+## Current Technical Features
+
+| Feature | Description |
+|:--------|:------------|
+| **Single-threaded Epoll I/O** | Predictable, event-driven execution model. |
+| **Runtime Metrics Exporter** | Live counters for uptime, active connections, request & response totals. |
+| **Modular Architecture** | Clean separation between core, infrastructure, and runtime layers. |
+| **Guided by SOLID Principles** | Modular, focused interfaces and components. |
+| **Extensible Dispatcher Design** | Architecturally supports new backends (e.g., WebSocket, raw TCP) easily. |
+| **Minimal External Dependencies** | No external web frameworks, pure C++14+. (Note: The CMakeLists.txt currently includes some legacy package checks that may be cleaned up in future versions.)|
+
+---
+
+## Requirements
+
+- Linux OS
+- GCC 14.2.1+ or Clang 19.1.7+
+- CMake 3.10+
+
+---
+
+## Build & Run
 
 ```bash
-# Clone and build
-git clone https://github.com/odigij/simple-epoll-web-server-cpp.git
-cd simple-epoll-web-server-cpp
-mkdir build && cd build
-cmake ..
-make
+# Clone the repository
+$ git clone https://github.com/odigij/simple-epoll-web-server-cpp.git
+$ cd simple-epoll-web-server-cpp
 
-# Optional: generate self-signed certificate
-openssl req -x509 -newkey rsa:4096 -keyout server.key -out server.crt -days 365 -nodes
+# Build
+$ mkdir build && cd build
+$ cmake ..
+$ make
 
-# Run the server (TLS enabled)
-./sews -p 8080 -f 1 >> sews.log 2>&1 &
-disown
-
-# Or alternatively:
-nohup ./sews >> sews.log 2>&1 &
+# Run
+$ ./sews
 ```
+
+---
+
+## Disclaimer
+
+This project is for educational, experimental, and prototyping purposes.
+It is **not hardened** for real-world production use.
+
+Use at your own discretion, and contributions are welcome.
+
+---
+
+## License
+
+MIT License. See [LICENSE](./LICENSE) for details.
