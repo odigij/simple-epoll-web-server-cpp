@@ -18,9 +18,9 @@ namespace sews::interface
 	 *
 	 * - Concrete implementations must document their thread-safety.
 	 */
-	struct Metrics
+	struct MetricsManager
 	{
-		virtual ~Metrics(void);
+		virtual ~MetricsManager(void);
 		virtual void increment(const std::string &name) = 0;
 		virtual void decrement(const std::string &name) = 0;
 		virtual void set(const std::string &name, size_t value) = 0;

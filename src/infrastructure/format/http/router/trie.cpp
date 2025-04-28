@@ -84,8 +84,9 @@ namespace sews::format::http
 		{
 			if (currentNode->children.find(segment) == currentNode->children.end())
 			{
-				logger->log(enums::LogType::WARNING,
-							"\033[36mTrie Router:\033[0m Node does not exists, returning nullptr.");
+				logger->log(enums::LogType::WARNING, "\033[36mTrie Router:\033[0m Node does not exists; \033[33m" +
+														 request->method + ' ' + request->path +
+														 "\033[0m. Returning nullptr.");
 				return nullptr;
 			}
 			currentNode = currentNode->children[segment].get();

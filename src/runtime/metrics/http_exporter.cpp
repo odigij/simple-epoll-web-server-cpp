@@ -1,9 +1,10 @@
-#include "sews/runtime/metrics/handlers/http_exporter.hpp"
+#include "sews/runtime/metrics/http_exporter.hpp"
 #include "sews/infrastructure/format/http/response.hpp"
 
 namespace sews::runtime::metrics
 {
-	HttpMetricExporter::HttpMetricExporter(interface::Metrics *metrics, interface::ResponseSerializer *serializer)
+	HttpMetricExporter::HttpMetricExporter(interface::MetricsManager *metrics,
+										   interface::ResponseSerializer *serializer)
 		: metrics(metrics), serializer(serializer)
 	{
 	}

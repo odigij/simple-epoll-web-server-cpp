@@ -2,6 +2,7 @@
 #define SEWS_INFRASTRUCTURE_TRANSPORT_PLAIN_TEXT_CHANNEL_HPP
 
 #include "sews/core/interface/channel.hpp"
+#include <cstdint>
 #include <string>
 
 namespace sews::transport
@@ -15,9 +16,13 @@ namespace sews::transport
 		ssize_t writeRaw(const char *buffer, size_t len) override;
 		void close(void) override;
 		std::string &getResponse(void);
+		const std::pair<uint16_t, std::string> getDetails(void);
+		void setDetails(const uint16_t port, const std::string ip);
 
 	  private:
 		int fd{-1};
+		uint16_t port;
+		std::string ip;
 		std::string response;
 	};
 } // namespace sews::transport

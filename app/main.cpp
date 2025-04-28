@@ -8,8 +8,8 @@
 #include "sews/infrastructure/io/epoll/socket_poll.hpp"
 #include "sews/infrastructure/io/logger/basic_logger.hpp"
 #include "sews/runtime/http/http_dispatcher.hpp"
-#include "sews/runtime/metrics/core/manager.hpp"
-#include "sews/runtime/metrics/handlers/http_exporter.hpp"
+#include "sews/runtime/metrics/manager.hpp"
+#include "sews/runtime/metrics/http_exporter.hpp"
 
 #include "../test/include/http/test_handler.hpp"
 

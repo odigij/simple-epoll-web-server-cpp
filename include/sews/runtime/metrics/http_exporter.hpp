@@ -9,12 +9,12 @@ namespace sews::runtime::metrics
 {
 	struct HttpMetricExporter : public interface::MessageHandler
 	{
-		HttpMetricExporter(interface::Metrics *metrics, interface::ResponseSerializer *serializer);
+		HttpMetricExporter(interface::MetricsManager *metrics, interface::ResponseSerializer *serializer);
 
 		std::unique_ptr<interface::Message> handle(const interface::Message &request) override;
 
 	  private:
-		interface::Metrics *metrics;
+		interface::MetricsManager *metrics;
 		interface::ResponseSerializer *serializer;
 	};
 } // namespace sews::runtime::metrics

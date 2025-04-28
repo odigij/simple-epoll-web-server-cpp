@@ -4,6 +4,8 @@
 #include "sews/infrastructure/format/http/response.hpp"
 #include "sews/infrastructure/io/epoll/socket_poll.hpp"
 #include "sews/infrastructure/transport/plain_text_channel.hpp"
+#include <string>
+#include <sstream>
 
 namespace sews::runtime::http
 {
@@ -56,6 +58,7 @@ namespace sews::runtime::http
 		// [] An asset manager to register static files to endpoints.
 		// [] Implement middleware.
 		// [] Reduce dispatcher constructor bloat.
+		// [] Implement handler adapter.
 
 		while (!stopFlag.load())
 		{
@@ -126,8 +129,8 @@ namespace sews::runtime::http
 					{
 						connectionManager->remove(event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::ERROR});
-						logger->log(enums::LogType::ERROR, "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, "
-														   "connection abruptly closed. Channel marked to be closed.");
+						logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, "
+														  "connection abruptly closed. Channel marked to be closed.");
 						continue;
 					}
 
@@ -139,7 +142,7 @@ namespace sews::runtime::http
 						logger->log(enums::LogType::ERROR,
 									"\033[36mHttp Dispatcher:\033[0m Failed to parse raw request.");
 						logger->log(
-							enums::LogType::WARNING,
+							enums::LogType::INFO,
 							"\033[36mHttp Dispatcher:\033[0m Sending \033[33mInternal Error\033[0m response anyway.");
 						format::http::Response errorResponse;
 						errorResponse.status = 500;
@@ -160,7 +163,7 @@ namespace sews::runtime::http
 						logger->log(enums::LogType::ERROR,
 									"\033[36mHttp Dispatcher:\033[0m Failed to cast message as request.");
 						logger->log(
-							enums::LogType::WARNING,
+							enums::LogType::INFO,
 							"\033[36mHttp Dispatcher:\033[0m Sending \033[33mInternal Error\033[0m response anyway.");
 						format::http::Response errorResponse;
 						errorResponse.status = 500;
@@ -173,16 +176,22 @@ namespace sews::runtime::http
 						continue;
 					}
 
-					logger->log(enums::LogType::INFO,
-								"\033[36mHttp Dispatcher: \033[33m" + req->method + ' ' + req->path);
+					{
+						std::pair<uint16_t, std::string> channelDetails{plainTextChannel->getDetails()};
+						std::ostringstream ss;
+						ss << "\033[36mHttp Dispatcher:\033[0m \033[33mfd=" << plainTextChannel->getFd()
+						   << " ip:port=" << channelDetails.second << ':' << channelDetails.first
+						   << " method=" << req->method << " path=" << req->path;
+						logger->log(enums::LogType::INFO, ss.str());
+					}
 
 					interface::MessageHandler *handler{router->match(*req)};
 					metricsManager->increment("requests_total");
 
 					if (!handler) // Gracefully fallback
 					{
-						logger->log(enums::LogType::WARNING, "\033[36mHttp Dispatcher:\033[0m No handler found for "
-															 "request, sending \033[33m404 Not Found\033[0m anyway.");
+						logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m No handler found for "
+														  "request, sending \033[33m404 Not Found\033[0m anyway.");
 						format::http::Response notFoundResp;
 						notFoundResp.status = 404;
 						notFoundResp.statusText = "Not Found";
@@ -197,10 +206,10 @@ namespace sews::runtime::http
 					std::unique_ptr<interface::Message> response{handler->handle(*message)};
 					if (!response) // Gracefully fallback
 					{
-						logger->log(enums::LogType::ERROR,
+						logger->log(enums::LogType::WARNING,
 									"\033[36mHttp Dispatcher:\033[0m Handler returned null pointer.");
 						logger->log(
-							enums::LogType::WARNING,
+							enums::LogType::INFO,
 							"\033[36mHttp Dispatcher:\033[0m Sending \033[33mInternal Error\033[0m response anyway.");
 						format::http::Response errorResponse;
 						errorResponse.status = 500;

@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <arpa/inet.h>
+#include <sstream>
 
 namespace sews::io::epoll
 {
@@ -30,13 +31,15 @@ namespace sews::io::epoll
 		}
 		char ip[INET_ADDRSTRLEN];
 		inet_ntop(AF_INET, &(clientAddr.sin_addr), ip, INET_ADDRSTRLEN);
-		uint16_t port = ntohs(clientAddr.sin_port);
+		uint16_t port{ntohs(clientAddr.sin_port)};
+		std::ostringstream os;
+		os << "\033[36mEpoll Acceptor:\033[0m Accepted connection from; \033[33m fd=" << clientFd << ", ip:port=" << ip
+		   << ':' << port;
+		logger->log(enums::LogType::INFO, os.str());
 
-		logger->log(enums::LogType::INFO, "\033[36mEpoll Acceptor:\033[0m Accepted connection from; \033[33m fd= " +
-											  std::to_string(clientFd) + ", ip:port= " + std::string(ip) + ":" +
-											  std::to_string(port));
-
-		return std::make_unique<sews::transport::PlainTextChannel>(clientFd);
+		std::unique_ptr channel{std::make_unique<sews::transport::PlainTextChannel>(clientFd)};
+		channel->setDetails(port, ip);
+		return std::move(channel);
 	}
 
 	interface::Channel &Acceptor::getListener(void)

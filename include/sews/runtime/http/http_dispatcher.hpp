@@ -9,7 +9,7 @@
 #include "sews/core/interface/dispatcher.hpp"
 #include "sews/core/interface/socket_loop.hpp"
 #include "sews/core/interface/logger.hpp"
-#include "sews/runtime/metrics/core/manager.hpp"
+#include "sews/runtime/metrics/manager.hpp"
 
 namespace sews::runtime::http
 {

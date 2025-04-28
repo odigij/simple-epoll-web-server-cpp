@@ -2,5 +2,5 @@
 
 namespace sews::interface
 {
-	Metrics::~Metrics(void) = default;
+	MetricsManager::~MetricsManager(void) = default;
 }

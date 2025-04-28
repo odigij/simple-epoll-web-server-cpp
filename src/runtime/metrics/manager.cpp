@@ -1,4 +1,4 @@
-#include "sews/runtime/metrics/core/manager.hpp"
+#include "sews/runtime/metrics/manager.hpp"
 #include "sews/core/enums/log_type.hpp"
 #include <chrono>
 #include <sstream>
@@ -43,7 +43,7 @@ namespace sews::runtime::metrics
 		if (it == metrics.end())
 		{
 			this->logger->log(enums::LogType::WARNING,
-							  "\033[36mMetric Manager:\033[0m Metric not found for increment: " + name);
+							  "\033[36mMetric Manager:\033[0m Metric not found for decrement: " + name);
 			return;
 		}
 		if (it->second.type == enums::MetricType::COUNTER)

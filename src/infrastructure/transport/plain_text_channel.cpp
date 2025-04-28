@@ -1,5 +1,6 @@
 #include "sews/infrastructure/transport/plain_text_channel.hpp"
 #include <unistd.h>
+#include <utility>
 
 namespace sews::transport
 {
@@ -39,6 +40,17 @@ namespace sews::transport
 	std::string &PlainTextChannel::getResponse(void)
 	{
 		return response;
+	}
+
+	const std::pair<uint16_t, std::string> PlainTextChannel::getDetails(void)
+	{
+		return std::make_pair(port, ip);
+	}
+
+	void PlainTextChannel::setDetails(const uint16_t port, const std::string ip)
+	{
+		this->port = port;
+		this->ip = ip;
 	}
 
 } // namespace sews::transport

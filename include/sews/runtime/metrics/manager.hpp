@@ -4,7 +4,7 @@
 #include "sews/core/enums/metric_type.hpp"
 #include "sews/core/interface/logger.hpp"
 #include "sews/core/interface/metrics.hpp"
-#include "sews/runtime/metrics/core/data.hpp"
+#include "sews/runtime/metrics/data.hpp"
 #include <memory>
 #include <unordered_map>
 #include <chrono>
@@ -12,7 +12,7 @@
 namespace sews::runtime::metrics
 {
 
-	struct Manager : public interface::Metrics
+	struct Manager : public interface::MetricsManager
 	{
 		Manager(std::shared_ptr<interface::Logger> logger);
 		~Manager(void) override;
