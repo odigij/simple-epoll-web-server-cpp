@@ -12,11 +12,16 @@ namespace sews::runtime::http
 						   std::unique_ptr<interface::ConnectionManager> connectionManager,
 						   std::unique_ptr<interface::Router> router, std::unique_ptr<interface::RequestParser> parser,
 						   std::unique_ptr<interface::ResponseSerializer> serializer,
+						   std::shared_ptr<runtime::metrics::Manager> metricsManager,
 						   std::shared_ptr<interface::Logger> logger)
 		: acceptor(std::move(acceptor)), socketLoop(std::move(socketLoop)),
 		  connectionManager(std::move(connectionManager)), router(std::move(router)), parser(std::move(parser)),
-		  serializer(std::move(serializer)), logger(logger)
+		  serializer(std::move(serializer)), metricsManager(metricsManager), logger(logger)
 	{
+		metricsManager->registerMetric("requests_total", enums::MetricType::COUNTER);
+		metricsManager->registerMetric("responses_404", enums::MetricType::COUNTER);
+		metricsManager->registerMetric("responses_500", enums::MetricType::COUNTER);
+		metricsManager->registerMetric("connections_total", enums::MetricType::GAUGE);
 		this->logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Initialized.");
 	}
 
@@ -34,22 +39,23 @@ namespace sews::runtime::http
 		std::vector<char> buffer(8192);
 		ssize_t bytesRead{0};
 
+		// NOTE:
+		// - One time cost.
+		// - Cohession for performance, reserves vector capacities.
 		if (auto *epollLoop = dynamic_cast<sews::io::epoll::SocketLoop *>(socketLoop.get()))
 		{
-			// Needed cohession for performance to reserve capacity.
 			const size_t cap = epollLoop->getEventCapacity();
 			events.reserve(cap);
 			watched.reserve(cap + 1);
 		}
 
 		// TODO:
-		// [X] Handle error cases.
-		// [X] Log necessary info.
-		// [] No unconditional loop.
-		// [X] Reserve vectors.
-		// [X] Log socket details.
-		// [X] Connection manager.
-		// [X] Implement routing.
+		// [] Store ip & port at channel when client connected.
+		// [] Store a buffer at channel for large file transfers.
+		// [] Log socket fd, connection ip & port at event logs.
+		// [] An asset manager to register static files to endpoints.
+		// [] Implement middleware.
+		// [] Reduce dispatcher constructor bloat.
 
 		while (!stopFlag.load())
 		{
@@ -74,6 +80,7 @@ namespace sews::runtime::http
 
 					socketLoop->registerChannel(*clientChannel);
 					connectionManager->add(std::move(clientChannel));
+					metricsManager->increment("connections_total");
 					continue;
 				}
 
@@ -110,8 +117,8 @@ namespace sews::runtime::http
 					{
 						connectionManager->remove(event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::ERROR});
-						logger->log(enums::LogType::WARNING, "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, "
-															 "peer doesn't answer. Channel marked to be closed.");
+						logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, "
+														  "peer doesn't answer. Channel marked to be closed.");
 						continue;
 					}
 
@@ -141,6 +148,7 @@ namespace sews::runtime::http
 						errorResponse.headers["Connection"] = "close";
 						plainTextChannel->getResponse() = serializer->serialize(errorResponse);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
+						metricsManager->increment("responses_500");
 						continue;
 					}
 
@@ -161,6 +169,7 @@ namespace sews::runtime::http
 						errorResponse.headers["Connection"] = "close";
 						plainTextChannel->getResponse() = serializer->serialize(errorResponse);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
+						metricsManager->increment("responses_500");
 						continue;
 					}
 
@@ -168,6 +177,7 @@ namespace sews::runtime::http
 								"\033[36mHttp Dispatcher: \033[33m" + req->method + ' ' + req->path);
 
 					interface::MessageHandler *handler{router->match(*req)};
+					metricsManager->increment("requests_total");
 
 					if (!handler) // Gracefully fallback
 					{
@@ -180,6 +190,7 @@ namespace sews::runtime::http
 						notFoundResp.headers["Connection"] = "close";
 						plainTextChannel->getResponse() = serializer->serialize(notFoundResp);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
+						metricsManager->increment("responses_404");
 						continue;
 					}
 
@@ -198,6 +209,7 @@ namespace sews::runtime::http
 						errorResponse.headers["Connection"] = "close";
 						plainTextChannel->getResponse() = serializer->serialize(errorResponse);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
+						metricsManager->increment("responses_500");
 						continue;
 					}
 
@@ -215,8 +227,11 @@ namespace sews::runtime::http
 				}
 			}
 
-			connectionManager->forEachClosed(
-				[&](interface::Channel &channel) { socketLoop->unregisterChannel(channel); });
+			connectionManager->forEachClosed([&](interface::Channel &channel) {
+				socketLoop->unregisterChannel(channel);
+				metricsManager->decrement("connections_total");
+			});
+
 			connectionManager->clear();
 
 			bytesRead = 0;

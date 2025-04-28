@@ -1,5 +1,5 @@
-#ifndef SEWS_INFRASTRUCTURE_RUNTIME_HTTP_DISPATCHER_HPP
-#define SEWS_INFRASTRUCTURE_RUNTIME_HTTP_DISPATCHER_HPP
+#ifndef SEWS_RUNTIME_HTTP_DISPATCHER_HPP
+#define SEWS_RUNTIME_HTTP_DISPATCHER_HPP
 
 #include "sews/core/interface/acceptor.hpp"
 #include "sews/core/interface/connection_manager.hpp"
@@ -9,6 +9,7 @@
 #include "sews/core/interface/dispatcher.hpp"
 #include "sews/core/interface/socket_loop.hpp"
 #include "sews/core/interface/logger.hpp"
+#include "sews/runtime/metrics/core/manager.hpp"
 
 namespace sews::runtime::http
 {
@@ -18,6 +19,7 @@ namespace sews::runtime::http
 				   std::unique_ptr<interface::ConnectionManager> connectionManager,
 				   std::unique_ptr<interface::Router> router, std::unique_ptr<interface::RequestParser> parser,
 				   std::unique_ptr<interface::ResponseSerializer> serializer,
+				   std::shared_ptr<runtime::metrics::Manager> metricsManager,
 				   std::shared_ptr<interface::Logger> logger);
 
 		~Dispatcher(void) override;
@@ -30,8 +32,9 @@ namespace sews::runtime::http
 		std::unique_ptr<interface::Router> router;
 		std::unique_ptr<interface::RequestParser> parser;
 		std::unique_ptr<interface::ResponseSerializer> serializer;
+		std::shared_ptr<runtime::metrics::Manager> metricsManager;
 		std::shared_ptr<interface::Logger> logger;
 	};
 } // namespace sews::runtime::http
 
-#endif // !SEWS_INFRASTRUCTURE_RUNTIME_HTTP_DISPATCHER_HPP
+#endif // !SEWS_RUNTIME_HTTP_DISPATCHER_HPP

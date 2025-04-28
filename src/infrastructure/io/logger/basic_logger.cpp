@@ -13,7 +13,7 @@ namespace sews::io::logger
 
 	BasicLogger::~BasicLogger(void)
 	{
-		log(enums::LogType::INFO, "\033[36mBasic Logger:\033[0m Terminated");
+		log(enums::LogType::INFO, "\033[36mBasic Logger:\033[0m Terminated.");
 	}
 
 	void BasicLogger::log(enums::LogType flag, std::string_view message)
@@ -58,12 +58,15 @@ namespace sews::io::logger
 
 	std::string BasicLogger::getTimestamp(void)
 	{
+		// NOTE: MS calculation depracated for now.
 		std::chrono::time_point now = std::chrono::system_clock::now();
 		std::time_t in_time = std::chrono::system_clock::to_time_t(now);
-		std::chrono::duration ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) % 1000;
+		// std::chrono::duration ms = std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()) %
+		// 1000;
 		std::stringstream ss;
-		ss << std::put_time(std::localtime(&in_time), "%F %T") << '.' << std::setfill('0') << std::setw(3)
-		   << ms.count();
+		// ss << std::put_time(std::localtime(&in_time), "%F %T") << '.' << std::setfill('0') << std::setw(3)
+		//    << ms.count();
+		ss << std::put_time(std::localtime(&in_time), "%F %T");
 		return ss.str();
 	}
 } // namespace sews::io::logger

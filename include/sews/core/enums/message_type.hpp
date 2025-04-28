@@ -3,7 +3,7 @@
 
 namespace sews::enums
 {
-	enum MessageType
+	enum class MessageType
 	{
 		HttpRequest,
 		HttpResponse,
