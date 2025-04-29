@@ -37,7 +37,7 @@ namespace sews::format::http
 		}
 		currentNode->handlers[safeCopyMethod] = handler;
 		logger->log(enums::LogType::INFO,
-					"\033[36mTrie Router:\033[0m Registering \033[33m" + safeCopyMethod + ' ' + safeCopyPath);
+					"\033[36mTrie Router:\033[0m Registering\033[33m -> " + safeCopyMethod + ' ' + safeCopyPath);
 	}
 
 	void TrieRouter::remove(std::string_view method, std::string_view path)
@@ -57,7 +57,7 @@ namespace sews::format::http
 			if (currentNode->children.find(segment) == currentNode->children.end())
 			{
 				logger->log(enums::LogType::WARNING,
-							"\033[36mTrie Router:\033[0m Node does not exists to remove, cancelling ->\033[31m" +
+							"\033[36mTrie Router:\033[0m Node does not exists to remove, cancelling ->\033[31m " +
 								safeCopyMethod + ' ' + safeCopyPath + " -> " + segment);
 				return;
 			}

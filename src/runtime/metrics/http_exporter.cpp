@@ -16,7 +16,7 @@ namespace sews::runtime::metrics
 		response.status = 200;
 		response.statusText = "OK";
 		response.headers["Content-Type"] = "text/plain";
-		response.headers["Connection"] = "close";
+		response.headers["Connection"] = "keep-alive";
 		response.body = metrics->exportValues();
 
 		return std::make_unique<format::http::Response>(std::move(response));

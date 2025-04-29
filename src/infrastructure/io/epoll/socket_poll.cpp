@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <string>
 #include <cstring>
+#include <sstream>
 
 namespace sews::io::epoll
 {
@@ -11,10 +12,10 @@ namespace sews::io::epoll
 	{
 		if (epollFd < 0)
 		{
-			logger->log(enums::LogType::ERROR,
-						std::string("\033[36mEpoll Socket Loop:\033[0m Failed to initialize epoll fd, \033[31merrno= " +
-									std::to_string(errno) + ", ") +
-							strerror(errno));
+			std::ostringstream oss;
+			oss << "\033[36mEpoll Socket Loop:\033[0m Failed to initialize epoll fd,  \033[31merrno = " << errno
+				<< " -> " << strerror(errno);
+			logger->log(enums::LogType::ERROR, oss.str());
 			perror("epoll_create1");
 			exit(EXIT_FAILURE);
 		}
@@ -41,10 +42,10 @@ namespace sews::io::epoll
 
 		if (epoll_ctl(epollFd, EPOLL_CTL_ADD, channel.getFd(), &epollEvent) != 0)
 		{
-			logger->log(enums::LogType::ERROR,
-						std::string("\033[36mEpoll Socket Loop:\033[0m Failed to register fd, \033[31merrno= " +
-									std::to_string(errno) + ", ") +
-							strerror(errno));
+			std::ostringstream oss;
+			oss << "\033[36mEpoll Socket Loop:\033[0m Failed to register fd, \033[31merrno = " << errno << " -> "
+				<< strerror(errno);
+			logger->log(enums::LogType::ERROR, oss.str());
 		}
 	}
 
@@ -52,10 +53,10 @@ namespace sews::io::epoll
 	{
 		if (epoll_ctl(epollFd, EPOLL_CTL_DEL, channel.getFd(), nullptr))
 		{
-			logger->log(enums::LogType::ERROR,
-						std::string("\033[36mEpoll Socket Loop:\033[0m Failed to delete fd, \033[31merrno= " +
-									std::to_string(errno) + ", ") +
-							strerror(errno));
+			std::ostringstream oss;
+			oss << "\033[36mEpoll Socket Loop:\033[0m Failed to delete fd, \033[31merrno -> " << errno << " -> "
+				<< strerror(errno);
+			logger->log(enums::LogType::ERROR, oss.str());
 		}
 	}
 
@@ -66,10 +67,10 @@ namespace sews::io::epoll
 		{
 			if (stopFlag.load())
 			{
-				logger->log(enums::LogType::WARNING,
-							std::string("\033[36mEpoll Socket Loop:\033[0m Terminated due to errno= " +
-										std::to_string(errno) + ", ") +
-								strerror(errno));
+				std::ostringstream oss;
+				oss << "\033[36mEpoll Socket Loop:\033[0m Terminated due to \033[31merrno -> " << errno << ", "
+					<< strerror(errno);
+				logger->log(enums::LogType::WARNING, oss.str());
 			}
 			else
 			{

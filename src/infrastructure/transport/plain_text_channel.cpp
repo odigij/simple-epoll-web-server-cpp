@@ -42,9 +42,9 @@ namespace sews::transport
 		return response;
 	}
 
-	const std::pair<uint16_t, std::string> PlainTextChannel::getDetails(void)
+	const std::pair<std::string, uint16_t> PlainTextChannel::getDetails(void)
 	{
-		return std::make_pair(port, ip);
+		return std::make_pair(ip, port);
 	}
 
 	void PlainTextChannel::setDetails(const uint16_t port, const std::string ip)

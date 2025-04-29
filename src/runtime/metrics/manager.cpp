@@ -18,6 +18,7 @@ namespace sews::runtime::metrics
 
 	void Manager::registerMetric(const std::string &name, enums::MetricType type)
 	{
+		// WARNING: Metric initialization must be in try_emplace() directly, so std::atomic<> would work.
 		auto [it, inserted] = metrics.try_emplace(name, Metric(0, type));
 		if (!inserted)
 		{
@@ -31,7 +32,7 @@ namespace sews::runtime::metrics
 		if (it == metrics.end())
 		{
 			this->logger->log(enums::LogType::WARNING,
-							  "\033[36mMetric Manager:\033[0m Metric not found for increment: " + name);
+							  "\033[36mMetric Manager:\033[0m Metric not found for increment: \033[33m" + name);
 			return;
 		}
 		it->second.value++;
@@ -43,7 +44,7 @@ namespace sews::runtime::metrics
 		if (it == metrics.end())
 		{
 			this->logger->log(enums::LogType::WARNING,
-							  "\033[36mMetric Manager:\033[0m Metric not found for decrement: " + name);
+							  "\033[36mMetric Manager:\033[0m Metric not found for decrement: \033[33m" + name);
 			return;
 		}
 		if (it->second.type == enums::MetricType::COUNTER)

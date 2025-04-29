@@ -52,9 +52,9 @@ namespace sews::runtime::http
 		}
 
 		// TODO:
-		// [] Store ip & port at channel when client connected.
+		// [X] Store ip & port at channel when client connected.
 		// [] Store a buffer at channel for large file transfers.
-		// [] Log socket fd, connection ip & port at event logs.
+		// [\] Log socket fd, connection ip & port at event logs.
 		// [] An asset manager to register static files to endpoints.
 		// [] Implement middleware.
 		// [] Reduce dispatcher constructor bloat.
@@ -106,6 +106,8 @@ namespace sews::runtime::http
 
 				transport::PlainTextChannel *plainTextChannel{
 					dynamic_cast<transport::PlainTextChannel *>(&event.channel)};
+				std::pair<std::string, uint16_t> channelDetails{plainTextChannel->getDetails()};
+
 				if (!plainTextChannel)
 				{
 					logger->log(enums::LogType::ERROR, "\033[36mHttp Dispatcher:\033[0m Failed to cast channel.");
@@ -120,8 +122,11 @@ namespace sews::runtime::http
 					{
 						connectionManager->remove(event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::ERROR});
-						logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, "
-														  "peer doesn't answer. Channel marked to be closed.");
+						std::ostringstream oss;
+						oss << "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, connection closed by peer. "
+							<< "Channel marked for closure -> \033[33m" << channelDetails.first << ':'
+							<< channelDetails.second << "\033[0m, fd = \033[33m" << plainTextChannel->getFd();
+						logger->log(enums::LogType::INFO, oss.str());
 						continue;
 					}
 
@@ -129,8 +134,11 @@ namespace sews::runtime::http
 					{
 						connectionManager->remove(event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::ERROR});
-						logger->log(enums::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, "
-														  "connection abruptly closed. Channel marked to be closed.");
+						std::ostringstream oss;
+						oss << "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, connection abruptly closed. "
+							<< "Channel marked for closure -> \033[33m" << channelDetails.first << ':'
+							<< channelDetails.second << "\033[0m, fd = \033[33m" << plainTextChannel->getFd();
+						logger->log(enums::LogType::INFO, oss.str());
 						continue;
 					}
 
@@ -177,12 +185,11 @@ namespace sews::runtime::http
 					}
 
 					{
-						std::pair<uint16_t, std::string> channelDetails{plainTextChannel->getDetails()};
-						std::ostringstream ss;
-						ss << "\033[36mHttp Dispatcher:\033[0m \033[33mfd=" << plainTextChannel->getFd()
-						   << " ip:port=" << channelDetails.second << ':' << channelDetails.first
-						   << " method=" << req->method << " path=" << req->path;
-						logger->log(enums::LogType::INFO, ss.str());
+						std::ostringstream oss;
+						oss << "\033[36mHttp Dispatcher:\033[33m " << req->method << ' ' << req->path
+							<< "\033[0m from \033[33m" << channelDetails.first << ':' << channelDetails.second
+							<< "\033[0m, fd = \033[33m" << plainTextChannel->getFd();
+						logger->log(enums::LogType::INFO, oss.str());
 					}
 
 					interface::MessageHandler *handler{router->match(*req)};
@@ -196,7 +203,7 @@ namespace sews::runtime::http
 						notFoundResp.status = 404;
 						notFoundResp.statusText = "Not Found";
 						notFoundResp.version = "HTTP/1.1";
-						notFoundResp.headers["Connection"] = "close";
+						notFoundResp.headers["Connection"] = "keep-alive";
 						plainTextChannel->getResponse() = serializer->serialize(notFoundResp);
 						socketLoop->updateEvents(*plainTextChannel, {enums::SocketEvent::WRITE});
 						metricsManager->increment("responses_404");
