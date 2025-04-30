@@ -1,7 +1,7 @@
-#include "sews/infrastructure/format/http/request.hpp"
+#include "architecture/message/http/transport/request.hpp"
 #include <sstream>
 
-std::string requestSerializer(sews::format::http::Request &request)
+std::string requestSerializer(sews::architecture::message::http::transport::Request &request)
 {
 	std::ostringstream oss;
 	oss << request.method << " " << request.path << " " << request.version << "\r\n";

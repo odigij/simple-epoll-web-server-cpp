@@ -1,19 +1,21 @@
 #ifndef SEWS_TEST_HTTP_HANDLER_HPP
 #define SEWS_TEST_HTTP_HANDLER_HPP
 
-#include "sews/core/interface/message_handler.hpp"
-#include "sews/infrastructure/format/http/request.hpp"
-#include "sews/infrastructure/format/http/response.hpp"
+#include "architecture/message/http/transport/request.hpp"
+#include "core/message/dispatch/handler.hpp"
+#include "architecture/message/http/transport/response.hpp"
 #include <memory>
 
 namespace sews::test::http
 {
-	struct HelloWorldPlainText : public interface::MessageHandler
+	struct HelloWorldPlainText : public core::message::dispatch::MessageHandler
 	{
-		std::unique_ptr<interface::Message> handle(const interface::Message &message) override
+		std::unique_ptr<core::message::transport::Message> handle(
+			const core::message::transport::Message &message) override
 		{
-			const format::http::Request *request = dynamic_cast<const format::http::Request *>(&message);
-			auto response = std::make_unique<format::http::Response>();
+			const architecture::message::http::transport::Request *request =
+				dynamic_cast<const architecture::message::http::transport::Request *>(&message);
+			auto response = std::make_unique<architecture::message::http::transport::Response>();
 			response->headers["Content-Type"] = "text/plain";
 			response->headers["Connection"] = "keep-alive";
 			response->status = 200;
@@ -23,12 +25,14 @@ namespace sews::test::http
 		};
 	};
 
-	struct HelloWorldHtml : public interface::MessageHandler
+	struct HelloWorldHtml : public core::message::dispatch::MessageHandler
 	{
-		std::unique_ptr<interface::Message> handle(const interface::Message &message) override
+		std::unique_ptr<core::message::transport::Message> handle(
+			const core::message::transport::Message &message) override
 		{
-			const format::http::Request *request = dynamic_cast<const format::http::Request *>(&message);
-			auto response = std::make_unique<format::http::Response>();
+			const architecture::message::http::transport::Request *request =
+				dynamic_cast<const architecture::message::http::transport::Request *>(&message);
+			auto response = std::make_unique<architecture::message::http::transport::Response>();
 			response->headers["Content-Type"] = "text/html";
 			response->headers["Connection"] = "keep-alive";
 			response->status = 200;
