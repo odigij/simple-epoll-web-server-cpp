@@ -20,7 +20,7 @@ namespace sews::infrastructure::connection::reactor::epoll
 				  std::vector<core::connection::transport::SocketEvent> &outEvents) override;
 		void updateEvents(core::connection::transport::Channel &channel,
 						  std::initializer_list<core::connection::Events> events) override;
-		size_t getEventCapacity() const override;
+		size_t getEventCapacity(void) const override;
 
 	  private:
 		int epollFd{-1};

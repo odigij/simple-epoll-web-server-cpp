@@ -168,7 +168,7 @@ namespace sews::infrastructure::connection::reactor::epoll
 		}
 	}
 
-	size_t SocketLoop::getEventCapacity() const
+	size_t SocketLoop::getEventCapacity(void) const
 	{
 		return epoll_events.capacity();
 	}

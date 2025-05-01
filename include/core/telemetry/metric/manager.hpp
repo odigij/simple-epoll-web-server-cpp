@@ -27,7 +27,7 @@ namespace sews::core::telemetry::metric
 		virtual void decrement(const std::string &name) = 0;
 		virtual void set(const std::string &name, size_t value) = 0;
 		// Called to export all metrics as a human-readable or machine-readable string.
-		virtual std::string exportValues() const = 0;
+		virtual std::string exportValues(void) const = 0;
 	};
 } // namespace sews::core::telemetry::metric
 

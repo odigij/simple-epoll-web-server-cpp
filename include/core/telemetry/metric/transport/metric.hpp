@@ -35,7 +35,7 @@ namespace sews::core::telemetry::metric::transport
 		std::atomic<std::size_t> value;
 		MetricType type;
 
-		Metric() : value(0), type(MetricType::COUNTER)
+		Metric(void) : value(0), type(MetricType::COUNTER)
 		{
 		}
 

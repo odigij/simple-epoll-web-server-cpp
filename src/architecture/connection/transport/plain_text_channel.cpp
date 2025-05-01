@@ -37,11 +37,6 @@ namespace sews::architecture::connection::transport
 		}
 	}
 
-	std::string &PlainTextChannel::getResponse(void)
-	{
-		return response;
-	}
-
 	const std::pair<std::string, uint16_t> PlainTextChannel::getDetails(void)
 	{
 		return std::make_pair(ip, port);
@@ -53,4 +48,33 @@ namespace sews::architecture::connection::transport
 		this->ip = ip;
 	}
 
+	std::vector<char> &PlainTextChannel::getWriteBuffer(void)
+	{
+		return writeBuffer;
+	}
+
+	size_t &PlainTextChannel::getWriteOffset(void)
+	{
+		return writeOffset;
+	}
+
+	core::connection::WriteResult PlainTextChannel::flush(void)
+	{
+		while (writeOffset < writeBuffer.size())
+		{
+			ssize_t written = writeRaw(writeBuffer.data() + writeOffset, writeBuffer.size() - writeOffset);
+			if (written < 0)
+			{
+				if (errno == EAGAIN || errno == EWOULDBLOCK)
+				{
+					return core::connection::WriteResult::WouldBlock;
+				}
+				return core::connection::WriteResult::Failed;
+			}
+			writeOffset += written;
+		}
+		writeBuffer.clear();
+		writeOffset = 0;
+		return core::connection::WriteResult::Done;
+	}
 } // namespace sews::architecture::connection::transport

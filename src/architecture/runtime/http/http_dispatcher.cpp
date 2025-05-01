@@ -45,25 +45,26 @@ namespace sews::architecture::runtime::orchestrator::http
 		std::vector<core::connection::transport::SocketEvent> events;
 		std::vector<char> buffer(8192);
 		ssize_t bytesRead{0};
-		constexpr size_t DEFAULT_EVENT_CAPACITY = 64;
 		// TODO:
-		// [] Inject capacity.
-		size_t cap{64};
-
-		// NOTE:
-		// - One time cost.
-		// - Cohession for performance, reserves vector capacities.
-		// - Resizing vectors is meaningless, only reserving for backend makes sense.
-		if (auto *info = dynamic_cast<core::connection::reactor::LoopInfo *>(socketLoop.get()))
+		// [] Inject capacity
+		constexpr size_t DEFAULT_EVENT_CAPACITY = 64;
 		{
-			cap = info->getEventCapacity();
+			size_t cap{DEFAULT_EVENT_CAPACITY};
+			// NOTE:
+			// - One time cost.
+			// - Cohession for performance, reserves vector capacities.
+			// - Resizing vectors is meaningless, only reserving for backend makes sense.
+			if (auto *info = dynamic_cast<core::connection::reactor::LoopInfo *>(socketLoop.get()))
+			{
+				cap = info->getEventCapacity();
+			}
+			events.reserve(cap);
+			watched.reserve(cap + 1);
 		}
-		events.reserve(cap);
-		watched.reserve(cap + 1);
 
 		// TODO:
 		// [X] Store ip & port at channel when client connected.
-		// [] Store a buffer at channel for large file transfers.
+		// [] Store a buffer at channel for large file transfers, AKA partial write.
 		// [X] Log socket fd, connection ip & port at event logs.
 		// [] An asset manager to register static files to endpoints.
 		// [] Implement middleware.
@@ -175,7 +176,10 @@ namespace sews::architecture::runtime::orchestrator::http
 						errorResponse.statusText = "Internal Error";
 						errorResponse.version = "HTTP/1.1";
 						errorResponse.headers["Connection"] = "close";
-						plainTextChannel->getResponse() = serializer->serialize(errorResponse);
+						std::string serialized = serializer->serialize(errorResponse);
+						std::vector<char> &buf = plainTextChannel->getWriteBuffer();
+						buf.assign(serialized.begin(), serialized.end());
+						plainTextChannel->getWriteOffset() = 0;
 						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
 						metricsManager->increment("responses_500");
 						continue;
@@ -197,7 +201,10 @@ namespace sews::architecture::runtime::orchestrator::http
 						errorResponse.statusText = "Internal Error";
 						errorResponse.version = "HTTP/1.1";
 						errorResponse.headers["Connection"] = "close";
-						plainTextChannel->getResponse() = serializer->serialize(errorResponse);
+						std::string serialized = serializer->serialize(errorResponse);
+						std::vector<char> &buf = plainTextChannel->getWriteBuffer();
+						buf.assign(serialized.begin(), serialized.end());
+						plainTextChannel->getWriteOffset() = 0;
 						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
 						metricsManager->increment("responses_500");
 						continue;
@@ -224,7 +231,10 @@ namespace sews::architecture::runtime::orchestrator::http
 						notFoundResp.statusText = "Not Found";
 						notFoundResp.version = "HTTP/1.1";
 						notFoundResp.headers["Connection"] = "keep-alive";
-						plainTextChannel->getResponse() = serializer->serialize(notFoundResp);
+						std::string serialized = serializer->serialize(notFoundResp);
+						std::vector<char> &buf = plainTextChannel->getWriteBuffer();
+						buf.assign(serialized.begin(), serialized.end());
+						plainTextChannel->getWriteOffset() = 0;
 						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
 						metricsManager->increment("responses_404");
 						continue;
@@ -243,23 +253,57 @@ namespace sews::architecture::runtime::orchestrator::http
 						errorResponse.statusText = "Internal Error";
 						errorResponse.version = "HTTP/1.1";
 						errorResponse.headers["Connection"] = "close";
-						plainTextChannel->getResponse() = serializer->serialize(errorResponse);
+						std::string serialized = serializer->serialize(errorResponse);
+						std::vector<char> &buf = plainTextChannel->getWriteBuffer();
+						buf.assign(serialized.begin(), serialized.end());
+						plainTextChannel->getWriteOffset() = 0;
 						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
 						metricsManager->increment("responses_500");
 						continue;
 					}
 
-					plainTextChannel->getResponse() = serializer->serialize(*response);
+					{ // Don't want any left-over, so these are in a scope.
+						std::string serialized = serializer->serialize(*response);
+						std::vector<char> &buf = plainTextChannel->getWriteBuffer();
+						buf.assign(serialized.begin(), serialized.end());
+						plainTextChannel->getWriteOffset() = 0;
+					}
 
 					socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
 				}
 
 				if (event.flag == core::connection::Events::WRITE)
 				{
-					std::string &out = plainTextChannel->getResponse();
-					plainTextChannel->writeRaw(out.c_str(), out.size());
-					out.clear();
-					socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::READ});
+					core::connection::WriteResult result{plainTextChannel->flush()};
+					std::ostringstream oss;
+
+					switch (result)
+					{
+						case core::connection::WriteResult::Done:
+							oss << "\033[36mHttp Dispatcher:\033[0m Response successfully flushed to \033[33m"
+								<< channelDetails.first << ':' << channelDetails.second << "\033[0m, fd = \033[33m"
+								<< plainTextChannel->getFd();
+							logger->log(core::telemetry::diagnostic::LogType::INFO, oss.str());
+							socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::READ});
+							break;
+
+						case core::connection::WriteResult::WouldBlock:
+							oss << "\033[36mHttp Dispatcher:\033[0m Response will continue flushing to \033[33m"
+								<< channelDetails.first << ':' << channelDetails.second << "\033[0m, fd = \033[33m"
+								<< plainTextChannel->getFd();
+							logger->log(core::telemetry::diagnostic::LogType::INFO, oss.str());
+							socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
+							break;
+
+						case core::connection::WriteResult::Failed:
+							oss << "\033[36mHttp Dispatcher:\033[0m Failed to flush response to \033[33m"
+								<< channelDetails.first << ':' << channelDetails.second << "\033[0m, fd = \033[33m"
+								<< plainTextChannel->getFd();
+							logger->log(core::telemetry::diagnostic::LogType::ERROR, oss.str());
+							connectionManager->remove(*event.channel); // Don't forget this!
+							socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::ERROR});
+							break;
+					}
 				}
 			}
 

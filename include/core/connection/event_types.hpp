@@ -10,6 +10,13 @@ namespace sews::core::connection
 		HANGUP,
 		ERROR,
 	};
+
+	enum class WriteResult
+	{
+		Done,
+		WouldBlock,
+		Failed
+	};
 } // namespace sews::core::connection
 
 #endif // !SEWS_CORE_CONNECTION_EVENT_TYPES_HPP

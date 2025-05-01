@@ -8,7 +8,7 @@
 namespace sews::core::connection::reactor
 {
 	/*
-	 * Module: SockerLoop (interface).
+	 * Module: SocketLoop (interface).
 	 *
 	 * Purpose: Defines the contract for application-level message transportation.
 	 *
@@ -25,10 +25,6 @@ namespace sews::core::connection::reactor
 	 *
 	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
 	 *
-	 * - `payload(void)` returns a serialized or raw textual representation of the message body.
-	 *
-	 * - Implementations must ensure that `type(void)` and `payload(void)` reflect a consistent view of the message.
-	 *
 	 * - fd is assumed to refer to a channel previously registered; no ownership assumed.
 	 */
 	struct SocketLoop
@@ -39,7 +35,7 @@ namespace sews::core::connection::reactor
 		virtual void poll(const std::vector<transport::Channel *> &watched,
 						  std::vector<transport::SocketEvent> &outEvents) = 0;
 		virtual void updateEvents(transport::Channel &channel, std::initializer_list<connection::Events> events) = 0;
-		virtual size_t getEventCapacity() const = 0;
+		virtual size_t getEventCapacity(void) const = 0;
 	};
 } // namespace sews::core::connection::reactor
 

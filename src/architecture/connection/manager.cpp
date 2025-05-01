@@ -24,9 +24,6 @@ namespace sews::architecture::connection
 
 	void Manager::clear(void)
 	{
-		// NOTE:
-		// - erasing to delete data.
-		// - clearing to delete dangling raw pointers.
 		for (int fd : closedChannels)
 		{
 			auto it = channels.find(fd);
