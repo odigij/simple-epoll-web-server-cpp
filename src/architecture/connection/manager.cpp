@@ -19,14 +19,17 @@ namespace sews::architecture::connection
 
 	void Manager::remove(core::connection::transport::Channel &channel)
 	{
-		closedChannels.push_back(&channel);
+		closedChannels.push_back(channel.getFd());
 	}
 
 	void Manager::clear(void)
 	{
-		for (core::connection::transport::Channel *channel : closedChannels)
+		// NOTE:
+		// - erasing to delete data.
+		// - clearing to delete dangling raw pointers.
+		for (int fd : closedChannels)
 		{
-			auto it = channels.find(channel->getFd());
+			auto it = channels.find(fd);
 			if (it != channels.end())
 			{
 				it->second->close();
@@ -57,11 +60,11 @@ namespace sews::architecture::connection
 		}
 	}
 
-	void Manager::forEachClosed(std::function<void(core::connection::transport::Channel &)> callback) const
+	void Manager::forEachClosed(std::function<void(int &)> callback) const
 	{
-		for (core::connection::transport::Channel *channel : closedChannels)
+		for (int fd : closedChannels)
 		{
-			callback(*channel);
+			callback(fd);
 		}
 	}
 

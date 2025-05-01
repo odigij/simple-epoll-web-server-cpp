@@ -20,7 +20,7 @@ namespace sews::infrastructure::connection::reactor::epoll
 			perror("epoll_create1");
 			exit(EXIT_FAILURE);
 		}
-		epoll_events.reserve(size);
+		epoll_events.resize(size);
 
 		logger->log(core::telemetry::diagnostic::LogType::INFO, "\033[36mEpoll Socket Loop:\033[0m Initialized.");
 	}
@@ -50,9 +50,9 @@ namespace sews::infrastructure::connection::reactor::epoll
 		}
 	}
 
-	void SocketLoop::unregisterChannel(core::connection::transport::Channel &channel)
+	void SocketLoop::unregisterChannel(int fd)
 	{
-		if (epoll_ctl(epollFd, EPOLL_CTL_DEL, channel.getFd(), nullptr))
+		if (epoll_ctl(epollFd, EPOLL_CTL_DEL, fd, nullptr))
 		{
 			std::ostringstream oss;
 			oss << "\033[36mEpoll Socket Loop:\033[0m Failed to delete fd, \033[31merrno -> " << errno << " -> "
@@ -64,7 +64,8 @@ namespace sews::infrastructure::connection::reactor::epoll
 	void SocketLoop::poll(const std::vector<core::connection::transport::Channel *> &watched,
 						  std::vector<core::connection::transport::SocketEvent> &outEvents)
 	{
-		const int readyEventCount{epoll_wait(epollFd, epoll_events.data(), epoll_events.capacity(), 300)};
+		outEvents.clear();
+		const int readyEventCount{epoll_wait(epollFd, epoll_events.data(), epoll_events.size(), 300)};
 		if (readyEventCount < 0)
 		{
 			if (infrastructure::control::stopFlag.load())
@@ -96,28 +97,28 @@ namespace sews::infrastructure::connection::reactor::epoll
 				{
 					outEvents.push_back({
 						core::connection::Events::ERROR,
-						*channel,
+						channel,
 					});
 				}
 				if (readyEvent.events & EPOLLHUP)
 				{
 					outEvents.push_back({
 						core::connection::Events::HANGUP,
-						*channel,
+						channel,
 					});
 				}
 				if (readyEvent.events & EPOLLIN)
 				{
 					outEvents.push_back({
 						core::connection::Events::READ,
-						*channel,
+						channel,
 					});
 				}
 				if (readyEvent.events & EPOLLOUT)
 				{
 					outEvents.push_back({
 						core::connection::Events::WRITE,
-						*channel,
+						channel,
 					});
 				}
 			}

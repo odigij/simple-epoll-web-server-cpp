@@ -2,6 +2,7 @@
 #include "architecture/message/http/transport/request.hpp"
 #include "core/connection/event_types.hpp"
 #include "core/connection/reactor/loop_info.hpp"
+#include "core/telemetry/diagnostic/log_types.hpp"
 #include "core/telemetry/metric/manager.hpp"
 #include "core/telemetry/metric/types.hpp"
 #include "infrastructure/control/stop_signal.hpp"
@@ -52,6 +53,7 @@ namespace sews::architecture::runtime::orchestrator::http
 		// NOTE:
 		// - One time cost.
 		// - Cohession for performance, reserves vector capacities.
+		// - Resizing vectors is meaningless, only reserving for backend makes sense.
 		if (auto *info = dynamic_cast<core::connection::reactor::LoopInfo *>(socketLoop.get()))
 		{
 			cap = info->getEventCapacity();
@@ -84,7 +86,7 @@ namespace sews::architecture::runtime::orchestrator::http
 			// - Do not clear buffer vector unless you re-assign, let it over-write.
 			for (core::connection::transport::SocketEvent &event : events)
 			{
-				if (event.channel.getFd() == serverChannel.getFd())
+				if (event.channel->getFd() == serverChannel.getFd())
 				{
 					logger->log(core::telemetry::diagnostic::LogType::INFO,
 								"\033[36mHttp Dispatcher:\033[0m Incoming connection request.");
@@ -107,7 +109,7 @@ namespace sews::architecture::runtime::orchestrator::http
 					logger->log(
 						core::telemetry::diagnostic::LogType::INFO,
 						"\033[36mHttp Dispatcher:\033[0m Connection closed by the peer, marking it for termination.");
-					connectionManager->remove(event.channel);
+					connectionManager->remove(*event.channel);
 					continue;
 				}
 
@@ -115,12 +117,12 @@ namespace sews::architecture::runtime::orchestrator::http
 				{
 					logger->log(core::telemetry::diagnostic::LogType::ERROR,
 								"\033[36mHttp Dispatcher:\033[0m Connection lost, marking it for termination.");
-					connectionManager->remove(event.channel);
+					connectionManager->remove(*event.channel);
 					continue;
 				}
 
 				connection::transport::PlainTextChannel *plainTextChannel{
-					dynamic_cast<connection::transport::PlainTextChannel *>(&event.channel)};
+					dynamic_cast<connection::transport::PlainTextChannel *>(event.channel)};
 				std::pair<std::string, uint16_t> channelDetails{plainTextChannel->getDetails()};
 
 				if (!plainTextChannel)
@@ -132,11 +134,11 @@ namespace sews::architecture::runtime::orchestrator::http
 
 				if (event.flag == core::connection::Events::READ)
 				{
-					bytesRead = event.channel.readRaw(buffer.data(), buffer.size());
+					bytesRead = event.channel->readRaw(buffer.data(), buffer.size());
 
 					if (bytesRead == 0)
 					{
-						connectionManager->remove(event.channel);
+						connectionManager->remove(*event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::ERROR});
 						std::ostringstream oss;
 						oss << "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, connection closed by peer. "
@@ -148,7 +150,7 @@ namespace sews::architecture::runtime::orchestrator::http
 
 					if (bytesRead < 0)
 					{
-						connectionManager->remove(event.channel);
+						connectionManager->remove(*event.channel);
 						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::ERROR});
 						std::ostringstream oss;
 						oss << "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, connection abruptly closed. "
@@ -261,8 +263,8 @@ namespace sews::architecture::runtime::orchestrator::http
 				}
 			}
 
-			connectionManager->forEachClosed([&](core::connection::transport::Channel &channel) {
-				socketLoop->unregisterChannel(channel);
+			connectionManager->forEachClosed([&](int &fd) {
+				socketLoop->unregisterChannel(fd);
 				metricsManager->decrement("connections_total");
 			});
 
@@ -277,8 +279,8 @@ namespace sews::architecture::runtime::orchestrator::http
 					"\033[36mHttp Dispatcher:\033[0m Shutting down, closing active connections...");
 
 		connectionManager->forEach(
-			[&](core::connection::transport::Channel &channel) { socketLoop->unregisterChannel(channel); });
-		socketLoop->unregisterChannel(serverChannel);
+			[&](core::connection::transport::Channel &channel) { socketLoop->unregisterChannel(channel.getFd()); });
+		socketLoop->unregisterChannel(serverChannel.getFd());
 		connectionManager->clear();
 		serverChannel.close();
 

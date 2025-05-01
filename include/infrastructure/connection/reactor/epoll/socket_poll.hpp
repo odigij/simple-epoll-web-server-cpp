@@ -15,7 +15,7 @@ namespace sews::infrastructure::connection::reactor::epoll
 		SocketLoop(size_t size, std::shared_ptr<core::telemetry::diagnostic::transport::Logger> logger);
 		~SocketLoop(void) override;
 		void registerChannel(core::connection::transport::Channel &channel) override;
-		void unregisterChannel(core::connection::transport::Channel &channel) override;
+		void unregisterChannel(int fd) override;
 		void poll(const std::vector<core::connection::transport::Channel *> &watched,
 				  std::vector<core::connection::transport::SocketEvent> &outEvents) override;
 		void updateEvents(core::connection::transport::Channel &channel,

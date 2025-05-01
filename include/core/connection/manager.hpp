@@ -36,7 +36,7 @@ namespace sews::core::connection
 		// Traverses all active Channels.
 		virtual void forEach(std::function<void(transport::Channel &)> callback) const = 0;
 		// Traverses all Channels marked for closure.
-		virtual void forEachClosed(std::function<void(transport::Channel &)> callback) const = 0;
+		virtual void forEachClosed(std::function<void(int &)> callback) const = 0;
 		// Returns the number of currently active Channels.
 		virtual size_t count(void) const = 0;
 	};

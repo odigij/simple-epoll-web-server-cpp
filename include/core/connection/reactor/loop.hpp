@@ -28,12 +28,14 @@ namespace sews::core::connection::reactor
 	 * - `payload(void)` returns a serialized or raw textual representation of the message body.
 	 *
 	 * - Implementations must ensure that `type(void)` and `payload(void)` reflect a consistent view of the message.
+	 *
+	 * - fd is assumed to refer to a channel previously registered; no ownership assumed.
 	 */
 	struct SocketLoop
 	{
 		virtual ~SocketLoop(void) = default;
 		virtual void registerChannel(transport::Channel &channel) = 0;
-		virtual void unregisterChannel(transport::Channel &channel) = 0;
+		virtual void unregisterChannel(int fd) = 0;
 		virtual void poll(const std::vector<transport::Channel *> &watched,
 						  std::vector<transport::SocketEvent> &outEvents) = 0;
 		virtual void updateEvents(transport::Channel &channel, std::initializer_list<connection::Events> events) = 0;

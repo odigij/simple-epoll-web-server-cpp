@@ -17,12 +17,12 @@ namespace sews::architecture::connection
 		void clear(void) override;
 		core::connection::transport::Channel *find(int fd) const override;
 		void forEach(std::function<void(core::connection::transport::Channel &)> callback) const override;
-		void forEachClosed(std::function<void(core::connection::transport::Channel &)> callback) const override;
+		void forEachClosed(std::function<void(int &)> callback) const override;
 		size_t count(void) const override;
 
 	  private:
 		std::unordered_map<int, std::unique_ptr<core::connection::transport::Channel>> channels;
-		std::vector<core::connection::transport::Channel *> closedChannels;
+		std::vector<int> closedChannels;
 		std::shared_ptr<core::telemetry::diagnostic::transport::Logger> logger;
 	};
 } // namespace sews::architecture::connection

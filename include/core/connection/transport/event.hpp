@@ -26,7 +26,7 @@ namespace sews::core::connection::transport
 	struct SocketEvent
 	{
 		Events flag;
-		Channel &channel;
+		Channel *channel;
 	};
 } // namespace sews::core::connection::transport
 
