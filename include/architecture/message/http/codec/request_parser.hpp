@@ -3,7 +3,7 @@
 
 #include "core/message/codec/decoder.hpp"
 #include "core/telemetry/diagnostic/logger/backend/logger.hpp"
-#include "core/message/transport/message.hpp"
+
 #include <memory>
 
 namespace sews::architecture::message::http::codec

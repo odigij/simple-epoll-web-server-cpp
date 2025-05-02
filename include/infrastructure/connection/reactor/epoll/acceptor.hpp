@@ -3,6 +3,7 @@
 
 #include "core/connection/reactor/acceptor.hpp"
 #include "core/telemetry/diagnostic/logger/backend/logger.hpp"
+
 #include <memory>
 
 namespace sews::infrastructure::connection::reactor::epoll

@@ -65,13 +65,12 @@ namespace sews::architecture::runtime::orchestrator::http
 
 		// TODO:
 		// [X] Store ip & port at channel when client connected.
-		// [] Store a buffer at channel for large file transfers, AKA partial write.
+		// [X] Store a buffer at channel for large file transfers, AKA partial write.
 		// [X] Log socket fd, connection ip & port at event logs.
 		// [] An asset manager to register static files to endpoints.
 		// [] Implement middleware.
 		// [] Reduce dispatcher constructor bloat.
 		// [] Implement handler adapter.
-		// [] Avoid “PlainTextChannel” casting.
 		// [] Extract per-event handling into functions.
 		// [] Helper for log formatting.
 		// [] Inject stopFlag dependency.

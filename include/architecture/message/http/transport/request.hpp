@@ -2,6 +2,7 @@
 #define SEWS_ARCHITECTURE_MESSAGE_HTTP_TRANSPORT_REQUEST_HPP
 
 #include "core/message/transport/message.hpp"
+
 #include <unordered_map>
 
 namespace sews::architecture::message::http::transport

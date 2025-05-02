@@ -1,9 +1,10 @@
 #include "architecture/telemetry/diagnostic/logger/backend/basic.hpp"
+
 #include <iostream>
 #include <chrono>
 #include <iomanip>
 
-namespace sews::architecture::telemetry::diagnostic::logger::transport
+namespace sews::architecture::telemetry::diagnostic::logger::backend
 {
 	Basic::Basic(void)
 	{
@@ -68,4 +69,4 @@ namespace sews::architecture::telemetry::diagnostic::logger::transport
 		ss << std::put_time(std::localtime(&in_time), "%F %T");
 		return ss.str();
 	}
-} // namespace sews::architecture::telemetry::diagnostic::logger::transport
+} // namespace sews::architecture::telemetry::diagnostic::logger::backend

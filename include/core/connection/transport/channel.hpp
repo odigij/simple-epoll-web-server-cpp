@@ -6,19 +6,9 @@
 namespace sews::core::connection::transport
 {
 	/*
-	 * Module: Channel (interface).
-	 *
 	 * Purpose: Defines the contract for `low-level socket I/O` operations and resource management.
 	 *
 	 * Ownership: Fully responsible for managing and closing the associated socket file descriptor.
-	 *
-	 * Notes:
-	 *
-	 * - This is an abstract interface.
-	 *
-	 * - Concrete implementations may or may not be thread-safe.
-	 *
-	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
 	 */
 	struct Channel
 	{

@@ -1,6 +1,8 @@
 #include "infrastructure/bootstrap/signal_handler.hpp"
 #include "infrastructure/control/stop_signal.hpp"
 
+#include <csignal>
+
 namespace sews::infrastructure::bootstrap
 {
 	void handleSigint(int)

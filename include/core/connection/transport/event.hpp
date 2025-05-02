@@ -7,21 +7,9 @@
 namespace sews::core::connection::transport
 {
 	/*
-	 * Module: SocketEvent (data structure).
-	 *
 	 * Purpose: Represents a single I/O event associated with a Channel.
 	 *
-	 * Ownership:
-	 *
-	 * - Does not manage any resources.
-	 *
-	 * - Holds non-owning reference to an external Channel.
-	 *
-	 * Notes:
-	 *
-	 * - This is a simple value type (POD-like).
-	 *
-	 * - No thread-safety guarantees: dispatcher must handle concurrency if needed.
+	 * Ownership: Does not responsible to manage any resources.
 	 */
 	struct Event
 	{

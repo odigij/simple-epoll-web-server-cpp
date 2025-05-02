@@ -2,7 +2,6 @@
 #define SEWS_ARCHITECTURE_MESSAGE_HTTP_DISPATCH_TRIE_ROUTER_HPP
 
 #include "core/telemetry/diagnostic/logger/backend/logger.hpp"
-#include "core/message/dispatch/handler.hpp"
 #include "core/message/dispatch/router.hpp"
 
 #include <unordered_map>

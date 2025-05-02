@@ -2,21 +2,16 @@
 #define SEWS_CORE_METRIC_BACKEND_METRIC_HPP
 
 #include "core/telemetry/metric/type/metric.hpp"
+
 #include <atomic>
 
 namespace sews::core::telemetry::metric::transport
 {
 	/*
-	 * Module: Metric (struct).
+	 * Purpose: Represents a single server metric, either a counter or a gauge. Provides thread-safe access to the
+	 * metric value.
 	 *
-	 * Purpose:
-	 *   Represents a single server metric, either a counter or a gauge.
-	 *   Provides thread-safe access to the metric value.
-	 *
-	 * Ownership:
-	 *   - Stores its own independent value and type.
-	 *
-	 *   - No external ownership or resource management required.
+	 * Ownership: Stores its own independent value and type. No external ownership or resource management required.
 	 *
 	 * Notes:
 	 *

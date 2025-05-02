@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
 	// TODO:
 	// [] Parse terminal commands.
 	sews::infrastructure::bootstrap::setupSignalHandlers();
-	auto logger = std::make_shared<sews::architecture::telemetry::diagnostic::logger::transport::Basic>();
+	auto logger = std::make_shared<sews::architecture::telemetry::diagnostic::logger::backend::Basic>();
 	int port{8080}, serverFd{sews::infrastructure::bootstrap::createSocket(port)};
 	if (serverFd < 0)
 	{

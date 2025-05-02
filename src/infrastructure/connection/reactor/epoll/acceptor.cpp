@@ -2,8 +2,6 @@
 #include "core/telemetry/diagnostic/logger/backend/logger.hpp"
 #include "architecture/connection/transport/plain_text_channel.hpp"
 
-#include <netinet/in.h>
-#include <unistd.h>
 #include <arpa/inet.h>
 #include <sstream>
 

@@ -1,10 +1,10 @@
 #ifndef SEWS_CORE_CONNECTION_TRANSPORT_BUFFERED_CHANNEL_HPP
 #define SEWS_CORE_CONNECTION_TRANSPORT_BUFFERED_CHANNEL_HPP
 
-#include <vector>
-
 #include "core/connection/event/write.hpp"
 #include "core/connection/transport/channel.hpp"
+
+#include <vector>
 
 namespace sews::core::connection::transport
 {

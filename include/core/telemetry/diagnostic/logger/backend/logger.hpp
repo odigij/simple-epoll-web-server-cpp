@@ -7,19 +7,9 @@
 namespace sews::core::telemetry::diagnostic::transport
 {
 	/*
-	 * Module: Logger (interface).
-	 *
 	 * Purpose: Defines the contract for logger to use in modules.
 	 *
 	 * Ownership: Does not manage ownership beyond what is internally required by implementations.
-	 *
-	 * Notes:
-	 *
-	 * - This is an abstract interface.
-	 *
-	 * - Concrete implementations may or may not be thread-safe.
-	 *
-	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
 	 */
 	struct Logger
 	{

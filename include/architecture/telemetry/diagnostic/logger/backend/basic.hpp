@@ -3,7 +3,7 @@
 
 #include "core/telemetry/diagnostic/logger/backend/logger.hpp"
 
-namespace sews::architecture::telemetry::diagnostic::logger::transport
+namespace sews::architecture::telemetry::diagnostic::logger::backend
 {
 	struct Basic : public core::telemetry::diagnostic::transport::Logger // Do not use this logger as hot path due it
 																		 // uses std::ostringstream
@@ -15,6 +15,6 @@ namespace sews::architecture::telemetry::diagnostic::logger::transport
 	  private:
 		std::string getTimestamp(void);
 	};
-} // namespace sews::architecture::telemetry::diagnostic::logger::transport
+} // namespace sews::architecture::telemetry::diagnostic::logger::backend
 
 #endif // !SEWS_ARCHITECTURE_TELEMETRY_DIAGNOSTIC_LOGGER_BACKEND_BASIC_LOGGER_HPP

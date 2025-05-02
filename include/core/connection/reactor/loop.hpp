@@ -3,29 +3,16 @@
 
 #include "core/connection/event/channel.hpp"
 #include "core/connection/transport/event.hpp"
+
 #include <vector>
 
 namespace sews::core::connection::reactor
 {
 	/*
-	 * Module: SocketLoop (interface).
-	 *
-	 * Purpose: Defines the contract for application-level message transportation.
+	 * Purpose: Defines the contract for application-level message transportation channel.
 	 *
 	 * Ownership: Does not manage external resources; concrete implementations own their internal values (e.g., payload
-	 * strings).
-	 *
-	 * Thread Safety: Not thread-safe; access must be restricted to the dispatcher thread.
-	 *
-	 * Notes:
-	 *
-	 * - This is an abstract interface.
-	 *
-	 * - Concrete implementations may or may not be thread-safe.
-	 *
-	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
-	 *
-	 * - fd is assumed to refer to a channel previously registered; no ownership assumed.
+	 * strings). fd is assumed to refer to a channel previously registered; no ownership assumed.
 	 */
 	struct Loop
 	{

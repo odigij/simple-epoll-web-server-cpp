@@ -3,7 +3,6 @@
 #include "infrastructure/control/stop_signal.hpp"
 
 #include <algorithm>
-#include <string>
 #include <cstring>
 #include <sstream>
 

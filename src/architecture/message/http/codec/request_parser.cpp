@@ -1,7 +1,7 @@
-#include <sstream>
-
 #include "architecture/message/http/codec/request_parser.hpp"
 #include "architecture/message/http/transport/request.hpp"
+
+#include <sstream>
 
 namespace sews::architecture::message::http::codec
 {
@@ -9,13 +9,13 @@ namespace sews::architecture::message::http::codec
 		: logger(logger)
 	{
 		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
-					"\033[36mHTTP Request Parser:\033[0m Initialized.");
+					"\033[36mHttp Request Parser:\033[0m Initialized.");
 	}
 
 	RequestParser::~RequestParser(void)
 	{
 		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
-					"\033[36mHTTP Request Parser:\033[0m Terminated.");
+					"\033[36mHttp Request Parser:\033[0m Terminated.");
 	}
 
 	std::unique_ptr<core::message::transport::Message> RequestParser::parse(const std::string &raw)

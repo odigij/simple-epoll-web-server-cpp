@@ -2,25 +2,16 @@
 #define SEWS_CORE_CONNECTION_MANAGER_HPP
 
 #include "core/connection/transport/channel.hpp"
+
 #include <functional>
 #include <memory>
 
 namespace sews::core::connection
 {
 	/*
-	 * Module: ConnectionManager (interface).
-	 *
 	 * Purpose: Defines the contract for managing the lifecycle of active Channels.
 	 *
 	 * Ownership: Fully responsible for closing and removing associated Channels.
-	 *
-	 * Notes:
-	 *
-	 * - This is an abstract interface.
-	 *
-	 * - Concrete implementations may or may not be thread-safe.
-	 *
-	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
 	 */
 	struct Manager
 	{

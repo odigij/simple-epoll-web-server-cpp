@@ -2,24 +2,15 @@
 #define SEWS_CORE_CONNECTION_REACTOR_ACCEPTOR_HPP
 
 #include "core/connection/transport/channel.hpp"
+
 #include <memory>
 
 namespace sews::core::connection::reactor
 {
 	/*
-	 * Module: Acceptor (interface).
-	 *
 	 * Purpose: Defines the contract for accepting incoming connection requests.
 	 *
-	 * Ownership: Owns the listener `interface::Channel` (socket) resource.
-	 *
-	 * Notes:
-	 *
-	 * - This is an abstract interface.
-	 *
-	 * - Concrete implementations may or may not be thread-safe.
-	 *
-	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
+	 * Ownership: Owns a listener channel.
 	 */
 	struct Acceptor
 	{

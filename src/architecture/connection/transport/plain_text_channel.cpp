@@ -1,7 +1,6 @@
-#include <unistd.h>
-#include <utility>
-
 #include "architecture/connection/transport/plain_text_channel.hpp"
+
+#include <unistd.h>
 
 namespace sews::architecture::connection::transport
 {

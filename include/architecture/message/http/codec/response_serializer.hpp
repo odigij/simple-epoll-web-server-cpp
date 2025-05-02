@@ -1,8 +1,8 @@
 #ifndef SEWS_INFRASTRUCTURE_HTTP_RESPONSE_SERIALIZER_HPP
 
-#include "core/message/transport/message.hpp"
 #include "core/message/codec/encoder.hpp"
 #include "core/telemetry/diagnostic/logger/backend/logger.hpp"
+
 #include <memory>
 
 namespace sews::architecture::message::http::codec

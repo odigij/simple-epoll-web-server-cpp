@@ -1,8 +1,8 @@
-#include <sstream>
-#include <string>
-
 #include "architecture/message/http/dispatch/trie_router.hpp"
 #include "architecture/message/http/transport/request.hpp"
+
+#include <sstream>
+#include <string>
 
 namespace sews::architecture::message::http::dispatch
 {

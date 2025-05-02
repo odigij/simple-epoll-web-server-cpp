@@ -6,19 +6,9 @@
 namespace sews::core::message::dispatch
 {
 	/*
-	 * Module: Router (interface).
-	 *
 	 * Purpose: Defines the contract for managing and path based access of handlers.
 	 *
 	 * Ownership: Fully responsible for managing the lifecycle of path-associated handler nodes.
-	 *
-	 * Notes:
-	 *
-	 * - This is an abstract interface.
-	 *
-	 * - Concrete implementations may or may not be thread-safe.
-	 *
-	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
 	 */
 	struct Router
 	{

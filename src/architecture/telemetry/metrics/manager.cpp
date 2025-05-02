@@ -1,6 +1,5 @@
 #include "architecture/telemetry/metric/manager.hpp"
 
-#include <chrono>
 #include <sstream>
 
 namespace sews::architecture::telemetry::metric

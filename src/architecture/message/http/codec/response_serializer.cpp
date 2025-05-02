@@ -1,8 +1,8 @@
-#include <sstream>
-
 #include "core/telemetry/diagnostic/logger/backend/logger.hpp"
 #include "architecture/message/http/transport/response.hpp"
 #include "architecture/message/http/codec/response_serializer.hpp"
+
+#include <sstream>
 
 namespace sews::architecture::message::http::codec
 {

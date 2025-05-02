@@ -2,22 +2,15 @@
 #define SEWS_CORE_TELEMETRY_METRIC_MANAGER_HPP
 
 #include "core/telemetry/metric/type/metric.hpp"
+
 #include <string>
 
 namespace sews::core::telemetry::metric
 {
 	/*
-	 * Module: Metrics (interface).
-	 *
 	 * Purpose: Defines the contract for collecting and exporting server metrics.
 	 *
 	 * Ownership: No ownership of external resources.
-	 *
-	 * Notes:
-	 *
-	 * - This is an abstract interface.
-	 *
-	 * - Concrete implementations must document their thread-safety.
 	 */
 	struct Manager
 	{
