@@ -23,10 +23,10 @@ namespace sews::core::message::dispatch
 	struct Router
 	{
 		virtual ~Router(void) = default;
-		virtual void add(std::string_view method, std::string_view path, MessageHandler *handler) = 0;
+		virtual void add(std::string_view method, std::string_view path, Handler *handler) = 0;
 		virtual void remove(std::string_view method, std::string_view path) = 0;
 		// Finds and returns the handler associated with method and path.
-		virtual MessageHandler *match(const transport::Message &message) const = 0;
+		virtual Handler *match(const transport::Message &message) const = 0;
 	};
 } // namespace sews::core::message::dispatch
 

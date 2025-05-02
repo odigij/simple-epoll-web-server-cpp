@@ -1,40 +1,41 @@
-#include "architecture/runtime/orchestrator/http/http_dispatcher.hpp"
-#include "architecture/message/http/transport/request.hpp"
-#include "core/connection/event_types.hpp"
-#include "core/connection/reactor/loop_info.hpp"
-#include "core/telemetry/diagnostic/log_types.hpp"
-#include "core/telemetry/metric/manager.hpp"
-#include "core/telemetry/metric/types.hpp"
-#include "infrastructure/control/stop_signal.hpp"
-#include "architecture/connection/transport/plain_text_channel.hpp"
-#include "architecture/message/http/transport/response.hpp"
-#include <string>
 #include <sstream>
+
+#include "core/connection/reactor/loop_info.hpp"
+
+#include "architecture/connection/transport/plain_text_channel.hpp"
+#include "architecture/message/http/transport/request.hpp"
+#include "architecture/message/http/transport/response.hpp"
+
+#include "infrastructure/control/stop_signal.hpp"
+
+#include "architecture/runtime/orchestrator/http/http_dispatcher.hpp"
 
 namespace sews::architecture::runtime::orchestrator::http
 {
 	Dispatcher::Dispatcher(std::unique_ptr<core::connection::reactor::Acceptor> acceptor,
-						   std::unique_ptr<core::connection::reactor::SocketLoop> socketLoop,
-						   std::unique_ptr<core::connection::ConnectionManager> connectionManager,
+						   std::unique_ptr<core::connection::reactor::Loop> socketLoop,
+						   std::unique_ptr<core::connection::Manager> connectionManager,
 						   std::unique_ptr<core::message::dispatch::Router> router,
-						   std::unique_ptr<core::message::codec::RequestParser> parser,
-						   std::unique_ptr<core::message::codec::ResponseSerializer> serializer,
-						   std::shared_ptr<core::telemetry::metric::MetricsManager> metricsManager,
+						   std::unique_ptr<core::message::codec::Decoder> parser,
+						   std::unique_ptr<core::message::codec::Encoder> serializer,
+						   std::shared_ptr<core::telemetry::metric::Manager> metricsManager,
 						   std::shared_ptr<core::telemetry::diagnostic::transport::Logger> logger)
 		: acceptor(std::move(acceptor)), socketLoop(std::move(socketLoop)),
 		  connectionManager(std::move(connectionManager)), router(std::move(router)), parser(std::move(parser)),
 		  serializer(std::move(serializer)), metricsManager(metricsManager), logger(logger)
 	{
-		metricsManager->registerMetric("requests_total", core::telemetry::metric::MetricType::COUNTER);
-		metricsManager->registerMetric("responses_404", core::telemetry::metric::MetricType::COUNTER);
-		metricsManager->registerMetric("responses_500", core::telemetry::metric::MetricType::COUNTER);
-		metricsManager->registerMetric("connections_total", core::telemetry::metric::MetricType::GAUGE);
-		this->logger->log(core::telemetry::diagnostic::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Initialized.");
+		metricsManager->registerMetric("requests_total", core::telemetry::metric::type::Metric::COUNTER);
+		metricsManager->registerMetric("responses_404", core::telemetry::metric::type::Metric::COUNTER);
+		metricsManager->registerMetric("responses_500", core::telemetry::metric::type::Metric::COUNTER);
+		metricsManager->registerMetric("connections_total", core::telemetry::metric::type::Metric::GAUGE);
+		this->logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
+						  "\033[36mHttp Dispatcher:\033[0m Initialized.");
 	}
 
 	Dispatcher::~Dispatcher(void)
 	{
-		logger->log(core::telemetry::diagnostic::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Terminated.");
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
+					"\033[36mHttp Dispatcher:\033[0m Terminated.");
 	}
 
 	void Dispatcher::run(void)
@@ -42,7 +43,7 @@ namespace sews::architecture::runtime::orchestrator::http
 		core::connection::transport::Channel &serverChannel{acceptor->getListener()};
 		socketLoop->registerChannel(serverChannel);
 		std::vector<core::connection::transport::Channel *> watched;
-		std::vector<core::connection::transport::SocketEvent> events;
+		std::vector<core::connection::transport::Event> events;
 		std::vector<char> buffer(8192);
 		ssize_t bytesRead{0};
 		// TODO:
@@ -85,16 +86,16 @@ namespace sews::architecture::runtime::orchestrator::http
 			// NOTE:
 			// - Do not modify container (events) while in loop.
 			// - Do not clear buffer vector unless you re-assign, let it over-write.
-			for (core::connection::transport::SocketEvent &event : events)
+			for (core::connection::transport::Event &event : events)
 			{
 				if (event.channel->getFd() == serverChannel.getFd())
 				{
-					logger->log(core::telemetry::diagnostic::LogType::INFO,
+					logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
 								"\033[36mHttp Dispatcher:\033[0m Incoming connection request.");
 					std::unique_ptr<core::connection::transport::Channel> clientChannel{acceptor->accept()};
 					if (!clientChannel)
 					{
-						logger->log(core::telemetry::diagnostic::LogType::ERROR,
+						logger->log(core::telemetry::diagnostic::logger::type::Log::ERROR,
 									"\033[36mHttp Dispatcher:\033[0m Failed to accept channel.");
 						continue;
 					}
@@ -105,59 +106,59 @@ namespace sews::architecture::runtime::orchestrator::http
 					continue;
 				}
 
-				if (event.flag == core::connection::Events::HANGUP)
+				if (event.flag == core::connection::event::Channel::HANGUP)
 				{
 					logger->log(
-						core::telemetry::diagnostic::LogType::INFO,
+						core::telemetry::diagnostic::logger::type::Log::INFO,
 						"\033[36mHttp Dispatcher:\033[0m Connection closed by the peer, marking it for termination.");
 					connectionManager->remove(*event.channel);
 					continue;
 				}
 
-				if (event.flag == core::connection::Events::ERROR)
+				if (event.flag == core::connection::event::Channel::ERROR)
 				{
-					logger->log(core::telemetry::diagnostic::LogType::ERROR,
+					logger->log(core::telemetry::diagnostic::logger::type::Log::ERROR,
 								"\033[36mHttp Dispatcher:\033[0m Connection lost, marking it for termination.");
 					connectionManager->remove(*event.channel);
 					continue;
 				}
 
-				connection::transport::PlainTextChannel *plainTextChannel{
+				sews::architecture::connection::transport::PlainTextChannel *plainTextChannel{
 					dynamic_cast<connection::transport::PlainTextChannel *>(event.channel)};
 				std::pair<std::string, uint16_t> channelDetails{plainTextChannel->getDetails()};
 
 				if (!plainTextChannel)
 				{
-					logger->log(core::telemetry::diagnostic::LogType::ERROR,
+					logger->log(core::telemetry::diagnostic::logger::type::Log::ERROR,
 								"\033[36mHttp Dispatcher:\033[0m Failed to cast channel.");
 					continue;
 				}
 
-				if (event.flag == core::connection::Events::READ)
+				if (event.flag == core::connection::event::Channel::READ)
 				{
 					bytesRead = event.channel->readRaw(buffer.data(), buffer.size());
 
 					if (bytesRead == 0)
 					{
 						connectionManager->remove(*event.channel);
-						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::ERROR});
+						socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::ERROR});
 						std::ostringstream oss;
 						oss << "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, connection closed by peer. "
 							<< "Channel marked for closure -> \033[33m" << channelDetails.first << ':'
 							<< channelDetails.second << "\033[0m, fd = \033[33m" << plainTextChannel->getFd();
-						logger->log(core::telemetry::diagnostic::LogType::INFO, oss.str());
+						logger->log(core::telemetry::diagnostic::logger::type::Log::INFO, oss.str());
 						continue;
 					}
 
 					if (bytesRead < 0)
 					{
 						connectionManager->remove(*event.channel);
-						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::ERROR});
+						socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::ERROR});
 						std::ostringstream oss;
 						oss << "\033[36mHttp Dispatcher:\033[0m Failed to read bytes, connection abruptly closed. "
 							<< "Channel marked for closure -> \033[33m" << channelDetails.first << ':'
 							<< channelDetails.second << "\033[0m, fd = \033[33m" << plainTextChannel->getFd();
-						logger->log(core::telemetry::diagnostic::LogType::INFO, oss.str());
+						logger->log(core::telemetry::diagnostic::logger::type::Log::INFO, oss.str());
 						continue;
 					}
 
@@ -166,10 +167,10 @@ namespace sews::architecture::runtime::orchestrator::http
 
 					if (!message) // Gracefully fallback
 					{
-						logger->log(core::telemetry::diagnostic::LogType::ERROR,
+						logger->log(core::telemetry::diagnostic::logger::type::Log::ERROR,
 									"\033[36mHttp Dispatcher:\033[0m Failed to parse raw request.");
 						logger->log(
-							core::telemetry::diagnostic::LogType::INFO,
+							core::telemetry::diagnostic::logger::type::Log::INFO,
 							"\033[36mHttp Dispatcher:\033[0m Sending \033[33mInternal Error\033[0m response anyway.");
 						architecture::message::http::transport::Response errorResponse;
 						errorResponse.status = 500;
@@ -180,7 +181,7 @@ namespace sews::architecture::runtime::orchestrator::http
 						std::vector<char> &buf = plainTextChannel->getWriteBuffer();
 						buf.assign(serialized.begin(), serialized.end());
 						plainTextChannel->getWriteOffset() = 0;
-						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
+						socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::WRITE});
 						metricsManager->increment("responses_500");
 						continue;
 					}
@@ -191,10 +192,10 @@ namespace sews::architecture::runtime::orchestrator::http
 
 					if (!req)
 					{
-						logger->log(core::telemetry::diagnostic::LogType::ERROR,
+						logger->log(core::telemetry::diagnostic::logger::type::Log::ERROR,
 									"\033[36mHttp Dispatcher:\033[0m Failed to cast message as request.");
 						logger->log(
-							core::telemetry::diagnostic::LogType::INFO,
+							core::telemetry::diagnostic::logger::type::Log::INFO,
 							"\033[36mHttp Dispatcher:\033[0m Sending \033[33mInternal Error\033[0m response anyway.");
 						architecture::message::http::transport::Response errorResponse;
 						errorResponse.status = 500;
@@ -205,7 +206,7 @@ namespace sews::architecture::runtime::orchestrator::http
 						std::vector<char> &buf = plainTextChannel->getWriteBuffer();
 						buf.assign(serialized.begin(), serialized.end());
 						plainTextChannel->getWriteOffset() = 0;
-						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
+						socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::WRITE});
 						metricsManager->increment("responses_500");
 						continue;
 					}
@@ -215,15 +216,15 @@ namespace sews::architecture::runtime::orchestrator::http
 						oss << "\033[36mHttp Dispatcher:\033[33m " << req->method << ' ' << req->path
 							<< "\033[0m from \033[33m" << channelDetails.first << ':' << channelDetails.second
 							<< "\033[0m, fd = \033[33m" << plainTextChannel->getFd();
-						logger->log(core::telemetry::diagnostic::LogType::INFO, oss.str());
+						logger->log(core::telemetry::diagnostic::logger::type::Log::INFO, oss.str());
 					}
 
-					core::message::dispatch::MessageHandler *handler{router->match(*req)};
+					core::message::dispatch::Handler *handler{router->match(*req)};
 					metricsManager->increment("requests_total");
 
 					if (!handler) // Gracefully fallback
 					{
-						logger->log(core::telemetry::diagnostic::LogType::INFO,
+						logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
 									"\033[36mHttp Dispatcher:\033[0m No handler found for "
 									"request, sending \033[33m404 Not Found\033[0m anyway.");
 						architecture::message::http::transport::Response notFoundResp;
@@ -235,7 +236,7 @@ namespace sews::architecture::runtime::orchestrator::http
 						std::vector<char> &buf = plainTextChannel->getWriteBuffer();
 						buf.assign(serialized.begin(), serialized.end());
 						plainTextChannel->getWriteOffset() = 0;
-						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
+						socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::WRITE});
 						metricsManager->increment("responses_404");
 						continue;
 					}
@@ -243,10 +244,10 @@ namespace sews::architecture::runtime::orchestrator::http
 					std::unique_ptr<core::message::transport::Message> response{handler->handle(*message)};
 					if (!response) // Gracefully fallback
 					{
-						logger->log(core::telemetry::diagnostic::LogType::WARNING,
+						logger->log(core::telemetry::diagnostic::logger::type::Log::WARNING,
 									"\033[36mHttp Dispatcher:\033[0m Handler returned null pointer.");
 						logger->log(
-							core::telemetry::diagnostic::LogType::INFO,
+							core::telemetry::diagnostic::logger::type::Log::INFO,
 							"\033[36mHttp Dispatcher:\033[0m Sending \033[33mInternal Error\033[0m response anyway.");
 						architecture::message::http::transport::Response errorResponse;
 						errorResponse.status = 500;
@@ -257,7 +258,7 @@ namespace sews::architecture::runtime::orchestrator::http
 						std::vector<char> &buf = plainTextChannel->getWriteBuffer();
 						buf.assign(serialized.begin(), serialized.end());
 						plainTextChannel->getWriteOffset() = 0;
-						socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
+						socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::WRITE});
 						metricsManager->increment("responses_500");
 						continue;
 					}
@@ -269,39 +270,39 @@ namespace sews::architecture::runtime::orchestrator::http
 						plainTextChannel->getWriteOffset() = 0;
 					}
 
-					socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
+					socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::WRITE});
 				}
 
-				if (event.flag == core::connection::Events::WRITE)
+				if (event.flag == core::connection::event::Channel::WRITE)
 				{
-					core::connection::WriteResult result{plainTextChannel->flush()};
+					sews::core::connection::event::Write result{plainTextChannel->flush()};
 					std::ostringstream oss;
 
 					switch (result)
 					{
-						case core::connection::WriteResult::Done:
+						case core::connection::event::Write::DONE:
 							oss << "\033[36mHttp Dispatcher:\033[0m Response successfully flushed to \033[33m"
 								<< channelDetails.first << ':' << channelDetails.second << "\033[0m, fd = \033[33m"
 								<< plainTextChannel->getFd();
-							logger->log(core::telemetry::diagnostic::LogType::INFO, oss.str());
-							socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::READ});
+							logger->log(core::telemetry::diagnostic::logger::type::Log::INFO, oss.str());
+							socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::READ});
 							break;
 
-						case core::connection::WriteResult::WouldBlock:
+						case core::connection::event::Write::WOULDBLOCK:
 							oss << "\033[36mHttp Dispatcher:\033[0m Response will continue flushing to \033[33m"
 								<< channelDetails.first << ':' << channelDetails.second << "\033[0m, fd = \033[33m"
 								<< plainTextChannel->getFd();
-							logger->log(core::telemetry::diagnostic::LogType::INFO, oss.str());
-							socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::WRITE});
+							logger->log(core::telemetry::diagnostic::logger::type::Log::INFO, oss.str());
+							socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::WRITE});
 							break;
 
-						case core::connection::WriteResult::Failed:
+						case core::connection::event::Write::FAILED:
 							oss << "\033[36mHttp Dispatcher:\033[0m Failed to flush response to \033[33m"
 								<< channelDetails.first << ':' << channelDetails.second << "\033[0m, fd = \033[33m"
 								<< plainTextChannel->getFd();
-							logger->log(core::telemetry::diagnostic::LogType::ERROR, oss.str());
+							logger->log(core::telemetry::diagnostic::logger::type::Log::ERROR, oss.str());
 							connectionManager->remove(*event.channel); // Don't forget this!
-							socketLoop->updateEvents(*plainTextChannel, {core::connection::Events::ERROR});
+							socketLoop->updateEvents(*plainTextChannel, {core::connection::event::Channel::ERROR});
 							break;
 					}
 				}
@@ -319,7 +320,7 @@ namespace sews::architecture::runtime::orchestrator::http
 			watched.clear();
 		}
 
-		logger->log(core::telemetry::diagnostic::LogType::INFO,
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
 					"\033[36mHttp Dispatcher:\033[0m Shutting down, closing active connections...");
 
 		connectionManager->forEach(
@@ -328,6 +329,7 @@ namespace sews::architecture::runtime::orchestrator::http
 		connectionManager->clear();
 		serverChannel.close();
 
-		logger->log(core::telemetry::diagnostic::LogType::INFO, "\033[36mHttp Dispatcher:\033[0m Shutdown complete.");
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
+					"\033[36mHttp Dispatcher:\033[0m Shutdown complete.");
 	};
 } // namespace sews::architecture::runtime::orchestrator::http

@@ -8,7 +8,7 @@
 
 namespace sews::test::http
 {
-	struct HelloWorldPlainText : public core::message::dispatch::MessageHandler
+	struct HelloWorldPlainText : public core::message::dispatch::Handler
 	{
 		std::unique_ptr<core::message::transport::Message> handle(
 			const core::message::transport::Message &message) override
@@ -25,7 +25,7 @@ namespace sews::test::http
 		};
 	};
 
-	struct HelloWorldHtml : public core::message::dispatch::MessageHandler
+	struct HelloWorldHtml : public core::message::dispatch::Handler
 	{
 		std::unique_ptr<core::message::transport::Message> handle(
 			const core::message::transport::Message &message) override

@@ -33,9 +33,9 @@ namespace sews::core::message::dispatch
 	 * - It is allowed for `handle()` to throw exceptions in case of unrecoverable processing errors (unless otherwise
 	 * stated).
 	 */
-	struct MessageHandler
+	struct Handler
 	{
-		virtual ~MessageHandler(void) = default;
+		virtual ~Handler(void) = default;
 		virtual std::unique_ptr<transport::Message> handle(const transport::Message &message) = 0;
 	};
 } // namespace sews::core::message::dispatch

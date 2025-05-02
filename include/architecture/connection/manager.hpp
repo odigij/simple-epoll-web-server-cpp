@@ -3,12 +3,12 @@
 
 #include "core/connection/manager.hpp"
 #include "core/connection/transport/channel.hpp"
-#include "core/telemetry/diagnostic/transport/logger.hpp"
+#include "core/telemetry/diagnostic/logger/backend/logger.hpp"
 #include <vector>
 
 namespace sews::architecture::connection
 {
-	struct Manager : public core::connection::ConnectionManager
+	struct Manager : public core::connection::Manager
 	{
 		Manager(std::shared_ptr<core::telemetry::diagnostic::transport::Logger> logger);
 		~Manager(void) override;

@@ -2,12 +2,12 @@
 
 #include "core/message/transport/message.hpp"
 #include "core/message/codec/encoder.hpp"
-#include "core/telemetry/diagnostic/transport/logger.hpp"
+#include "core/telemetry/diagnostic/logger/backend/logger.hpp"
 #include <memory>
 
 namespace sews::architecture::message::http::codec
 {
-	struct ResponseSerializer : public core::message::codec::ResponseSerializer
+	struct ResponseSerializer : public core::message::codec::Encoder
 	{
 		ResponseSerializer(std::shared_ptr<core::telemetry::diagnostic::transport::Logger> logger);
 		~ResponseSerializer(void) override;

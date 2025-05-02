@@ -1,7 +1,7 @@
 #ifndef SEWS_CORE_MESSAGE_TRANSPORT_MESSAGE_HPP
 #define SEWS_CORE_MESSAGE_TRANSPORT_MESSAGE_HPP
 
-#include "core/message/types.hpp"
+#include "core/message/type/message.hpp"
 #include <string>
 
 namespace sews::core::message::transport
@@ -32,7 +32,7 @@ namespace sews::core::message::transport
 	{
 		virtual ~Message(void) = default;
 		// Returns the format of the payload.
-		virtual MessageType type(void) const = 0;
+		virtual core::message::type::Message type(void) const = 0;
 		// Returns raw payload.
 		virtual std::string payload(void) const = 0;
 	};

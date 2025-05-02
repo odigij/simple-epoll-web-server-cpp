@@ -1,7 +1,7 @@
 #ifndef SEWS_CORE_TELEMETRY_METRIC_MANAGER_HPP
 #define SEWS_CORE_TELEMETRY_METRIC_MANAGER_HPP
 
-#include "core/telemetry/metric/types.hpp"
+#include "core/telemetry/metric/type/metric.hpp"
 #include <string>
 
 namespace sews::core::telemetry::metric
@@ -19,10 +19,10 @@ namespace sews::core::telemetry::metric
 	 *
 	 * - Concrete implementations must document their thread-safety.
 	 */
-	struct MetricsManager
+	struct Manager
 	{
-		virtual ~MetricsManager(void) = default;
-		virtual void registerMetric(const std::string &name, core::telemetry::metric::MetricType type) = 0;
+		virtual ~Manager(void) = default;
+		virtual void registerMetric(const std::string &name, core::telemetry::metric::type::Metric type) = 0;
 		virtual void increment(const std::string &name) = 0;
 		virtual void decrement(const std::string &name) = 0;
 		virtual void set(const std::string &name, size_t value) = 0;

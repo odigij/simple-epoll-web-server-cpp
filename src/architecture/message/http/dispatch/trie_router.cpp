@@ -1,23 +1,23 @@
-#include "architecture/message/http/dispatch/trie_router.hpp"
-#include "architecture/message/http/transport/request.hpp"
 #include <sstream>
 #include <string>
+
+#include "architecture/message/http/dispatch/trie_router.hpp"
+#include "architecture/message/http/transport/request.hpp"
 
 namespace sews::architecture::message::http::dispatch
 {
 	TrieRouter::TrieRouter(std::shared_ptr<core::telemetry::diagnostic::transport::Logger> logger)
 		: logger(logger), root(std::make_unique<Node>())
 	{
-		logger->log(core::telemetry::diagnostic::LogType::INFO, "\033[36mTrie Router:\033[0m Initialized.");
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO, "\033[36mTrie Router:\033[0m Initialized.");
 	}
 
 	TrieRouter::~TrieRouter(void)
 	{
-		logger->log(core::telemetry::diagnostic::LogType::INFO, "\033[36mTrie Router:\033[0m Terminated.");
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO, "\033[36mTrie Router:\033[0m Terminated.");
 	}
 
-	void TrieRouter::add(std::string_view method, std::string_view path,
-						 core::message::dispatch::MessageHandler *handler)
+	void TrieRouter::add(std::string_view method, std::string_view path, core::message::dispatch::Handler *handler)
 	{
 		// WARN:
 		// - Do not store or manipulate std::string_view (method, path) directly, use safe copies.
@@ -38,7 +38,7 @@ namespace sews::architecture::message::http::dispatch
 			currentNode = currentNode->children[segment].get();
 		}
 		currentNode->handlers[safeCopyMethod] = handler;
-		logger->log(core::telemetry::diagnostic::LogType::INFO,
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
 					"\033[36mTrie Router:\033[0m Registering\033[33m -> " + safeCopyMethod + ' ' + safeCopyPath);
 	}
 
@@ -58,7 +58,7 @@ namespace sews::architecture::message::http::dispatch
 		{
 			if (currentNode->children.find(segment) == currentNode->children.end())
 			{
-				logger->log(core::telemetry::diagnostic::LogType::WARNING,
+				logger->log(core::telemetry::diagnostic::logger::type::Log::WARNING,
 							"\033[36mTrie Router:\033[0m Node does not exists to remove, cancelling ->\033[31m " +
 								safeCopyMethod + ' ' + safeCopyPath + " -> " + segment);
 				return;
@@ -68,12 +68,12 @@ namespace sews::architecture::message::http::dispatch
 		currentNode->handlers.erase(safeCopyMethod);
 	}
 
-	core::message::dispatch::MessageHandler *TrieRouter::match(const core::message::transport::Message &message) const
+	core::message::dispatch::Handler *TrieRouter::match(const core::message::transport::Message &message) const
 	{
 		const http::transport::Request *request{dynamic_cast<const http::transport::Request *>(&message)};
 		if (!request)
 		{
-			logger->log(core::telemetry::diagnostic::LogType::WARNING,
+			logger->log(core::telemetry::diagnostic::logger::type::Log::WARNING,
 						"\033[36mTrie Router:\033[0m Failed to cast message as request, returning nullptr.");
 			return nullptr;
 		}
@@ -86,7 +86,7 @@ namespace sews::architecture::message::http::dispatch
 		{
 			if (currentNode->children.find(segment) == currentNode->children.end())
 			{
-				logger->log(core::telemetry::diagnostic::LogType::WARNING,
+				logger->log(core::telemetry::diagnostic::logger::type::Log::WARNING,
 							"\033[36mTrie Router:\033[0m Node does not exists; \033[33m" + request->method + ' ' +
 								request->path + "\033[0m. Returning nullptr.");
 				return nullptr;
@@ -98,7 +98,7 @@ namespace sews::architecture::message::http::dispatch
 		auto it = currentNode->handlers.find(request->method);
 		if (it == currentNode->handlers.end())
 		{
-			logger->log(core::telemetry::diagnostic::LogType::WARNING,
+			logger->log(core::telemetry::diagnostic::logger::type::Log::WARNING,
 						"\033[36mTrie Router:\033[0m Node handler does not exists, returning nullptr.");
 			return nullptr;
 		}

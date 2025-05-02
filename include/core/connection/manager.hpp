@@ -22,9 +22,9 @@ namespace sews::core::connection
 	 *
 	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
 	 */
-	struct ConnectionManager
+	struct Manager
 	{
-		virtual ~ConnectionManager(void) = default;
+		virtual ~Manager(void) = default;
 		// Stores Channel to inner container.
 		virtual void add(std::unique_ptr<transport::Channel> channel) = 0;
 		// Marks a Channel for future closure and removal.

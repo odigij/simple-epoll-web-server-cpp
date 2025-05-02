@@ -1,14 +1,14 @@
 #ifndef SEWS_ARCHITECTURE_TRANSPORT_PLAIN_TEXT_CHANNEL_HPP
 #define SEWS_ARCHITECTURE_TRANSPORT_PLAIN_TEXT_CHANNEL_HPP
 
-#include "core/connection/transport/buffered_channel.hpp"
 #include <cstdint>
 #include <string>
-#include <vector>
+
+#include "core/connection/transport/buffered_channel.hpp"
 
 namespace sews::architecture::connection::transport
 {
-	struct PlainTextChannel : public core::connection::transport::BufferedChannel
+	struct PlainTextChannel : public sews::core::connection::transport::BufferedChannel
 	{
 		explicit PlainTextChannel(int fd);
 		~PlainTextChannel(void) override;
@@ -20,7 +20,7 @@ namespace sews::architecture::connection::transport
 		void setDetails(const uint16_t port, const std::string ip);
 		std::vector<char> &getWriteBuffer(void) override;
 		size_t &getWriteOffset(void) override;
-		core::connection::WriteResult flush(void) override;
+		sews::core::connection::event::Write flush(void) override;
 
 	  private:
 		int fd{-1};

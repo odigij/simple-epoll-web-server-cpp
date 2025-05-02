@@ -4,12 +4,14 @@ namespace sews::architecture::connection
 {
 	Manager::Manager(std::shared_ptr<core::telemetry::diagnostic::transport::Logger> logger) : logger(logger)
 	{
-		logger->log(core::telemetry::diagnostic::LogType::INFO, "\033[36mConnection Manager:\033[0m Initialized.");
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
+					"\033[36mConnection Manager:\033[0m Initialized.");
 	}
 
 	Manager::~Manager(void)
 	{
-		logger->log(core::telemetry::diagnostic::LogType::INFO, "\033[36mConnection Manager:\033[0m Terminated.");
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
+					"\033[36mConnection Manager:\033[0m Terminated.");
 	}
 
 	void Manager::add(std::unique_ptr<core::connection::transport::Channel> channel)

@@ -1,7 +1,7 @@
 #ifndef SEWS_CORE_CONNECTION_EVENT_HPP
 #define SEWS_CORE_CONNECTION_EVENT_HPP
 
-#include "core/connection/event_types.hpp"
+#include "core/connection/event/channel.hpp"
 #include "core/connection/transport/channel.hpp"
 
 namespace sews::core::connection::transport
@@ -23,9 +23,9 @@ namespace sews::core::connection::transport
 	 *
 	 * - No thread-safety guarantees: dispatcher must handle concurrency if needed.
 	 */
-	struct SocketEvent
+	struct Event
 	{
-		Events flag;
+		event::Channel flag;
 		Channel *channel;
 	};
 } // namespace sews::core::connection::transport

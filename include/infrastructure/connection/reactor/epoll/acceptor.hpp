@@ -2,8 +2,7 @@
 #define SEWS_INFRASTRUCTURE_CONNECTION_REACTOR_EPOLL_ACCEPTOR_HPP
 
 #include "core/connection/reactor/acceptor.hpp"
-#include "core/connection/transport/channel.hpp"
-#include "core/telemetry/diagnostic/transport/logger.hpp"
+#include "core/telemetry/diagnostic/logger/backend/logger.hpp"
 #include <memory>
 
 namespace sews::infrastructure::connection::reactor::epoll

@@ -22,9 +22,9 @@ namespace sews::core::message::codec
 	 *
 	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
 	 */
-	struct ResponseSerializer
+	struct Encoder
 	{
-		virtual ~ResponseSerializer(void) = default;
+		virtual ~Encoder(void) = default;
 		virtual std::string serialize(const transport::Message &response) const = 0;
 	};
 } // namespace sews::core::message::codec

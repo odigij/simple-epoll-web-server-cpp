@@ -1,7 +1,7 @@
-#ifndef SEWS_CORE_METRIC_TRANSPORT_METRIC_HPP
-#define SEWS_CORE_METRIC_TRANSPORT_METRIC_HPP
+#ifndef SEWS_CORE_METRIC_BACKEND_METRIC_HPP
+#define SEWS_CORE_METRIC_BACKEND_METRIC_HPP
 
-#include "core/telemetry/metric/types.hpp"
+#include "core/telemetry/metric/type/metric.hpp"
 #include <atomic>
 
 namespace sews::core::telemetry::metric::transport
@@ -33,13 +33,13 @@ namespace sews::core::telemetry::metric::transport
 	struct Metric
 	{
 		std::atomic<std::size_t> value;
-		MetricType type;
+		type::Metric type;
 
-		Metric(void) : value(0), type(MetricType::COUNTER)
+		Metric(void) : value(0), type(type::Metric::COUNTER)
 		{
 		}
 
-		Metric(std::size_t initialValue, MetricType t) : value(initialValue), type(t)
+		Metric(std::size_t initialValue, type::Metric t) : value(initialValue), type(t)
 		{
 		}
 
@@ -66,4 +66,4 @@ namespace sews::core::telemetry::metric::transport
 	};
 } // namespace sews::core::telemetry::metric::transport
 
-#endif // !SEWS_CORE_METRIC_TRANSPORT_METRIC_HPP
+#endif // !SEWS_CORE_METRIC_BACKEND_METRIC_HPP

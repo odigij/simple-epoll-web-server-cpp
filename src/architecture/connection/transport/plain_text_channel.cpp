@@ -1,6 +1,7 @@
-#include "architecture/connection/transport/plain_text_channel.hpp"
 #include <unistd.h>
 #include <utility>
+
+#include "architecture/connection/transport/plain_text_channel.hpp"
 
 namespace sews::architecture::connection::transport
 {
@@ -58,7 +59,7 @@ namespace sews::architecture::connection::transport
 		return writeOffset;
 	}
 
-	core::connection::WriteResult PlainTextChannel::flush(void)
+	core::connection::event::Write PlainTextChannel::flush(void)
 	{
 		while (writeOffset < writeBuffer.size())
 		{
@@ -67,14 +68,14 @@ namespace sews::architecture::connection::transport
 			{
 				if (errno == EAGAIN || errno == EWOULDBLOCK)
 				{
-					return core::connection::WriteResult::WouldBlock;
+					return core::connection::event::Write::WOULDBLOCK;
 				}
-				return core::connection::WriteResult::Failed;
+				return core::connection::event::Write::FAILED;
 			}
 			writeOffset += written;
 		}
 		writeBuffer.clear();
 		writeOffset = 0;
-		return core::connection::WriteResult::Done;
+		return core::connection::event::Write::DONE;
 	}
 } // namespace sews::architecture::connection::transport

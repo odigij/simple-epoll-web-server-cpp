@@ -22,9 +22,9 @@ namespace sews::core::message::codec
 	 *
 	 * - Dispatcher should guarantee single-threaded access unless otherwise documented.
 	 */
-	struct RequestParser
+	struct Decoder
 	{
-		virtual ~RequestParser(void) = default;
+		virtual ~Decoder(void) = default;
 		virtual std::unique_ptr<transport::Message> parse(const std::string &raw) = 0;
 	};
 } // namespace sews::core::message::codec

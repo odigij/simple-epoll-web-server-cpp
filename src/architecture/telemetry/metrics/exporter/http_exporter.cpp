@@ -1,10 +1,10 @@
-#include "architecture/telemetry/metric/http_exporter.hpp"
+#include "architecture/telemetry/metric/exporter/http_exporter.hpp"
 #include "architecture/message/http/transport/response.hpp"
 
-namespace sews::architecture::telemetry::metric
+namespace sews::architecture::telemetry::metric::exporter
 {
-	HttpMetricExporter::HttpMetricExporter(core::telemetry::metric::MetricsManager *metrics,
-										   core::message::codec::ResponseSerializer *serializer)
+	HttpMetricExporter::HttpMetricExporter(core::telemetry::metric::Manager *metrics,
+										   core::message::codec::Encoder *serializer)
 		: metrics(metrics), serializer(serializer)
 	{
 	}
@@ -22,4 +22,4 @@ namespace sews::architecture::telemetry::metric
 
 		return std::make_unique<architecture::message::http::transport::Response>(std::move(response));
 	}
-} // namespace sews::architecture::telemetry::metric
+} // namespace sews::architecture::telemetry::metric::exporter

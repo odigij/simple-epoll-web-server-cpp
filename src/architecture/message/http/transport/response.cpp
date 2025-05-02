@@ -17,9 +17,9 @@ namespace sews::architecture::message::http::transport
 	{
 	}
 
-	core::message::MessageType Response::type(void) const
+	core::message::type::Message Response::type(void) const
 	{
-		return core::message::MessageType::HttpResponse;
+		return core::message::type::Message::HttpResponse;
 	}
 
 	std::string Response::payload(void) const

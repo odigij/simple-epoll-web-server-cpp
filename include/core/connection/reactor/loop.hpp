@@ -1,7 +1,7 @@
 #ifndef SEWS_CORE_CONNECTION_REACTOR_LOOP_HPP
 #define SEWS_CORE_CONNECTION_REACTOR_LOOP_HPP
 
-#include "core/connection/transport/channel.hpp"
+#include "core/connection/event/channel.hpp"
 #include "core/connection/transport/event.hpp"
 #include <vector>
 
@@ -27,14 +27,14 @@ namespace sews::core::connection::reactor
 	 *
 	 * - fd is assumed to refer to a channel previously registered; no ownership assumed.
 	 */
-	struct SocketLoop
+	struct Loop
 	{
-		virtual ~SocketLoop(void) = default;
+		virtual ~Loop(void) = default;
 		virtual void registerChannel(transport::Channel &channel) = 0;
 		virtual void unregisterChannel(int fd) = 0;
 		virtual void poll(const std::vector<transport::Channel *> &watched,
-						  std::vector<transport::SocketEvent> &outEvents) = 0;
-		virtual void updateEvents(transport::Channel &channel, std::initializer_list<connection::Events> events) = 0;
+						  std::vector<transport::Event> &outEvents) = 0;
+		virtual void updateEvents(transport::Channel &channel, std::initializer_list<event::Channel> events) = 0;
 		virtual size_t getEventCapacity(void) const = 0;
 	};
 } // namespace sews::core::connection::reactor

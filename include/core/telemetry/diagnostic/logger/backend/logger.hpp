@@ -1,7 +1,7 @@
-#ifndef SEWS_CORE_TELEMETRY_DIAGNOSTIC_TRANSPORT_LOGGER_HPP
-#define SEWS_CORE_TELEMETRY_DIAGNOSTIC_TRANSPORT_LOGGER_HPP
+#ifndef SEWS_CORE_TELEMETRY_DIAGNOSTIC_LOGGER_BACKEND_LOGGER_HPP
+#define SEWS_CORE_TELEMETRY_DIAGNOSTIC_LOGGER_BACKEND_LOGGER_HPP
 
-#include "core/telemetry/diagnostic/log_types.hpp"
+#include "core/telemetry/diagnostic/logger/type/log.hpp"
 #include <string_view>
 
 namespace sews::core::telemetry::diagnostic::transport
@@ -25,8 +25,8 @@ namespace sews::core::telemetry::diagnostic::transport
 	{
 		virtual ~Logger(void) = default;
 		// Logs given message in a format with enums::LogType.
-		virtual void log(diagnostic::LogType flag, std::string_view message) = 0;
+		virtual void log(core::telemetry::diagnostic::logger::type::Log flag, std::string_view message) = 0;
 	};
 } // namespace sews::core::telemetry::diagnostic::transport
 
-#endif // !SEWS_CORE_TELEMETRY_DIAGNOSTIC_TRANSPORT_LOGGER_HPP
+#endif // !SEWS_CORE_TELEMETRY_DIAGNOSTIC_LOGGER_BACKEND_LOGGER_HPP

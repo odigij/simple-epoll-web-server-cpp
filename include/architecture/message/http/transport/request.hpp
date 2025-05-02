@@ -16,7 +16,7 @@ namespace sews::architecture::message::http::transport
 		std::string method, path, version, body;
 		std::unordered_map<std::string, std::string> headers;
 
-		core::message::MessageType type(void) const override;
+		core::message::type::Message type(void) const override;
 		std::string payload(void) const override;
 	};
 } // namespace sews::architecture::message::http::transport

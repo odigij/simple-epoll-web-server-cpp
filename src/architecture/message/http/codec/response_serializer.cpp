@@ -1,27 +1,29 @@
-#include "core/telemetry/diagnostic/log_types.hpp"
+#include <sstream>
+
+#include "core/telemetry/diagnostic/logger/backend/logger.hpp"
 #include "architecture/message/http/transport/response.hpp"
 #include "architecture/message/http/codec/response_serializer.hpp"
-#include <sstream>
 
 namespace sews::architecture::message::http::codec
 {
 	ResponseSerializer::ResponseSerializer(std::shared_ptr<core::telemetry::diagnostic::transport::Logger> logger)
 		: logger(logger)
 	{
-		logger->log(core::telemetry::diagnostic::LogType::INFO,
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
 					"\033[36mHttp Response Serializer:\033[0m Initialized.");
 	}
 
 	ResponseSerializer::~ResponseSerializer(void)
 	{
-		logger->log(core::telemetry::diagnostic::LogType::INFO, "\033[36mHttp Response Serializer:\033[0m Terminated.");
+		logger->log(core::telemetry::diagnostic::logger::type::Log::INFO,
+					"\033[36mHttp Response Serializer:\033[0m Terminated.");
 	}
 
 	std::string ResponseSerializer::serialize(const core::message::transport::Message &response) const
 	{
-		if (response.type() != core::message::MessageType::HttpResponse)
+		if (response.type() != core::message::type::Message::HttpResponse)
 		{
-			logger->log(core::telemetry::diagnostic::LogType::ERROR,
+			logger->log(core::telemetry::diagnostic::logger::type::Log::ERROR,
 						"\033[36mHttp Response Serializer:\033[0m Inconvinient message type.");
 			return std::string();
 		}

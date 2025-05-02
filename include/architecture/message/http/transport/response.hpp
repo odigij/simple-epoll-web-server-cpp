@@ -18,7 +18,7 @@ namespace sews::architecture::message::http::transport
 		std::string statusText{"OK"}, version{"HTTP/1.1"}, body{};
 		std::unordered_map<std::string, std::string> headers;
 
-		core::message::MessageType type(void) const override;
+		core::message::type::Message type(void) const override;
 		std::string payload(void) const override;
 	};
 } // namespace sews::architecture::message::http::transport
